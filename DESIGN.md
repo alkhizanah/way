@@ -4,7 +4,7 @@
 
 ```
 name : T = value; // Variable
-name : T : value; // Constants
+name : T : value; // Constants, prefer omitting the type unless necessary
 ```
 
 - Explicit type without initializer (works only for variables, constants can not be modified so they must have a value)
