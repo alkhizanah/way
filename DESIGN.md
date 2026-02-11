@@ -94,6 +94,65 @@ usize, ssize // unsigned or signed integer with the size of a register
 f16, f32, f64 // A floating point number defined by IEEE 754 standard
 ```
 
+# Composite types
+
+To define a data structure, use the `struct` keyword, every data structure has fields and an associated type of each field
+
+```
+Cat :: struct {
+    name : []u8,
+    color : Color,
+}
+```
+
+To define an enumeration, use the `enum` keyword, to access an enumeration member, use the enumeration's name then `.` then the member's name
+
+```
+Color :: enum {
+    White,
+    Red,
+    Green,
+    Blue,
+}
+
+main :: () -> {
+    white := Color.White;
+}
+```
+
+To define a union of multiple types (often known as the sum type in type theory) use the `union` keyword, no tag is specified as this is not a *tagged* union
+
+```
+ValuePayload :: union {
+    s64,
+    f64,
+}
+
+ValueTag :: enum {
+    Int,
+    Float
+}
+
+Value :: struct {
+    payload : ValuePayload,
+    tag : ValueTag,
+}
+
+main :: () -> {
+    value : Value;
+
+    value.tag = ValueTag.Int;
+    value.payload = 10;
+
+    i := value.payload.(s64);
+
+    value.tag = ValueTag.Float;
+    value.payload = 10.4;
+
+    f := value.payload.(f64);
+}
+```
+
 # Pointer types
 
 Pointers are specified by adding a `*` prefix to the type, and dereferenced by `.*` suffix, for example:
