@@ -110,7 +110,7 @@ You can have a multi-value pointer:
 
 ```
 iterate :: (xs : [*]u8, len : usize, f : (x : u8) -> void) -> {
-    for i := 0; i < len; i++ {
+    for i := 0; i < len; i += 1 {
         f(xs[i])
     }
 }
@@ -120,9 +120,39 @@ The above example is better if we used slices, a structure with mutli-value poin
 
 ```
 iterate :: (xs : []u8, f : (x : u8) -> void) -> {
-    for i := 0; i < xs.len; i++ {
+    for i := 0; i < xs.len; i += 1 {
         f(xs[i])
     }
+}
+```
+
+# Loops
+
+You saw that `for`? that's a loop, it's called a `for` loop, Way has two kinds of these, either a `while` loop or a `for` loop,
+for a `while` loop you specify a condition such that: while that condition is true, the loop body keeps being executed,
+and for a `for` loop you specify three things: a statement that runs before the loop starts, a condition such that if the condition is met the loop body keeps being executed, and lastly a statement that gets ran each time the loop body gets executed
+
+Let's see an example:
+
+```
+drop_while :: (xs : []u8, p : (x : u8) -> bool) -> []u8 {
+    i := 0
+
+    while p(xs[i]) {
+        i += 1
+    }
+
+    return xs[i + 1..];
+}
+```
+
+This could be also written as a `for` loop:
+
+```
+drop_while :: (xs : []u8, p : (x : u8) -> bool) -> []u8 {
+    for i := 0; p(xs[i]); i += 1 {}
+
+    return xs[i + 1..];
 }
 ```
 
