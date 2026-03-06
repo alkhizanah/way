@@ -25,7 +25,7 @@ name :: value; // Constants
 - With parameters and result
 
 ```
-name :: (a : T, b : T) -> R {
+name :: fn (a : T, b : T) -> R {
 
 }
 ```
@@ -33,7 +33,7 @@ name :: (a : T, b : T) -> R {
 - Without parameters but with result
 
 ```
-name :: () -> R {
+name :: fn () -> R {
 
 }
 ```
@@ -41,11 +41,11 @@ name :: () -> R {
 - Without parameters and without result
 
 ```
-name :: () -> void {
+name :: fn () -> void {
 
 }
 
-name :: () -> { // A shortcut to the above one
+name :: fn () { // A shortcut to the above one
 
 }
 ```
@@ -53,9 +53,9 @@ name :: () -> { // A shortcut to the above one
 - Using it as a type
 
 ```
-name : (a : T, b : T) -> R;
-name : () -> R;
-name : () -> void; // No shortcut since that would be ambiguous
+name : fn (a : T, b : T) -> R;
+name : fn () -> R;
+name : fn () -> void; // No shortcut since that would be ambiguous
 ```
 
 # Operators
@@ -115,7 +115,7 @@ Color :: enum {
     Blue,
 }
 
-main :: () -> {
+main :: fn () {
     white := Color.White;
 }
 ```
@@ -133,12 +133,11 @@ ValueTag :: enum {
     Float
 }
 
-Value :: struct {
-    payload : ValuePayload,
+Value :: struct { payload : ValuePayload,
     tag : ValueTag,
 }
 
-main :: () -> {
+main :: fn () {
     value : Value;
 
     value.tag = ValueTag.Int;
@@ -158,7 +157,7 @@ main :: () -> {
 Pointers are specified by adding a `*` prefix to the type, and dereferenced by `.*` suffix, for example:
 
 ```
-swap :: (a : *u8, b : *u8) -> u8 {
+swap :: fn (a : *u8, b : *u8) -> u8 {
     temp := a.*;
     a.* = b.*;
     b.* = temp;
@@ -168,7 +167,7 @@ swap :: (a : *u8, b : *u8) -> u8 {
 You can have a multi-value pointer:
 
 ```
-iterate :: (xs : [*]u8, len : usize, f : (x : u8) -> void) -> {
+iterate :: fn (xs : [*]u8, len : usize, f : (x : u8) -> void) {
     for i := 0; i < len; i += 1 {
         f(xs[i])
     }
@@ -178,7 +177,7 @@ iterate :: (xs : [*]u8, len : usize, f : (x : u8) -> void) -> {
 The above example is better if we used slices, a structure with mutli-value pointer and a length:
 
 ```
-iterate :: (xs : []u8, f : (x : u8) -> void) -> {
+iterate :: fn (xs : []u8, f : (x : u8) -> void) {
     for i := 0; i < xs.len; i += 1 {
         f(xs[i])
     }
@@ -194,7 +193,7 @@ and for a `for` loop you specify three things: a statement that runs before the 
 Let's see an example:
 
 ```
-drop_while :: (xs : []u8, p : (x : u8) -> bool) -> []u8 {
+drop_while :: fn (xs : []u8, p : (x : u8) -> bool) -> []u8 {
     i := 0
 
     while p(xs[i]) {
@@ -208,7 +207,7 @@ drop_while :: (xs : []u8, p : (x : u8) -> bool) -> []u8 {
 This could be also written as a `for` loop:
 
 ```
-drop_while :: (xs : []u8, p : (x : u8) -> bool) -> []u8 {
+drop_while :: fn (xs : []u8, p : (x : u8) -> bool) -> []u8 {
     for i := 0; p(xs[i]); i += 1 {}
 
     return xs[i + 1..];
