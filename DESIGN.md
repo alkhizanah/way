@@ -133,7 +133,8 @@ ValueTag :: enum {
     Float
 }
 
-Value :: struct { payload : ValuePayload,
+Value :: struct {
+    payload : ValuePayload,
     tag : ValueTag,
 }
 
@@ -158,9 +159,9 @@ Pointers are specified by adding a `*` prefix to the type, and dereferenced by `
 
 ```
 swap :: fn (a : *u8, b : *u8) -> u8 {
-    temp := a.*;
+    t := a.*;
     a.* = b.*;
-    b.* = temp;
+    b.* = t;
 }
 ```
 
@@ -214,4 +215,44 @@ drop_while :: fn (xs : []u8, p : (x : u8) -> bool) -> []u8 {
 }
 ```
 
-... To be continued
+# Parametric Polymorphism
+
+Or as other languages call it, generics, templates, etc...
+
+To make a polymorphic function we use the `[]` syntax:
+
+```
+swap :: fn [T] (a : *T, b : *T) {
+    t := a.*;
+    a.* = b.*;
+    b.* = t;
+}
+```
+
+And to use such function, you either let the compiler infer the type parameters, or specify them, an example:
+
+```
+main :: fn () {
+    a : u8 = 4;
+    b : u8 = 6;
+
+    swap(&a, &b); // Infer
+    swap[u8](&a, &b); // Explicit
+}
+```
+
+You can add type parameters for comoposite types as well, like a `struct` for example:
+
+```
+Node :: struct [T] {
+    value : T,
+    next : *Node[T],
+}
+
+main :: fn () {
+    node := Node[u8].{
+        value : 0,
+        next : null,
+    };
+}
+```
