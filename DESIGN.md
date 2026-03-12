@@ -4,7 +4,7 @@
 
 ```
 name : T = value; // Variable
-name : T : value; // Constants, prefer omitting the type unless necessary
+name : T : value; // Constant, prefer omitting the type unless necessary
 ```
 
 - Explicit type without initializer (works only for variables, constants can not be modified so they must have a value)
@@ -17,7 +17,7 @@ name : T; // Variable
 
 ```
 name := value; // Variable
-name :: value; // Constants
+name :: value; // Constant
 ```
 
 # Functions
@@ -168,7 +168,7 @@ swap :: fn (a : *u8, b : *u8) -> u8 {
 You can have a multi-value pointer:
 
 ```
-iterate :: fn (xs : [*]u8, len : usize, f : (x : u8) -> void) {
+iterate :: fn (xs : [*]u8, len : usize, f : fn (x : u8) -> void) {
     for i := 0; i < len; i += 1 {
         f(xs[i])
     }
@@ -178,7 +178,7 @@ iterate :: fn (xs : [*]u8, len : usize, f : (x : u8) -> void) {
 The above example is better if we used slices, a structure with mutli-value pointer and a length:
 
 ```
-iterate :: fn (xs : []u8, f : (x : u8) -> void) {
+iterate :: fn (xs : []u8, f : fn (x : u8) -> void) {
     for i := 0; i < xs.len; i += 1 {
         f(xs[i])
     }
@@ -194,7 +194,7 @@ and for a `for` loop you specify three things: a statement that runs before the 
 Let's see an example:
 
 ```
-drop_while :: fn (xs : []u8, p : (x : u8) -> bool) -> []u8 {
+drop_while :: fn (xs : []u8, p : fn (x : u8) -> bool) -> []u8 {
     i := 0
 
     while p(xs[i]) {
@@ -208,7 +208,7 @@ drop_while :: fn (xs : []u8, p : (x : u8) -> bool) -> []u8 {
 This could be also written as a `for` loop:
 
 ```
-drop_while :: fn (xs : []u8, p : (x : u8) -> bool) -> []u8 {
+drop_while :: fn (xs : []u8, p : fn (x : u8) -> bool) -> []u8 {
     for i := 0; p(xs[i]); i += 1 {}
 
     return xs[i + 1..];
