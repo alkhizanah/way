@@ -67,8 +67,59 @@ Token_Tag :: enum {
 	Return,
 }
 
+@(rodata)
+token_tag_string := [Token_Tag]string {
+	.Invalid            = "invalid bytes",
+	.EOF                = "end of file",
+	.Plus               = "+",
+	.Minus              = "-",
+	.Star               = "*",
+	.Forward_Slash      = "/",
+	.Percent            = "%",
+	.Dot                = ".",
+	.Comma              = ",",
+	.Semicolon          = ";",
+	.Paren_Open         = "(",
+	.Paren_Close        = ")",
+	.Bracket_Open       = "[",
+	.Bracket_Close      = "]",
+	.Brace_Open         = "{",
+	.Brace_Close        = "}",
+	.Assign             = "=",
+	.Equal              = "==",
+	.Not_Equal          = "!=",
+	.Less_Than          = "<",
+	.Greater_Than       = ">",
+	.Less_Than_Equal    = "<=",
+	.Greater_Than_Equal = ">=",
+	.Ellipsis           = "...",
+	.Right_Arrow        = "->",
+	.Colon              = ":",
+	.Bit_Left_Shift     = "<<",
+	.Bit_Right_Shift    = ">>",
+	.Bit_And            = "&",
+	.Bit_Or             = "|",
+	.Bit_Xor            = "^",
+	.Bit_Not            = "~",
+	.Bool_Not           = "!",
+	.Identifier         = "an identifier",
+	.Int                = "an integer",
+	.Float              = "a floating points number",
+	.String             = "a string",
+	.Fn                 = "fn",
+	.While              = "while",
+	.For                = "for",
+	.If                 = "if",
+	.Else               = "else",
+	.True               = "true",
+	.False              = "false",
+	.Null               = "null",
+	.Return             = "return",
+}
+
 Token :: struct {
 	tag:      Token_Tag,
+	value:    string,
 	position: Position,
 }
 
@@ -76,6 +127,8 @@ lexer_init :: proc(l: ^Lexer, buffer: string) {
 	l^ = Lexer {
 		buffer = buffer,
 	}
+
+	l.position.line = 1
 
 	next_rune(l)
 
@@ -131,7 +184,9 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 		return r >= '0' && r <= '9'
 	}
 
-	scan_string :: proc(l: ^Lexer) -> Token_Tag {
+	scan_string :: proc(l: ^Lexer, token: ^Token) {
+		start := l.offset
+
 		for {
 			if l.character == '"' || l.character == utf8.RUNE_EOF {
 				break
@@ -144,72 +199,89 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 			next_rune(l)
 		}
 
+		token.value = l.buffer[start:l.offset]
+
 		if l.character == '"' {
 			next_rune(l)
+		} else {
+			token.tag = .Invalid
 		}
 
-		return .String
+		token.tag = .String
 	}
 
-	scan_number :: proc(l: ^Lexer) -> Token_Tag {
+	scan_number :: proc(l: ^Lexer, token: ^Token) {
+		start := l.offset - l.width
+
 		is_float := false
 
-		for is_digit(l.character) {
+		for is_identifier_continue(l.character) {
 			next_rune(l)
 		}
 
-		if l.character == '.' && is_digit(peek_rune(l)) {
+		if l.character == '.' {
 			is_float = true
+
 			next_rune(l)
 
-			for is_digit(l.character) {
+			for is_identifier_continue(l.character) {
 				next_rune(l)
 			}
 		}
 
-		if is_float {
-			return .Float
-		}
+		token.value = l.buffer[start:l.offset]
 
-		return .Int
+		if is_float {
+			token.tag = .Float
+		} else {
+			token.tag = .Int
+		}
 	}
 
-	scan_identifier :: proc(l: ^Lexer) -> Token_Tag {
+	scan_identifier :: proc(l: ^Lexer, token: ^Token) {
 		start := l.offset - l.width
 
 		for is_identifier_continue(l.character) {
 			next_rune(l)
 		}
 
-		text := l.buffer[start:l.offset - l.width]
+		text := l.buffer[start:l.offset]
+
+		token.value = text
 
 		switch text {
 		case "fn":
-			return .Fn
+			token.tag = .Fn
 		case "while":
-			return .While
+			token.tag = .While
 		case "for":
-			return .For
+			token.tag = .For
 		case "if":
-			return .If
+			token.tag = .If
 		case "else":
-			return .Else
+			token.tag = .Else
 		case "true":
-			return .True
+			token.tag = .True
 		case "false":
-			return .False
+			token.tag = .False
 		case "null":
-			return .Null
+			token.tag = .Null
 		case "return":
-			return .Return
+			token.tag = .Return
 		}
 
-		return .Identifier
+		token.tag = .Identifier
 	}
 
 	skip_whitespace(l)
 
+
 	token.tag = .Invalid
+
+	if l.character != utf8.RUNE_EOF {
+		token.value = l.buffer[l.offset:][:l.width]
+	}
+
 	token.position = l.position
 
 	character := l.character
@@ -283,6 +355,9 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 		if l.character == '.' && peek_rune(l) == '.' {
 			next_rune(l)
 			next_rune(l)
+
+			token.value = "..."
+
 			token.tag = .Ellipsis
 		} else {
 			token.tag = .Dot
@@ -330,6 +405,7 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 	case '!':
 		if l.character == '=' {
 			next_rune(l)
+			token.value = "!="
 			token.tag = .Not_Equal
 		} else {
 			token.tag = .Bool_Not
@@ -338,6 +414,7 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 	case '=':
 		if l.character == '=' {
 			next_rune(l)
+			token.value = "=="
 			token.tag = .Equal
 		} else {
 			token.tag = .Assign
@@ -346,9 +423,11 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 	case '<':
 		if l.character == '=' {
 			next_rune(l)
+			token.value = "<="
 			token.tag = .Less_Than_Equal
 		} else if l.character == '<' {
 			next_rune(l)
+			token.value = "<<"
 			token.tag = .Bit_Left_Shift
 		} else {
 			token.tag = .Less_Than
@@ -357,23 +436,24 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 	case '>':
 		if l.character == '=' {
 			next_rune(l)
+			token.value = ">="
 			token.tag = .Greater_Than_Equal
 		} else if l.character == '>' {
 			next_rune(l)
+			token.value = ">>"
 			token.tag = .Bit_Right_Shift
 		} else {
 			token.tag = .Greater_Than
 		}
 
 	case '"':
-		token.tag = scan_string(l)
+		scan_string(l, &token)
 
 	case 'A' ..= 'Z', 'a' ..= 'z', '_':
-		token.tag = scan_identifier(l)
+		scan_identifier(l, &token)
 
 	case '0' ..= '9':
-		token.tag = scan_number(l)
-
+		scan_number(l, &token)
 	}
 
 	return token
