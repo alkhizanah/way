@@ -9,6 +9,9 @@ Ast_Node_Tag :: enum {
 	Int,
 	// lhs is the upper bits and rhs is the lower bits
 	Float,
+	// rhs is the bit width
+	Unsigned_Int_Type,
+	Signed_Int_Type,
 	// the following are left as an exercise to the reader (they are unary operations, lhs is unused)
 	Neg,
 	Bool_Not,
@@ -56,6 +59,11 @@ Ast_Node_Tag :: enum {
 	// no payload needed for those
 	Break,
 	Continue,
+	Null,
+	Void_Type,
+	Float16_Type,
+	Float32_Type,
+	Float64_Type,
 }
 
 Ast_Index :: distinct u32

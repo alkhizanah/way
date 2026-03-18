@@ -63,7 +63,10 @@ Token_Tag :: enum {
 	Else,
 	True,
 	False,
+	Void,
 	Null,
+	Break,
+	Continue,
 	Return,
 }
 
@@ -113,7 +116,10 @@ token_tag_string := [Token_Tag]string {
 	.Else               = "else",
 	.True               = "true",
 	.False              = "false",
+	.Void               = "void",
 	.Null               = "null",
+	.Break              = "break",
+	.Continue           = "continue",
 	.Return             = "return",
 }
 
@@ -159,6 +165,10 @@ peek_rune :: proc(l: ^Lexer) -> rune {
 	return character
 }
 
+is_digit :: proc(r: rune) -> bool {
+	return r >= '0' && r <= '9'
+}
+
 next_token :: proc(l: ^Lexer) -> (token: Token) {
 	skip_whitespace :: proc(l: ^Lexer) {
 		for l.offset < len(l.buffer) {
@@ -178,10 +188,6 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 
 	is_identifier_continue :: proc(r: rune) -> bool {
 		return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r == '_' || r >= '0' && r <= '9'
-	}
-
-	is_digit :: proc(r: rune) -> bool {
-		return r >= '0' && r <= '9'
 	}
 
 	scan_string :: proc(l: ^Lexer, token: ^Token) {
@@ -264,13 +270,20 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 			token.tag = .True
 		case "false":
 			token.tag = .False
+		case "void":
+			token.tag = .Void
 		case "null":
 			token.tag = .Null
+		case "break":
+			token.tag = .Break
+		case "continue":
+			token.tag = .Continue
 		case "return":
 			token.tag = .Return
+		case:
+			token.tag = .Identifier
 		}
 
-		token.tag = .Identifier
 	}
 
 	skip_whitespace(l)

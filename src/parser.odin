@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:strconv"
+import "core:strings"
 
 Parser :: struct {
 	lexer:          Lexer,
@@ -160,6 +161,8 @@ Precedence :: enum {
 parse_expr :: proc(p: ^Parser, precedence: Precedence) -> Ast_Index {
 	lhs := parse_unary_expr(p)
 
+	fmt.println(p.ast.nodes[lhs])
+
 	return lhs
 }
 
@@ -167,6 +170,18 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	#partial switch (p.current_token.tag) {
 	case .Identifier:
 		return parse_identifier(p)
+
+	case .Null:
+		return append_node(p, .Null, 0, 0, advance_token(p).position)
+
+	case .Void:
+		return append_node(p, .Void_Type, 0, 0, advance_token(p).position)
+
+	case .Break:
+		return append_node(p, .Break, 0, 0, advance_token(p).position)
+
+	case .Continue:
+		return append_node(p, .Continue, 0, 0, advance_token(p).position)
 
 	case .Int:
 		return parse_int(p)
@@ -186,6 +201,32 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 
 parse_identifier :: proc(p: ^Parser) -> Ast_Index {
 	token := advance_token(p)
+
+	if len(token.value) >= 2 {
+		bit_width, ok := strconv.parse_u64(token.value[1:])
+
+		if ok {
+			switch token.value[0] {
+			case 'u', 's':
+				if bit_width < u64(max(u16)) {
+					tag: Ast_Node_Tag =
+						token.value[0] == 'u' ? .Unsigned_Int_Type : .Signed_Int_Type
+
+					return append_node(p, tag, 0, Ast_Index(bit_width), token.position)
+				}
+
+			case 'f':
+				switch bit_width {
+				case 16:
+					return append_node(p, .Float16_Type, 0, 0, token.position)
+				case 32:
+					return append_node(p, .Float32_Type, 0, 0, token.position)
+				case 64:
+					return append_node(p, .Float64_Type, 0, 0, token.position)
+				}
+			}
+		}
+	}
 
 	string_offset := len(p.ast.strings)
 
@@ -211,13 +252,7 @@ parse_int :: proc(p: ^Parser) -> Ast_Index {
 		return AST_INVALID
 	}
 
-	return append_node(
-		p,
-		.Int,
-		Ast_Index((v >> 32) & u64(max(u32))),
-		Ast_Index(v & u64(max(u32))),
-		token.position,
-	)
+	return append_node(p, .Int, Ast_Index(v >> 32), Ast_Index(v), token.position)
 }
 
 parse_float :: proc(p: ^Parser) -> Ast_Index {
@@ -230,16 +265,10 @@ parse_float :: proc(p: ^Parser) -> Ast_Index {
 
 		return AST_INVALID
 	}
-	
+
 	v := transmute(u64)vf
 
-	return append_node(
-		p,
-		.Float,
-		Ast_Index((v >> 32) & u64(max(u32))),
-		Ast_Index(v & u64(max(u32))),
-		token.position,
-	)
+	return append_node(p, .Float, Ast_Index(v >> 32), Ast_Index(v), token.position)
 }
 
 parse_string :: proc(p: ^Parser) -> Ast_Index {
