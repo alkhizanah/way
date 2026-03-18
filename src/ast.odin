@@ -13,7 +13,7 @@ Ast_Node_Tag :: enum {
 	Unsigned_Int_Type,
 	Signed_Int_Type,
 	// the following are left as an exercise to the reader (they are unary operations, lhs is unused)
-	Neg,
+	Negate,
 	Bool_Not,
 	Bit_Not,
 	Return,

@@ -156,12 +156,11 @@ parse_global :: proc(p: ^Parser) -> bool {
 
 Precedence :: enum {
 	Lowest,
+	Prefix,
 }
 
 parse_expr :: proc(p: ^Parser, precedence: Precedence) -> Ast_Index {
 	lhs := parse_unary_expr(p)
-
-	fmt.println(p.ast.nodes[lhs])
 
 	return lhs
 }
@@ -191,6 +190,15 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 
 	case .String:
 		return parse_string(p)
+
+	case .Minus:
+		return parse_unary_op(p, .Negate)
+
+	case .Bit_Not:
+		return parse_unary_op(p, .Bit_Not)
+
+	case .Bool_Not:
+		return parse_unary_op(p, .Bool_Not)
 
 	case:
 		syntax_error(p, p.current_token.position, "unknown expression")
@@ -285,4 +293,10 @@ parse_string :: proc(p: ^Parser) -> Ast_Index {
 		Ast_Index(len(p.ast.strings) - string_offset),
 		token.position,
 	)
+}
+
+parse_unary_op :: proc(p: ^Parser, tag: Ast_Node_Tag) -> Ast_Index {
+	token := advance_token(p)
+	rhs := parse_expr(p, .Prefix)
+	return append_node(p, tag, 0, rhs, token.position)
 }
