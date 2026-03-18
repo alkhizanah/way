@@ -25,7 +25,7 @@ name :: value; // Constant
 - With parameters and result
 
 ```
-name :: fn (a : T, b : T) -> R {
+name :: fn (a: T, b: T) -> R {
 
 }
 ```
@@ -53,7 +53,7 @@ name :: fn () { // A shortcut to the above one
 - Using it as a type
 
 ```
-name : fn (a : T, b : T) -> R;
+name : fn (a: T, b: T) -> R;
 name : fn () -> R;
 name : fn () -> void; // No shortcut since that would be ambiguous
 ```
@@ -100,8 +100,8 @@ To define a data structure, use the `struct` keyword, every data structure has f
 
 ```
 Cat :: struct {
-    name : []u8,
-    color : Color,
+    name:  []u8,
+    color: Color,
 }
 ```
 
@@ -120,36 +120,35 @@ main :: fn () {
 }
 ```
 
-To define a union of multiple types (often known as the sum type in type theory) use the `union` keyword, no tag is specified as this is not a *tagged* union
+To define a union of multiple types (often known as the sum type in type theory) use the `union` keyword
 
 ```
 ValuePayload :: union {
-    s64,
-    f64,
+    int: s64,
+    flt: f64,
 }
 
 ValueTag :: enum {
     Int,
-    Float
+    Flt,
 }
 
 Value :: struct {
-    payload : ValuePayload,
-    tag : ValueTag,
+    payload: ValuePayload,
+    tag:     ValueTag,
 }
 
 main :: fn () {
-    value : Value;
+    value := Value.{
+        .payload = ValuePayload.{
+            .int = 0,
+        },
 
-    value.tag = ValueTag.Int;
-    value.payload = 10;
+        .tag = ValueTag.Int
+    };
 
-    i := value.payload.(s64);
-
-    value.tag = ValueTag.Float;
-    value.payload = 10.4;
-
-    f := value.payload.(f64);
+    value.payload.int == 0;
+    value.tag == ValueTag.Int;
 }
 ```
 
@@ -158,7 +157,7 @@ main :: fn () {
 Pointers are specified by adding a `*` prefix to the type, and dereferenced by `.*` suffix, for example:
 
 ```
-swap :: fn (a : *u8, b : *u8) -> u8 {
+swap :: fn (a: *u8, b: *u8) -> u8 {
     t := a.*;
     a.* = b.*;
     b.* = t;
@@ -168,7 +167,7 @@ swap :: fn (a : *u8, b : *u8) -> u8 {
 You can have a multi-value pointer:
 
 ```
-iterate :: fn (xs : [*]u8, len : usize, f : fn (x : u8) -> void) {
+iterate :: fn (xs: [*]u8, len: usize, f: fn (x: u8) -> void) {
     for i := 0; i < len; i += 1 {
         f(xs[i])
     }
@@ -178,7 +177,7 @@ iterate :: fn (xs : [*]u8, len : usize, f : fn (x : u8) -> void) {
 The above example is better if we used slices, a structure with mutli-value pointer and a length:
 
 ```
-iterate :: fn (xs : []u8, f : fn (x : u8) -> void) {
+iterate :: fn (xs: []u8, f: fn (x: u8) -> void) {
     for i := 0; i < xs.len; i += 1 {
         f(xs[i])
     }
@@ -194,7 +193,7 @@ and for a `for` loop you specify three things: a statement that runs before the 
 Let's see an example:
 
 ```
-drop_while :: fn (xs : []u8, p : fn (x : u8) -> bool) -> []u8 {
+drop_while :: fn (xs: []u8, p: fn (x: u8) -> bool) -> []u8 {
     i := 0
 
     while p(xs[i]) {
@@ -208,7 +207,7 @@ drop_while :: fn (xs : []u8, p : fn (x : u8) -> bool) -> []u8 {
 This could be also written as a `for` loop:
 
 ```
-drop_while :: fn (xs : []u8, p : fn (x : u8) -> bool) -> []u8 {
+drop_while :: fn (xs: []u8, p: fn (x: u8) -> bool) -> []u8 {
     for i := 0; p(xs[i]); i += 1 {}
 
     return xs[i + 1..];
@@ -222,7 +221,7 @@ Or as other languages call it, generics, templates, etc...
 To make a polymorphic function we use the `[]` syntax:
 
 ```
-swap :: fn [T] (a : *T, b : *T) {
+swap :: fn [T] (a: *T, b: *T) {
     t := a.*;
     a.* = b.*;
     b.* = t;
@@ -245,14 +244,14 @@ You can add type parameters for comoposite types as well, like a `struct` for ex
 
 ```
 Node :: struct [T] {
-    value : T,
-    next : *Node[T],
+    value: T,
+    next: *Node[T],
 }
 
 main :: fn () {
     node := Node[u8].{
-        value : 0,
-        next : null,
+        .value = 0,
+        .next = null,
     };
 }
 ```
