@@ -156,11 +156,54 @@ parse_global :: proc(p: ^Parser) -> bool {
 
 Precedence :: enum {
 	Lowest,
+	Assign,
+	Bitwise,
+	Comparison,
+	Shift,
+	Additive,
+	Multiplicative,
 	Prefix,
+	Postfix,
+}
+
+precedence_of_token :: proc(tag: Token_Tag) -> Precedence {
+	#partial switch tag {
+	case .Plus, .Minus:
+		return .Additive
+
+	case .Star, .Forward_Slash, .Percent:
+		return .Multiplicative
+
+	case .Bit_Left_Shift, .Bit_Right_Shift:
+		return .Shift
+
+	case .Equal, .Not_Equal, .Less_Than, .Greater_Than, .Less_Than_Equal, .Greater_Than_Equal:
+		return .Comparison
+
+	case .Bit_And, .Bit_Or, .Bit_Xor:
+		return .Bitwise
+
+	case .Paren_Open, .Bracket_Open, .Dot:
+		return .Postfix
+
+	case .Assign:
+		return .Assign
+
+	case:
+		return .Lowest
+	}
 }
 
 parse_expr :: proc(p: ^Parser, precedence: Precedence) -> Ast_Index {
 	lhs := parse_unary_expr(p)
+
+	for precedence_of_token(p.current_token.tag) > precedence {
+		if lhs == AST_INVALID {
+			return AST_INVALID
+		}
+
+		lhs = parse_binary_expr(p, lhs)
+	}
 
 	return lhs
 }
@@ -200,11 +243,77 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .Bool_Not:
 		return parse_unary_op(p, .Bool_Not)
 
+	case .Paren_Open:
+		return parse_grouped_expr(p)
+
 	case:
 		syntax_error(p, p.current_token.position, "unknown expression")
 
 		return AST_INVALID
 	}
+}
+
+parse_unary_op :: proc(p: ^Parser, tag: Ast_Node_Tag) -> Ast_Index {
+	token := advance_token(p)
+	rhs := parse_expr(p, .Prefix)
+	return append_node(p, tag, 0, rhs, token.position)
+}
+
+parse_grouped_expr :: proc(p: ^Parser) -> Ast_Index {
+	advance_token(p)
+	expr := parse_expr(p, .Lowest)
+	expect_token(p, .Paren_Close)
+	return expr
+}
+
+parse_binary_expr :: proc(p: ^Parser, lhs: Ast_Index) -> Ast_Index {
+	#partial switch (p.current_token.tag) {
+	case .Plus:
+		return parse_binary_op(p, lhs, .Add)
+	case .Minus:
+		return parse_binary_op(p, lhs, .Sub)
+	case .Star:
+		return parse_binary_op(p, lhs, .Mul)
+	case .Forward_Slash:
+		return parse_binary_op(p, lhs, .Div)
+	case .Percent:
+		return parse_binary_op(p, lhs, .Mod)
+
+	case .Equal:
+		return parse_binary_op(p, lhs, .Eql)
+	case .Not_Equal:
+		return parse_binary_op(p, lhs, .Neq)
+	case .Less_Than:
+		return parse_binary_op(p, lhs, .Lt)
+	case .Greater_Than:
+		return parse_binary_op(p, lhs, .Gt)
+	case .Less_Than_Equal:
+		return parse_binary_op(p, lhs, .Lte)
+	case .Greater_Than_Equal:
+		return parse_binary_op(p, lhs, .Gte)
+
+	case .Bit_Left_Shift:
+		return parse_binary_op(p, lhs, .Bit_Shl)
+	case .Bit_Right_Shift:
+		return parse_binary_op(p, lhs, .Bit_Shr)
+	case .Bit_And:
+		return parse_binary_op(p, lhs, .Bit_And)
+	case .Bit_Or:
+		return parse_binary_op(p, lhs, .Bit_Or)
+	case .Bit_Xor:
+		return parse_binary_op(p, lhs, .Bit_Xor)
+
+	case:
+		syntax_error(p, p.current_token.position, "unhandled binary operator")
+
+		return AST_INVALID
+	}
+}
+
+parse_binary_op :: proc(p: ^Parser, lhs: Ast_Index, tag: Ast_Node_Tag) -> Ast_Index {
+	token := advance_token(p)
+	rhs := parse_expr(p, precedence_of_token(token.tag))
+	return append_node(p, tag, lhs, rhs, token.position)
 }
 
 parse_identifier :: proc(p: ^Parser) -> Ast_Index {
@@ -293,10 +402,4 @@ parse_string :: proc(p: ^Parser) -> Ast_Index {
 		Ast_Index(len(p.ast.strings) - string_offset),
 		token.position,
 	)
-}
-
-parse_unary_op :: proc(p: ^Parser, tag: Ast_Node_Tag) -> Ast_Index {
-	token := advance_token(p)
-	rhs := parse_expr(p, .Prefix)
-	return append_node(p, tag, 0, rhs, token.position)
 }

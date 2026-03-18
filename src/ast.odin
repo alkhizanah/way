@@ -21,6 +21,8 @@ Ast_Node_Tag :: enum {
 	Bit_Or,
 	Bit_Xor,
 	Bit_And,
+	Bit_Shl,
+	Bit_Shr,
 	Add,
 	Sub,
 	Mul,
