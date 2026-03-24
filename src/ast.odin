@@ -39,10 +39,12 @@ Ast_Node_Tag :: enum {
 	// lhs is an index into statements in extra, and rhs is the amount of statements
 	Block,
 	// lhs is an index into pairs of (identifier index, parameter type index) in extra, and rhs is the amount of parameters
-	Function_Parameters,
-	// lhs is an index to Function_Parameters and rhs is an index to the return type
-	Function_Prototype,
-	// lhs is an index to Function_Prototype and rhs is an index to Block
+	Function_Named_Parameters,
+	// lhs is an index into array of parameter types in extra, and rhs is the amount of parameters
+	Function_Unamed_Parameters,
+	// lhs is an index to Function_Named_Parameters or Function_Unnamed_Parameters and rhs is an index to the return type
+	Function_Type,
+	// lhs is an index to Function_Type and rhs is an index to Block
 	Function,
 	// lhs is an index into values in extra, and rhs is the amount of values
 	Call_Arguments,

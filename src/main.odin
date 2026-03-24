@@ -20,7 +20,7 @@ main :: proc() {
 			os.exit(1)
 		}
 
-		parser : Parser
+		parser: Parser
 
 		parser_init(&parser, os.args[2])
 

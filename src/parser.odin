@@ -154,6 +154,19 @@ parse_global :: proc(p: ^Parser) -> bool {
 	return true
 }
 
+parse_stmt :: proc(p: ^Parser) -> Ast_Index {
+	#partial switch p.current_token.tag {
+	case .Break:
+		return append_node(p, .Break, 0, 0, advance_token(p).position)
+
+	case .Continue:
+		return append_node(p, .Continue, 0, 0, advance_token(p).position)
+
+	case:
+		return parse_expr(p, .Lowest)
+	}
+}
+
 Precedence :: enum {
 	Lowest,
 	Assign,
@@ -198,9 +211,7 @@ parse_expr :: proc(p: ^Parser, precedence: Precedence) -> Ast_Index {
 	lhs := parse_unary_expr(p)
 
 	for precedence_of_token(p.current_token.tag) > precedence {
-		if lhs == AST_INVALID {
-			return AST_INVALID
-		}
+		if lhs == AST_INVALID do return AST_INVALID
 
 		lhs = parse_binary_expr(p, lhs)
 	}
@@ -218,12 +229,6 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 
 	case .Void:
 		return append_node(p, .Void_Type, 0, 0, advance_token(p).position)
-
-	case .Break:
-		return append_node(p, .Break, 0, 0, advance_token(p).position)
-
-	case .Continue:
-		return append_node(p, .Continue, 0, 0, advance_token(p).position)
 
 	case .Int:
 		return parse_int(p)
@@ -246,6 +251,9 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .Paren_Open:
 		return parse_grouped_expr(p)
 
+	case .Fn:
+		return parse_function(p)
+
 	case:
 		syntax_error(p, p.current_token.position, "unknown expression")
 
@@ -256,13 +264,15 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 parse_unary_op :: proc(p: ^Parser, tag: Ast_Node_Tag) -> Ast_Index {
 	token := advance_token(p)
 	rhs := parse_expr(p, .Prefix)
+	if rhs == AST_INVALID do return AST_INVALID
 	return append_node(p, tag, 0, rhs, token.position)
 }
 
 parse_grouped_expr :: proc(p: ^Parser) -> Ast_Index {
 	advance_token(p)
 	expr := parse_expr(p, .Lowest)
-	expect_token(p, .Paren_Close)
+	_, ok := expect_token(p, .Paren_Close)
+	if !ok do return AST_INVALID
 	return expr
 }
 
@@ -313,6 +323,7 @@ parse_binary_expr :: proc(p: ^Parser, lhs: Ast_Index) -> Ast_Index {
 parse_binary_op :: proc(p: ^Parser, lhs: Ast_Index, tag: Ast_Node_Tag) -> Ast_Index {
 	token := advance_token(p)
 	rhs := parse_expr(p, precedence_of_token(token.tag))
+	if rhs == AST_INVALID do return AST_INVALID
 	return append_node(p, tag, lhs, rhs, token.position)
 }
 
@@ -401,5 +412,171 @@ parse_string :: proc(p: ^Parser) -> Ast_Index {
 		Ast_Index(string_offset),
 		Ast_Index(len(p.ast.strings) - string_offset),
 		token.position,
+	)
+}
+
+parse_function :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	type := parse_function_type(p)
+
+	if type == AST_INVALID do return AST_INVALID
+
+	if p.current_token.tag == .Brace_Open {
+		block := parse_block(p)
+
+		if block == AST_INVALID do return AST_INVALID
+
+		return append_node(p, .Function, type, block, token.position)
+	} else {
+		return type
+	}
+}
+
+parse_function_type :: proc(p: ^Parser) -> Ast_Index {
+	paren_open, ok := expect_token(p, .Paren_Open)
+
+	if !ok do return AST_INVALID
+
+	parameters := make([dynamic]Ast_Index)
+
+	defer delete(parameters)
+
+	named := false
+
+	for !allow_token(p, .Paren_Close) {
+		if named {
+			if p.current_token.tag != .Identifier {
+				syntax_error(
+					p,
+					p.current_token.position,
+					"expected an identifier for a parameter name but got %v",
+					token_tag_string[p.current_token.tag],
+				)
+
+				return AST_INVALID
+			}
+
+			name := parse_identifier(p)
+
+			_, ok = expect_token(p, .Colon)
+
+			if !ok do return AST_INVALID
+
+			type := parse_expr(p, .Lowest)
+
+			if type == AST_INVALID do return AST_INVALID
+
+			append(&parameters, name, type)
+		} else {
+			expr := parse_expr(p, .Lowest)
+
+			if expr == AST_INVALID do return AST_INVALID
+
+			if p.current_token.tag == .Colon {
+				advance_token(p)
+
+				named = true
+
+				if p.ast.nodes[expr].tag != .Identifier {
+					syntax_error(
+						p,
+						p.ast.sources[expr],
+						"expected an identifier for a parameter name",
+					)
+
+					return AST_INVALID
+				}
+
+				name := expr
+
+				type := parse_expr(p, .Lowest)
+
+				if type == AST_INVALID do return AST_INVALID
+
+				append(&parameters, name, type)
+			} else {
+				append(&parameters, expr)
+			}
+		}
+
+		if !allow_token(p, .Comma) && p.current_token.tag != .Paren_Close {
+			syntax_error(
+				p,
+				p.current_token.position,
+				"expected , or ) got %v",
+				token_tag_string[p.current_token.tag],
+			)
+
+			return AST_INVALID
+		}
+	}
+
+	parameters_index := len(p.ast.extra)
+
+	append(&p.ast.extra, ..parameters[:])
+
+	parameters_node := append_node(
+		p,
+		named ? .Function_Named_Parameters : .Function_Unamed_Parameters,
+		Ast_Index(parameters_index),
+		Ast_Index(len(parameters)),
+		paren_open.position,
+	)
+
+	return_type: Ast_Index
+
+	if p.current_token.tag == .Brace_Open {
+		return_type = append_node(p, .Void_Type, 0, 0, p.current_token.position)
+	} else {
+		arrow_token, ok := expect_token(p, .Right_Arrow)
+
+		if !ok do return AST_INVALID
+
+		return_type := parse_expr(p, .Lowest)
+
+		if return_type == AST_INVALID do return AST_INVALID
+	}
+
+	return append_node(p, .Function_Type, parameters_node, return_type, paren_open.position)
+}
+
+parse_block :: proc(p: ^Parser) -> Ast_Index {
+	brace_open, ok := expect_token(p, .Brace_Open)
+
+	if !ok do return AST_INVALID
+
+	stmts := make([dynamic]Ast_Index)
+
+	for !allow_token(p, .Brace_Close) {
+		stmt := parse_stmt(p)
+
+		if stmt == AST_INVALID do return AST_INVALID
+
+		if !expect_semicolon(p) do return AST_INVALID
+
+		if p.current_token.tag == .EOF {
+			syntax_error(p, brace_open.position, "{ is not closed")
+
+			return AST_INVALID
+		}
+
+		append(&stmts, stmt)
+	}
+
+	stmts_index := len(p.ast.extra)
+
+	append(&p.ast.extra, ..stmts[:])
+
+	stmts_count := len(stmts)
+
+	delete(stmts)
+
+	return append_node(
+		p,
+		.Block,
+		Ast_Index(stmts_index),
+		Ast_Index(stmts_count),
+		brace_open.position,
 	)
 }
