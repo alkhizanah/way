@@ -65,7 +65,7 @@ append_node :: proc(
 }
 
 syntax_error :: proc(p: ^Parser, position: Position, format: string, args: ..any) {
-	fmt.eprintf("%s:%d:%d: syntax error: ", p.file_path, position.line, position.column)
+	fmt.eprintf("%v:%v:%v: syntax error: ", p.file_path, position.line, position.column)
 	fmt.eprintfln(format, args = args)
 }
 
@@ -156,6 +156,9 @@ parse_global :: proc(p: ^Parser) -> bool {
 
 parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	#partial switch p.current_token.tag {
+	case .Brace_Open:
+		return parse_block(p)
+
 	case .Break:
 		return append_node(p, .Break, 0, 0, advance_token(p).position)
 
@@ -556,7 +559,7 @@ parse_block :: proc(p: ^Parser) -> Ast_Index {
 		if !expect_semicolon(p) do return AST_INVALID
 
 		if p.current_token.tag == .EOF {
-			syntax_error(p, brace_open.position, "{ is not closed")
+			syntax_error(p, brace_open.position, "{{ is not closed")
 
 			return AST_INVALID
 		}
