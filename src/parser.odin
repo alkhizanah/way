@@ -159,6 +159,9 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	case .Brace_Open:
 		return parse_block(p)
 
+	case .Return:
+		return parse_return(p)
+
 	case .Break:
 		return append_node(p, .Break, 0, 0, advance_token(p).position)
 
@@ -316,6 +319,9 @@ parse_binary_expr :: proc(p: ^Parser, lhs: Ast_Index) -> Ast_Index {
 	case .Bit_Xor:
 		return parse_binary_op(p, lhs, .Bit_Xor)
 
+	case .Paren_Open:
+		return parse_call(p, lhs)
+
 	case:
 		syntax_error(p, p.current_token.position, "unhandled binary operator")
 
@@ -328,6 +334,20 @@ parse_binary_op :: proc(p: ^Parser, lhs: Ast_Index, tag: Ast_Node_Tag) -> Ast_In
 	rhs := parse_expr(p, precedence_of_token(token.tag))
 	if rhs == AST_INVALID do return AST_INVALID
 	return append_node(p, tag, lhs, rhs, token.position)
+}
+
+parse_return :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	if p.current_token.tag == .Semicolon {
+		return append_node(p, .Return, 0, AST_INVALID, token.position)
+	} else {
+		value := parse_expr(p, .Lowest)
+
+		if value == AST_INVALID do return AST_INVALID
+
+		return append_node(p, .Return, 0, value, token.position)
+	}
 }
 
 parse_identifier :: proc(p: ^Parser) -> Ast_Index {
@@ -416,6 +436,47 @@ parse_string :: proc(p: ^Parser) -> Ast_Index {
 		Ast_Index(len(p.ast.strings) - string_offset),
 		token.position,
 	)
+}
+
+parse_call :: proc(p: ^Parser, callee: Ast_Index) -> Ast_Index {
+	paren_open, ok := expect_token(p, .Paren_Open)
+
+	if !ok do return AST_INVALID
+
+	arguments: [dynamic]Ast_Index
+
+	for !allow_token(p, .Paren_Close) {
+		argument := parse_expr(p, .Lowest)
+
+		if argument == AST_INVALID do return AST_INVALID
+
+		append(&arguments, argument)
+
+		if !allow_token(p, .Comma) && p.current_token.tag != .Paren_Close {
+			syntax_error(
+				p,
+				p.current_token.position,
+				"expected , or ) got %v",
+				token_tag_string[p.current_token.tag],
+			)
+
+			return AST_INVALID
+		}
+	}
+
+	arguments_index := len(p.ast.extra)
+
+	append(&p.ast.extra, ..arguments[:])
+
+	arguments_node := append_node(
+		p,
+		.Call_Arguments,
+		Ast_Index(arguments_index),
+		Ast_Index(len(arguments)),
+		paren_open.position,
+	)
+
+	return append_node(p, .Call, callee, arguments_node, paren_open.position)
 }
 
 parse_function :: proc(p: ^Parser) -> Ast_Index {

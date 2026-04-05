@@ -16,6 +16,7 @@ Ast_Node_Tag :: enum {
 	Negate,
 	Bool_Not,
 	Bit_Not,
+	// like the above but if rhs is AST_INVALID then the user didn't provide any return value
 	Return,
 	// the following are left as an exercise to the reader (they are binary operations, lhs and rhs are node indices)
 	Bit_Or,
