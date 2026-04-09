@@ -322,6 +322,9 @@ parse_binary_expr :: proc(p: ^Parser, lhs: Ast_Index) -> Ast_Index {
 	case .Paren_Open:
 		return parse_call(p, lhs)
 
+	case .Bracket_Open:
+		return parse_subscript(p, lhs)
+
 	case:
 		syntax_error(p, p.current_token.position, "unhandled binary operator")
 
@@ -334,6 +337,15 @@ parse_binary_op :: proc(p: ^Parser, lhs: Ast_Index, tag: Ast_Node_Tag) -> Ast_In
 	rhs := parse_expr(p, precedence_of_token(token.tag))
 	if rhs == AST_INVALID do return AST_INVALID
 	return append_node(p, tag, lhs, rhs, token.position)
+}
+
+parse_subscript :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
+	token := advance_token(p)
+	index := parse_expr(p, .Lowest)
+	if index == AST_INVALID do return AST_INVALID
+	_, ok := expect_token(p, .Bracket_Close)
+	if !ok do return AST_INVALID
+	return append_node(p, .Subscript, target, index, token.position)
 }
 
 parse_return :: proc(p: ^Parser) -> Ast_Index {
