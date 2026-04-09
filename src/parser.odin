@@ -162,6 +162,9 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	case .While:
 		return parse_while_loop(p)
 
+	case .If:
+		return parse_conditional(p)
+
 	case .Return:
 		return parse_return(p)
 
@@ -228,6 +231,49 @@ parse_while_loop :: proc(p: ^Parser) -> Ast_Index {
 	if block == AST_INVALID do return AST_INVALID
 
 	return append_node(p, .While, condition, block, token.position)
+}
+
+parse_conditional :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	condition := parse_expr(p, .Lowest)
+
+	if condition == AST_INVALID do return AST_INVALID
+
+	true_case := parse_block(p)
+
+	if true_case == AST_INVALID do return AST_INVALID
+
+	false_case := AST_INVALID
+
+	if (p.current_token.tag == .Else) {
+		advance_token(p)
+
+		#partial switch (p.current_token.tag) {
+		case .If:
+			false_case = parse_conditional(p)
+
+			if false_case == AST_INVALID do return AST_INVALID
+
+		case .Brace_Open:
+			false_case = parse_block(p)
+
+			if false_case == AST_INVALID do return AST_INVALID
+
+		case:
+			syntax_error(p, p.current_token.position, "expected {{ or if, got %v", token_tag_string[p.current_token.tag])
+
+			return AST_INVALID
+		}
+	}
+
+	rhs := Ast_Index(len(p.ast.extra))
+
+	append(&p.ast.extra, true_case)
+
+	append(&p.ast.extra, false_case)
+
+	return append_node(p, .If, condition, rhs, token.position)
 }
 
 parse_return :: proc(p: ^Parser) -> Ast_Index {

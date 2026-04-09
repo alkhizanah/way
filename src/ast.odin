@@ -53,7 +53,9 @@ Ast_Node_Tag :: enum {
 	Call,
 	// lhs is the condition and rhs is an index to Block
 	While,
-	// lhs is the condition and rhs is an index to Block
+	// lhs is the condition and rhs is an index to 2 elements in extra array where
+	// first element is the true case block and the second is the false case block,
+	// if the second element is AST_INVALID then the false case block is empty
 	If,
 	// lhs is an index into the sequence (start statement, conditon, end statement) in extra and rhs is an index to Block
 	For,
