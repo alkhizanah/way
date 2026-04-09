@@ -159,6 +159,9 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	case .Brace_Open:
 		return parse_block(p)
 
+	case .While:
+		return parse_while_loop(p)
+
 	case .Return:
 		return parse_return(p)
 
@@ -172,6 +175,75 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 		return parse_expr(p, .Lowest)
 	}
 }
+
+parse_block :: proc(p: ^Parser) -> Ast_Index {
+	brace_open, ok := expect_token(p, .Brace_Open)
+
+	if !ok do return AST_INVALID
+
+	stmts := make([dynamic]Ast_Index)
+
+	for !allow_token(p, .Brace_Close) {
+		stmt := parse_stmt(p)
+
+		if stmt == AST_INVALID do return AST_INVALID
+
+		if !expect_semicolon(p) do return AST_INVALID
+
+		if p.current_token.tag == .EOF {
+			syntax_error(p, brace_open.position, "{{ is not closed")
+
+			return AST_INVALID
+		}
+
+		append(&stmts, stmt)
+	}
+
+	stmts_index := len(p.ast.extra)
+
+	append(&p.ast.extra, ..stmts[:])
+
+	stmts_count := len(stmts)
+
+	delete(stmts)
+
+	return append_node(
+		p,
+		.Block,
+		Ast_Index(stmts_index),
+		Ast_Index(stmts_count),
+		brace_open.position,
+	)
+}
+
+parse_while_loop :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	condition := parse_expr(p, .Lowest)
+
+	if condition == AST_INVALID do return AST_INVALID
+
+	block := parse_block(p)
+
+	if block == AST_INVALID do return AST_INVALID
+
+	return append_node(p, .While, condition, block, token.position)
+}
+
+parse_return :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	if p.current_token.tag == .Semicolon {
+		return append_node(p, .Return, 0, AST_INVALID, token.position)
+	} else {
+		value := parse_expr(p, .Lowest)
+
+		if value == AST_INVALID do return AST_INVALID
+
+		return append_node(p, .Return, 0, value, token.position)
+	}
+}
+
 
 Precedence :: enum {
 	Lowest,
@@ -229,6 +301,12 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	#partial switch (p.current_token.tag) {
 	case .Identifier:
 		return parse_identifier(p)
+
+	case .True:
+		return append_node(p, .True, 0, 0, advance_token(p).position)
+
+	case .False:
+		return append_node(p, .False, 0, 0, advance_token(p).position)
 
 	case .Null:
 		return append_node(p, .Null, 0, 0, advance_token(p).position)
@@ -356,20 +434,6 @@ parse_assign :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 	value := parse_expr(p, .Lowest)
 	if value == AST_INVALID do return AST_INVALID
 	return append_node(p, .Assign, target, value, token.position)
-}
-
-parse_return :: proc(p: ^Parser) -> Ast_Index {
-	token := advance_token(p)
-
-	if p.current_token.tag == .Semicolon {
-		return append_node(p, .Return, 0, AST_INVALID, token.position)
-	} else {
-		value := parse_expr(p, .Lowest)
-
-		if value == AST_INVALID do return AST_INVALID
-
-		return append_node(p, .Return, 0, value, token.position)
-	}
 }
 
 parse_identifier :: proc(p: ^Parser) -> Ast_Index {
@@ -625,44 +689,4 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 	}
 
 	return append_node(p, .Function_Type, parameters_node, return_type, paren_open.position)
-}
-
-parse_block :: proc(p: ^Parser) -> Ast_Index {
-	brace_open, ok := expect_token(p, .Brace_Open)
-
-	if !ok do return AST_INVALID
-
-	stmts := make([dynamic]Ast_Index)
-
-	for !allow_token(p, .Brace_Close) {
-		stmt := parse_stmt(p)
-
-		if stmt == AST_INVALID do return AST_INVALID
-
-		if !expect_semicolon(p) do return AST_INVALID
-
-		if p.current_token.tag == .EOF {
-			syntax_error(p, brace_open.position, "{{ is not closed")
-
-			return AST_INVALID
-		}
-
-		append(&stmts, stmt)
-	}
-
-	stmts_index := len(p.ast.extra)
-
-	append(&p.ast.extra, ..stmts[:])
-
-	stmts_count := len(stmts)
-
-	delete(stmts)
-
-	return append_node(
-		p,
-		.Block,
-		Ast_Index(stmts_index),
-		Ast_Index(stmts_count),
-		brace_open.position,
-	)
 }

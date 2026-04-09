@@ -64,6 +64,8 @@ Ast_Node_Tag :: enum {
 	// no payload needed for those
 	Break,
 	Continue,
+	True,
+	False,
 	Null,
 	Void_Type,
 	Float16_Type,
