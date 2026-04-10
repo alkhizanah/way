@@ -38,7 +38,7 @@ advance_token :: proc(p: ^Parser) -> Token {
 
 @(require_results)
 allow_token :: proc(p: ^Parser, tag: Token_Tag) -> bool {
-	if p.current_token.tag == tag {
+	if peek_token(p, tag) {
 		advance_token(p)
 
 		return true
@@ -116,38 +116,27 @@ parse_global :: proc(p: ^Parser) -> bool {
 
 	target: ^[dynamic]Ast_Binding
 
-	if (p.current_token.tag != .Colon && p.current_token.tag != .Assign) {
+	if !peek_token(p, .Colon) && !peek_token(p, .Assign) {
 		type = parse_expr(p, .Lowest)
 
-		if type == AST_INVALID {
-			return false
-		}
+		if type == AST_INVALID do return false
 	}
 
-	if (p.current_token.tag == .Colon) {
-		advance_token(p)
-
+	if allow_token(p, .Colon) {
 		value = parse_expr(p, .Lowest)
 
-		if value == AST_INVALID {
-			return false
-		}
+		if value == AST_INVALID do return false
 
 		target = &p.ast.global_constants
-	} else if (p.current_token.tag == .Assign) {
-		advance_token(p)
-
+	} else if allow_token(p, .Assign) {
 		value = parse_expr(p, .Lowest)
 
-		if value == AST_INVALID {
-			return false
-		}
+		if value == AST_INVALID do return false
 
 		target = &p.ast.global_variables
 	}
 
 	expect_semicolon(p) or_return
-
 
 	append(target, Ast_Binding{name = name, type = type, value = value})
 
@@ -156,6 +145,21 @@ parse_global :: proc(p: ^Parser) -> bool {
 
 parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	#partial switch p.current_token.tag {
+	case .Identifier:
+		previous_token := p.previous_token
+		identifier := advance_token(p)
+
+		is_colon := peek_token(p, .Colon)
+
+		p.previous_token = previous_token
+		p.current_token = identifier
+
+		if is_colon {
+			return parse_binding(p)
+		} else {
+			return parse_expr(p, .Lowest)
+		}
+
 	case .Brace_Open:
 		return parse_block(p)
 
@@ -182,6 +186,55 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	}
 }
 
+parse_binding :: proc(p: ^Parser) -> Ast_Index {
+	name := parse_identifier(p)
+
+	// This must be of tag .Colon
+	position := advance_token(p).position
+
+	type := AST_INVALID
+	value := AST_INVALID
+
+	tag: Ast_Node_Tag
+
+	if !peek_token(p, .Colon) && !peek_token(p, .Assign) {
+		type = parse_expr(p, .Lowest)
+
+		if type == AST_INVALID do return AST_INVALID
+	}
+
+	if allow_token(p, .Colon) {
+		tag = .Constant
+
+		value = parse_expr(p, .Lowest)
+
+		if value == AST_INVALID do return AST_INVALID
+	} else if allow_token(p, .Assign) {
+		tag = .Variable
+
+		value = parse_expr(p, .Lowest)
+
+		if value == AST_INVALID do return AST_INVALID
+	} else if peek_token(p, .Semicolon) {
+		tag = .Variable
+	} else {
+		syntax_error(
+			p,
+			p.current_token.position,
+			"expected a value, or ;, got %s",
+			token_tag_string[p.current_token.tag],
+		)
+
+		return AST_INVALID
+	}
+
+	lhs := Ast_Index(len(p.ast.extra))
+
+	append(&p.ast.extra, name, type)
+
+	return append_node(p, tag, lhs, value, position)
+}
+
 parse_block :: proc(p: ^Parser) -> Ast_Index {
 	brace_open, ok := expect_token(p, .Brace_Open)
 
@@ -196,7 +249,7 @@ parse_block :: proc(p: ^Parser) -> Ast_Index {
 
 		if !expect_semicolon(p) do return AST_INVALID
 
-		if p.current_token.tag == .EOF {
+		if peek_token(p, .EOF) {
 			syntax_error(p, brace_open.position, "{{ is not closed")
 
 			return AST_INVALID
@@ -265,7 +318,7 @@ parse_for_loop :: proc(p: ^Parser) -> Ast_Index {
 
 	ending := AST_INVALID
 
-	if p.current_token.tag != .Brace_Open {
+	if !peek_token(p, .Brace_Open) {
 		ending = parse_stmt(p)
 
 		if ending == AST_INVALID do return AST_INVALID
@@ -295,9 +348,7 @@ parse_conditional :: proc(p: ^Parser) -> Ast_Index {
 
 	false_case := AST_INVALID
 
-	if (p.current_token.tag == .Else) {
-		advance_token(p)
-
+	if allow_token(p, .Else) {
 		#partial switch (p.current_token.tag) {
 		case .If:
 			false_case = parse_conditional(p)
@@ -331,7 +382,7 @@ parse_conditional :: proc(p: ^Parser) -> Ast_Index {
 parse_return :: proc(p: ^Parser) -> Ast_Index {
 	token := advance_token(p)
 
-	if p.current_token.tag == .Semicolon {
+	if peek_token(p, .Semicolon) {
 		return append_node(p, .Return, 0, AST_INVALID, token.position)
 	} else {
 		value := parse_expr(p, .Lowest)
@@ -636,7 +687,7 @@ parse_call :: proc(p: ^Parser, callee: Ast_Index) -> Ast_Index {
 
 		append(&arguments, argument)
 
-		if !allow_token(p, .Comma) && p.current_token.tag != .Paren_Close {
+		if !allow_token(p, .Comma) && !peek_token(p, .Paren_Close) {
 			syntax_error(
 				p,
 				p.current_token.position,
@@ -670,7 +721,7 @@ parse_function :: proc(p: ^Parser) -> Ast_Index {
 
 	if type == AST_INVALID do return AST_INVALID
 
-	if p.current_token.tag == .Brace_Open {
+	if peek_token(p, .Brace_Open) {
 		block := parse_block(p)
 
 		if block == AST_INVALID do return AST_INVALID
@@ -694,7 +745,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 	for !allow_token(p, .Paren_Close) {
 		if named {
-			if p.current_token.tag != .Identifier {
+			if !peek_token(p, .Identifier) {
 				syntax_error(
 					p,
 					p.current_token.position,
@@ -721,9 +772,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 			if expr == AST_INVALID do return AST_INVALID
 
-			if p.current_token.tag == .Colon {
-				advance_token(p)
-
+			if allow_token(p, .Colon) {
 				named = true
 
 				if p.ast.nodes[expr].tag != .Identifier {
@@ -748,7 +797,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 			}
 		}
 
-		if !allow_token(p, .Comma) && p.current_token.tag != .Paren_Close {
+		if !allow_token(p, .Comma) && !peek_token(p, .Paren_Close) {
 			syntax_error(
 				p,
 				p.current_token.position,
@@ -774,7 +823,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 	return_type: Ast_Index
 
-	if p.current_token.tag == .Brace_Open {
+	if peek_token(p, .Brace_Open) {
 		return_type = append_node(p, .Void_Type, 0, 0, p.current_token.position)
 	} else {
 		arrow_token, ok := expect_token(p, .Right_Arrow)
