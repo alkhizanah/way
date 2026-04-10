@@ -57,7 +57,8 @@ Ast_Node_Tag :: enum {
 	// first element is the true case block and the second is the false case block,
 	// if the second element is AST_INVALID then the false case block is empty
 	If,
-	// lhs is an index into the sequence (start statement, conditon, end statement) in extra and rhs is an index to Block
+	// lhs is an index into the sequence (start statement, conditon, end statement) in extra, all of them can be AST_INVALID,
+	// and rhs is an index to Block
 	For,
 	// lhs is an index into pair (name index, type index) in extra and rhs is an index to the value
 	Variable,

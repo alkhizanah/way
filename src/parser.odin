@@ -162,6 +162,9 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	case .While:
 		return parse_while_loop(p)
 
+	case .For:
+		return parse_for_loop(p)
+
 	case .If:
 		return parse_conditional(p)
 
@@ -233,6 +236,52 @@ parse_while_loop :: proc(p: ^Parser) -> Ast_Index {
 	return append_node(p, .While, condition, block, token.position)
 }
 
+parse_for_loop :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	inital := AST_INVALID
+
+	if !allow_token(p, .Semicolon) {
+		inital = parse_stmt(p)
+
+		if inital == AST_INVALID do return AST_INVALID
+
+		_, ok := expect_token(p, .Semicolon)
+
+		if !ok do return AST_INVALID
+	}
+
+	condition := AST_INVALID
+
+	if !allow_token(p, .Semicolon) {
+		condition = parse_expr(p, .Lowest)
+
+		if condition == AST_INVALID do return AST_INVALID
+
+		_, ok := expect_token(p, .Semicolon)
+
+		if !ok do return AST_INVALID
+	}
+
+	ending := AST_INVALID
+
+	if p.current_token.tag != .Brace_Open {
+		ending = parse_stmt(p)
+
+		if ending == AST_INVALID do return AST_INVALID
+	}
+
+	block := parse_block(p)
+
+	if block == AST_INVALID do return AST_INVALID
+
+	lhs := Ast_Index(len(p.ast.extra))
+
+	append(&p.ast.extra, inital, condition, ending)
+
+	return append_node(p, .For, lhs, block, token.position)
+}
+
 parse_conditional :: proc(p: ^Parser) -> Ast_Index {
 	token := advance_token(p)
 
@@ -261,7 +310,12 @@ parse_conditional :: proc(p: ^Parser) -> Ast_Index {
 			if false_case == AST_INVALID do return AST_INVALID
 
 		case:
-			syntax_error(p, p.current_token.position, "expected {{ or if, got %v", token_tag_string[p.current_token.tag])
+			syntax_error(
+				p,
+				p.current_token.position,
+				"expected {{ or if, got %v",
+				token_tag_string[p.current_token.tag],
+			)
 
 			return AST_INVALID
 		}
@@ -269,9 +323,7 @@ parse_conditional :: proc(p: ^Parser) -> Ast_Index {
 
 	rhs := Ast_Index(len(p.ast.extra))
 
-	append(&p.ast.extra, true_case)
-
-	append(&p.ast.extra, false_case)
+	append(&p.ast.extra, true_case, false_case)
 
 	return append_node(p, .If, condition, rhs, token.position)
 }
