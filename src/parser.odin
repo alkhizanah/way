@@ -55,11 +55,11 @@ peek_token :: proc(p: ^Parser, tag: Token_Tag) -> bool {
 append_node :: proc(
 	p: ^Parser,
 	tag: Ast_Node_Tag,
-	lhs: Ast_Index,
-	rhs: Ast_Index,
+	a: Ast_Index,
+	b: Ast_Index,
 	source: Position,
 ) -> Ast_Index {
-	append(&p.ast.nodes, Ast_Node{lhs, rhs, tag})
+	append(&p.ast.nodes, Ast_Node{a, b, tag})
 	append(&p.ast.sources, source)
 	return Ast_Index(len(p.ast.nodes) - 1)
 }
@@ -228,11 +228,11 @@ parse_binding :: proc(p: ^Parser) -> Ast_Index {
 		return AST_INVALID
 	}
 
-	lhs := Ast_Index(len(p.ast.extra))
+	a := Ast_Index(len(p.ast.extra))
 
 	append(&p.ast.extra, name, type)
 
-	return append_node(p, tag, lhs, value, position)
+	return append_node(p, tag, a, value, position)
 }
 
 parse_block :: proc(p: ^Parser) -> Ast_Index {
@@ -328,11 +328,11 @@ parse_for_loop :: proc(p: ^Parser) -> Ast_Index {
 
 	if block == AST_INVALID do return AST_INVALID
 
-	lhs := Ast_Index(len(p.ast.extra))
+	a := Ast_Index(len(p.ast.extra))
 
 	append(&p.ast.extra, inital, condition, ending)
 
-	return append_node(p, .For, lhs, block, token.position)
+	return append_node(p, .For, a, block, token.position)
 }
 
 parse_conditional :: proc(p: ^Parser) -> Ast_Index {
@@ -372,11 +372,11 @@ parse_conditional :: proc(p: ^Parser) -> Ast_Index {
 		}
 	}
 
-	rhs := Ast_Index(len(p.ast.extra))
+	b := Ast_Index(len(p.ast.extra))
 
 	append(&p.ast.extra, true_case, false_case)
 
-	return append_node(p, .If, condition, rhs, token.position)
+	return append_node(p, .If, condition, b, token.position)
 }
 
 parse_return :: proc(p: ^Parser) -> Ast_Index {
@@ -435,15 +435,15 @@ precedence_of_token :: proc(tag: Token_Tag) -> Precedence {
 }
 
 parse_expr :: proc(p: ^Parser, precedence: Precedence) -> Ast_Index {
-	lhs := parse_unary_expr(p)
+	a := parse_unary_expr(p)
 
 	for precedence_of_token(p.current_token.tag) > precedence {
-		if lhs == AST_INVALID do return AST_INVALID
+		if a == AST_INVALID do return AST_INVALID
 
-		lhs = parse_binary_expr(p, lhs)
+		a = parse_binary_expr(p, a)
 	}
 
-	return lhs
+	return a
 }
 
 parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
@@ -496,9 +496,9 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 
 parse_unary_op :: proc(p: ^Parser, tag: Ast_Node_Tag) -> Ast_Index {
 	token := advance_token(p)
-	rhs := parse_expr(p, .Prefix)
-	if rhs == AST_INVALID do return AST_INVALID
-	return append_node(p, tag, 0, rhs, token.position)
+	b := parse_expr(p, .Prefix)
+	if b == AST_INVALID do return AST_INVALID
+	return append_node(p, tag, 0, b, token.position)
 }
 
 parse_grouped_expr :: proc(p: ^Parser) -> Ast_Index {
@@ -509,51 +509,51 @@ parse_grouped_expr :: proc(p: ^Parser) -> Ast_Index {
 	return expr
 }
 
-parse_binary_expr :: proc(p: ^Parser, lhs: Ast_Index) -> Ast_Index {
+parse_binary_expr :: proc(p: ^Parser, a: Ast_Index) -> Ast_Index {
 	#partial switch (p.current_token.tag) {
 	case .Plus:
-		return parse_binary_op(p, lhs, .Add)
+		return parse_binary_op(p, a, .Add)
 	case .Minus:
-		return parse_binary_op(p, lhs, .Sub)
+		return parse_binary_op(p, a, .Sub)
 	case .Star:
-		return parse_binary_op(p, lhs, .Mul)
+		return parse_binary_op(p, a, .Mul)
 	case .Forward_Slash:
-		return parse_binary_op(p, lhs, .Div)
+		return parse_binary_op(p, a, .Div)
 	case .Percent:
-		return parse_binary_op(p, lhs, .Mod)
+		return parse_binary_op(p, a, .Mod)
 
 	case .Equal:
-		return parse_binary_op(p, lhs, .Eql)
+		return parse_binary_op(p, a, .Eql)
 	case .Not_Equal:
-		return parse_binary_op(p, lhs, .Neq)
+		return parse_binary_op(p, a, .Neq)
 	case .Less_Than:
-		return parse_binary_op(p, lhs, .Lt)
+		return parse_binary_op(p, a, .Lt)
 	case .Greater_Than:
-		return parse_binary_op(p, lhs, .Gt)
+		return parse_binary_op(p, a, .Gt)
 	case .Less_Than_Equal:
-		return parse_binary_op(p, lhs, .Lte)
+		return parse_binary_op(p, a, .Lte)
 	case .Greater_Than_Equal:
-		return parse_binary_op(p, lhs, .Gte)
+		return parse_binary_op(p, a, .Gte)
 
 	case .Bit_Left_Shift:
-		return parse_binary_op(p, lhs, .Bit_Shl)
+		return parse_binary_op(p, a, .Bit_Shl)
 	case .Bit_Right_Shift:
-		return parse_binary_op(p, lhs, .Bit_Shr)
+		return parse_binary_op(p, a, .Bit_Shr)
 	case .Bit_And:
-		return parse_binary_op(p, lhs, .Bit_And)
+		return parse_binary_op(p, a, .Bit_And)
 	case .Bit_Or:
-		return parse_binary_op(p, lhs, .Bit_Or)
+		return parse_binary_op(p, a, .Bit_Or)
 	case .Bit_Xor:
-		return parse_binary_op(p, lhs, .Bit_Xor)
+		return parse_binary_op(p, a, .Bit_Xor)
 
 	case .Paren_Open:
-		return parse_call(p, lhs)
+		return parse_call(p, a)
 
 	case .Bracket_Open:
-		return parse_subscript(p, lhs)
+		return parse_subscript(p, a)
 
 	case .Assign:
-		return parse_assign(p, lhs)
+		return parse_assign(p, a)
 
 	case:
 		syntax_error(p, p.current_token.position, "unhandled binary operator")
@@ -562,11 +562,11 @@ parse_binary_expr :: proc(p: ^Parser, lhs: Ast_Index) -> Ast_Index {
 	}
 }
 
-parse_binary_op :: proc(p: ^Parser, lhs: Ast_Index, tag: Ast_Node_Tag) -> Ast_Index {
+parse_binary_op :: proc(p: ^Parser, a: Ast_Index, tag: Ast_Node_Tag) -> Ast_Index {
 	token := advance_token(p)
-	rhs := parse_expr(p, precedence_of_token(token.tag))
-	if rhs == AST_INVALID do return AST_INVALID
-	return append_node(p, tag, lhs, rhs, token.position)
+	b := parse_expr(p, precedence_of_token(token.tag))
+	if b == AST_INVALID do return AST_INVALID
+	return append_node(p, tag, a, b, token.position)
 }
 
 parse_subscript :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
