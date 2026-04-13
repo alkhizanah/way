@@ -110,10 +110,10 @@ parse_global :: proc(p: ^Parser) -> bool {
 
 	value := AST_INVALID
 
-	target: ^[dynamic]Ast_Binding
+	target: ^[dynamic]Ast_Binding = &p.ast.global_variables
 
 	if !peek_token(p, .Colon) && !peek_token(p, .Assign) {
-		type = parse_expr(p, .Lowest)
+		type = parse_expr(p, .Lowest, stop_on_assign = true)
 
 		if type == AST_INVALID do return false
 	}
@@ -128,8 +128,6 @@ parse_global :: proc(p: ^Parser) -> bool {
 		value = parse_expr(p, .Lowest)
 
 		if value == AST_INVALID do return false
-
-		target = &p.ast.global_variables
 	}
 
 	expect_semicolon(p) or_return
@@ -428,10 +426,12 @@ precedence_of_token :: proc(tag: Token_Tag) -> Precedence {
 	}
 }
 
-parse_expr :: proc(p: ^Parser, precedence: Precedence) -> Ast_Index {
+parse_expr :: proc(p: ^Parser, precedence: Precedence, stop_on_assign := false) -> Ast_Index {
 	a := parse_unary_expr(p)
 
 	for precedence_of_token(p.current_token.tag) > precedence {
+		if stop_on_assign && p.current_token.tag == .Assign do break
+
 		if a == AST_INVALID do return AST_INVALID
 
 		a = parse_binary_expr(p, a)
@@ -592,7 +592,7 @@ parse_identifier :: proc(p: ^Parser) -> Ast_Index {
 					tag: Ast_Node_Tag =
 						token.value[0] == 'u' ? .Unsigned_Int_Type : .Signed_Int_Type
 
-					return append_node(p, tag, 0, Ast_Index(bit_width), token.position)
+					return append_node(p, tag, Ast_Index(bit_width), 0, token.position)
 				}
 
 			case 'f':

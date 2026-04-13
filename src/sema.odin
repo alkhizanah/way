@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:math"
 
 Sema_Global_Binding_State :: enum {
 	Hoisted,
@@ -237,6 +238,12 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Int:
 		return analyze_int(s, result_type, node, position)
 
+	case .Unsigned_Int_Type:
+		return analyze_int_type(s, result_type, node, position, signed = false)
+
+	case .Signed_Int_Type:
+		return analyze_int_type(s, result_type, node, position, signed = true)
+
 	case:
 		sema_error(position, "unhandled expression")
 
@@ -317,10 +324,11 @@ analyze_int :: proc(
 	node: Ast_Node,
 	position: Position,
 ) -> Ir_Index {
-	lower_bits := Ir_Index(node.a)
-	upper_bits := Ir_Index(node.b)
+	upper_bits := Ir_Index(node.a)
+	lower_bits := Ir_Index(node.b)
 
 	v := u64(upper_bits) << 32 | u64(lower_bits)
+	vf := f64(v)
 
 	if result_type_id == IR_INVALID {
 		return append_value(s, intern_type(s, .Untyped_Int, 0, 0), .Int, upper_bits, lower_bits)
@@ -329,7 +337,6 @@ analyze_int :: proc(
 	result_type := s.ir.types[result_type_id]
 
 	if is_float_type(result_type) {
-		vf := f64(v)
 		bvf := transmute(u64)vf
 
 		lower_bits = Ir_Index(bvf)
@@ -342,5 +349,48 @@ analyze_int :: proc(
 		return IR_INVALID
 	}
 
+	bits_available := f64(result_type.a)
+
+	bits_needed := math.ceil(math.log2(vf + 1))
+
+	if result_type.tag == .Signed_Int {
+		bits_needed += 1 // (to keep the sign)
+	}
+
+	if bits_available < bits_needed {
+		sema_error(
+			position,
+			"integer literal needs %v or more bits to keep the same information but the type only has %v bits",
+			bits_needed,
+			bits_available,
+		)
+	}
+
 	return append_value(s, result_type_id, .Int, upper_bits, lower_bits)
+}
+
+analyze_int_type :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+	signed: bool,
+) -> Ir_Index {
+	result_type_id := result_type_id
+
+	if result_type_id == IR_INVALID {
+		result_type_id = intern_type(s, .Type, 0, 0)
+	} else {
+		result_type := s.ir.types[result_type_id]
+
+		if result_type.tag != .Type {
+			sema_error(position, "did not expect a type in here")
+
+			return IR_INVALID
+		}
+	}
+
+	int_type := intern_type(s, signed ? .Signed_Int : .Unsigned_Int, Ir_Index(node.a), 0)
+
+	return append_value(s, result_type_id, .Type, int_type, 0)
 }

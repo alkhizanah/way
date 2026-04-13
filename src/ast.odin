@@ -13,7 +13,7 @@ Ast_Node_Tag :: enum {
 	Int,
 	// a is the upper bits and b is the lower bits
 	Float,
-	// b is the bit width
+	// a is the bit width
 	Unsigned_Int_Type,
 	Signed_Int_Type,
 	// the following are left as an exercise to the reader (they are unary operations, a is unused)
