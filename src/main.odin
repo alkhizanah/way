@@ -24,10 +24,17 @@ main :: proc() {
 
 		parser_init(&parser, os.args[2])
 
-		if (!parse(&parser)) {
+		if !parse(&parser) {
 			os.exit(1)
 		}
 
+		sema: Sema
+
+		sema.ast = &parser.ast
+
+		if !analyze(&sema) {
+			os.exit(1)
+		}
 	case:
 		fmt.eprintfln("error: unhandled command: %v", command)
 		os.exit(1)

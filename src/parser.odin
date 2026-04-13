@@ -8,7 +8,6 @@ import "core:strings"
 Parser :: struct {
 	lexer:          Lexer,
 	ast:            Ast,
-	file_path:      string,
 	current_token:  Token,
 	previous_token: Token,
 }
@@ -21,9 +20,7 @@ parser_init :: proc(p: ^Parser, file_path: string) -> bool {
 		return false
 	}
 
-	p.file_path = file_path
-
-	lexer_init(&p.lexer, string(file_content))
+	lexer_init(&p.lexer, file_path, string(file_content))
 
 	advance_token(p)
 
@@ -57,15 +54,15 @@ append_node :: proc(
 	tag: Ast_Node_Tag,
 	a: Ast_Index,
 	b: Ast_Index,
-	source: Position,
+	position: Position,
 ) -> Ast_Index {
 	append(&p.ast.nodes, Ast_Node{a, b, tag})
-	append(&p.ast.sources, source)
+	append(&p.ast.positions, position)
 	return Ast_Index(len(p.ast.nodes) - 1)
 }
 
-syntax_error :: proc(p: ^Parser, position: Position, format: string, args: ..any) {
-	fmt.eprintf("%v:%v:%v: syntax error: ", p.file_path, position.line, position.column)
+syntax_error :: proc(position: Position, format: string, args: ..any) {
+	fmt.eprintf("%v:%v:%v: syntax error: ", position.file_path, position.line, position.column)
 	fmt.eprintfln(format, args = args)
 }
 
@@ -79,7 +76,6 @@ expect_token :: proc(p: ^Parser, tag: Token_Tag) -> (Token, bool) {
 	}
 
 	syntax_error(
-		p,
 		prev.position,
 		"expected %s, got %s",
 		token_tag_string[tag],
@@ -219,7 +215,6 @@ parse_binding :: proc(p: ^Parser) -> Ast_Index {
 		tag = .Variable
 	} else {
 		syntax_error(
-			p,
 			p.current_token.position,
 			"expected a value, or ;, got %s",
 			token_tag_string[p.current_token.tag],
@@ -250,7 +245,7 @@ parse_block :: proc(p: ^Parser) -> Ast_Index {
 		if !expect_semicolon(p) do return AST_INVALID
 
 		if peek_token(p, .EOF) {
-			syntax_error(p, brace_open.position, "{{ is not closed")
+			syntax_error(brace_open.position, "{{ is not closed")
 
 			return AST_INVALID
 		}
@@ -362,7 +357,6 @@ parse_conditional :: proc(p: ^Parser) -> Ast_Index {
 
 		case:
 			syntax_error(
-				p,
 				p.current_token.position,
 				"expected {{ or if, got %v",
 				token_tag_string[p.current_token.tag],
@@ -488,7 +482,7 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 		return parse_function(p)
 
 	case:
-		syntax_error(p, p.current_token.position, "unknown expression")
+		syntax_error(p.current_token.position, "unknown expression")
 
 		return AST_INVALID
 	}
@@ -556,7 +550,7 @@ parse_binary_expr :: proc(p: ^Parser, a: Ast_Index) -> Ast_Index {
 		return parse_assign(p, a)
 
 	case:
-		syntax_error(p, p.current_token.position, "unhandled binary operator")
+		syntax_error(p.current_token.position, "unhandled binary operator")
 
 		return AST_INVALID
 	}
@@ -633,7 +627,7 @@ parse_int :: proc(p: ^Parser) -> Ast_Index {
 	v, ok := strconv.parse_u64(token.value)
 
 	if !ok {
-		syntax_error(p, token.position, "invalid integer")
+		syntax_error(token.position, "invalid integer")
 
 		return AST_INVALID
 	}
@@ -647,7 +641,7 @@ parse_float :: proc(p: ^Parser) -> Ast_Index {
 	vf, ok := strconv.parse_f64(token.value)
 
 	if !ok {
-		syntax_error(p, token.position, "invalid floating point number")
+		syntax_error(token.position, "invalid floating point number")
 
 		return AST_INVALID
 	}
@@ -689,7 +683,6 @@ parse_call :: proc(p: ^Parser, callee: Ast_Index) -> Ast_Index {
 
 		if !allow_token(p, .Comma) && !peek_token(p, .Paren_Close) {
 			syntax_error(
-				p,
 				p.current_token.position,
 				"expected , or ) got %v",
 				token_tag_string[p.current_token.tag],
@@ -747,7 +740,6 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 		if named {
 			if !peek_token(p, .Identifier) {
 				syntax_error(
-					p,
 					p.current_token.position,
 					"expected an identifier for a parameter name but got %v",
 					token_tag_string[p.current_token.tag],
@@ -777,8 +769,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 				if p.ast.nodes[expr].tag != .Identifier {
 					syntax_error(
-						p,
-						p.ast.sources[expr],
+						p.ast.positions[expr],
 						"expected an identifier for a parameter name",
 					)
 
@@ -799,7 +790,6 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 		if !allow_token(p, .Comma) && !peek_token(p, .Paren_Close) {
 			syntax_error(
-				p,
 				p.current_token.position,
 				"expected , or ) got %v",
 				token_tag_string[p.current_token.tag],

@@ -4,9 +4,10 @@ import "core:unicode/utf8"
 
 
 Position :: struct {
-	line:   int,
-	column: int,
-	offset: int,
+	file_path: string,
+	line:      int,
+	column:    int,
+	offset:    int,
 }
 
 Lexer :: struct {
@@ -129,10 +130,12 @@ Token :: struct {
 	position: Position,
 }
 
-lexer_init :: proc(l: ^Lexer, buffer: string) {
+lexer_init :: proc(l: ^Lexer, file_path: string, buffer: string) {
 	l^ = Lexer {
 		buffer = buffer,
 	}
+
+	l.position.file_path = file_path
 
 	l.position.line = 1
 

@@ -1,5 +1,9 @@
 package main
 
+Ast_Index :: distinct u32
+
+AST_INVALID :: max(Ast_Index)
+
 Ast_Node_Tag :: enum {
 	// a holds an index into strings and b is the amount of bytes the string contains
 	Identifier,
@@ -76,13 +80,9 @@ Ast_Node_Tag :: enum {
 	Float64_Type,
 }
 
-Ast_Index :: distinct u32
-
-AST_INVALID :: max(Ast_Index)
-
 Ast_Node :: struct {
-	a: Ast_Index,
-	b: Ast_Index,
+	a:   Ast_Index,
+	b:   Ast_Index,
 	tag: Ast_Node_Tag,
 }
 
@@ -96,7 +96,7 @@ Ast :: struct {
 	global_variables: [dynamic]Ast_Binding,
 	global_constants: [dynamic]Ast_Binding,
 	nodes:            [dynamic]Ast_Node,
-	sources:          [dynamic]Position,
+	positions:        [dynamic]Position,
 	extra:            [dynamic]Ast_Index,
 	strings:          [dynamic]u8,
 }
