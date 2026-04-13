@@ -264,6 +264,15 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Signed_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = true)
 
+	case .Float16_Type:
+		return analyze_float_type(s, result_type, 16, position)
+
+	case .Float32_Type:
+		return analyze_float_type(s, result_type, 32, position)
+
+	case .Float64_Type:
+		return analyze_float_type(s, result_type, 64, position)
+
 	case:
 		sema_error(position, "unhandled expression")
 
@@ -339,14 +348,13 @@ is_int_type :: proc(type: Ir_Type) -> bool {
 	}
 }
 
-bits_needed_for_float :: proc(n: f64) -> uint {
-	return uint(math.ceil(math.log2(n + 1)))
+int_bits_needed :: proc(#any_int n: int, signed: bool) -> uint {
+	return uint(math.ceil(math.log2(f64(n + (signed && (n > 0) ? 1 : 0)) + 1)))
 }
 
-bits_needed_for_int :: proc(#any_int n: int, signed: bool) -> uint {
-	return bits_needed_for_float(f64(n)) + (signed && (n > 0) ? 1 : 0)
+float_can_fit :: proc($T: typeid, v: $A) -> bool {
+	return f64(T(v)) == f64(v)
 }
-
 
 analyze_int :: proc(
 	s: ^Sema,
@@ -372,6 +380,25 @@ analyze_int :: proc(
 		lower_bits = Ir_Index(bvf)
 		upper_bits = Ir_Index(bvf >> 32)
 
+		can_fit: bool
+
+		switch result_type.a {
+		case 16:
+			can_fit = float_can_fit(f16, v)
+		case 32:
+			can_fit = float_can_fit(f32, v)
+		case 64:
+			can_fit = float_can_fit(f64, v)
+		case:
+			unreachable()
+		}
+
+		if !can_fit {
+			sema_error(position, "integer literal '%v' can not fit into an f%v", v, result_type.a)
+
+			return IR_INVALID
+		}
+
 		return append_value(s, result_type_id, .Float, upper_bits, lower_bits)
 	} else if !is_int_type(result_type) {
 		sema_error(position, "did not expect an integer")
@@ -379,15 +406,17 @@ analyze_int :: proc(
 		return IR_INVALID
 	}
 
-	bits_needed := bits_needed_for_int(v, signed = result_type.tag == .Signed_Int)
+	bits_needed := int_bits_needed(v, signed = result_type.tag == .Signed_Int)
 
 	bits_available := uint(result_type.a)
 
 	if bits_available < bits_needed {
 		sema_error(
 			position,
-			"integer literal needs %v or more bits to keep the same information but the type only has %v bits",
+			"integer literal '%v' needs %v or more bits which the type '%v%v' does not have",
+			v,
 			bits_needed,
+			result_type.tag == .Signed_Int ? 's' : 'u',
 			bits_available,
 		)
 	}
@@ -419,4 +448,29 @@ analyze_int_type :: proc(
 	int_type := intern_type(s, signed ? .Signed_Int : .Unsigned_Int, Ir_Index(node.a), 0)
 
 	return append_value(s, result_type_id, .Type, int_type, 0)
+}
+
+analyze_float_type :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	bit_width: u32,
+	position: Position,
+) -> Ir_Index {
+	result_type_id := result_type_id
+
+	if result_type_id == IR_INVALID {
+		result_type_id = intern_type(s, .Type, 0, 0)
+	} else {
+		result_type := s.ir.types[result_type_id]
+
+		if result_type.tag != .Type {
+			sema_error(position, "did not expect a type in here")
+
+			return IR_INVALID
+		}
+	}
+
+	float_type := intern_type(s, .Float, Ir_Index(bit_width), 0)
+
+	return append_value(s, result_type_id, .Type, float_type, 0)
 }
