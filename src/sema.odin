@@ -215,11 +215,31 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 	}
 
 	if !binding.constant {
+		initializer := s.ir.values[binding.value]
+
+		initializer_type := s.ir.types[initializer.type]
+
+		if initializer_type.tag == .Untyped_Int {
+			sema_error(
+				binding.syntax.name.position,
+				"please specify a type for your integer variable, the compiler can't decide on its own",
+			)
+
+			return false
+		} else if initializer_type.tag == .Untyped_Float {
+			sema_error(
+				binding.syntax.name.position,
+				"please specify a type for your float variable, the compiler can't decide on its own",
+			)
+
+			return false
+		}
+
 		index := Ir_Index(len(s.ir.globals))
 
 		append(&s.ir.globals, Ir_Global{name = binding.syntax.name, value = binding.value})
 
-		binding.value = append_value(s, s.ir.values[binding.value].type, .Global, index, 0)
+		binding.value = append_value(s, initializer.type, .Global, index, 0)
 	}
 
 	binding.state = .Analyzed
@@ -313,6 +333,7 @@ is_int_type :: proc(type: Ir_Type) -> bool {
 
 	case .Untyped_Int:
 		return true
+
 	case:
 		return false
 	}
