@@ -19,6 +19,8 @@ Ir_Type_Tag :: enum {
 	Float,
 
 	// no payload is needed
+	Untyped_Int,
+	Untyped_Float,
 	Type,
 	Void,
 	Bool,

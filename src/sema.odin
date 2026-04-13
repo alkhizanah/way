@@ -234,6 +234,9 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Identifier:
 		return analyze_identifier(s, result_type, node, position)
 
+	case .Int:
+		return analyze_int(s, result_type, node, position)
+
 	case:
 		sema_error(position, "unhandled expression")
 
@@ -243,7 +246,7 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 
 analyze_identifier :: proc(
 	s: ^Sema,
-	result_type: Ir_Index,
+	result_type_id: Ir_Index,
 	node: Ast_Node,
 	position: Position,
 ) -> Ir_Index {
@@ -252,7 +255,7 @@ analyze_identifier :: proc(
 	if local, ok := scope_lookup(&s.scope, name); ok {
 		local_type := pointer_value_child_type(s, local.pointer)
 
-		if result_type != IR_INVALID && !check_type_compatibility(position, local_type, result_type) do return IR_INVALID
+		if result_type_id != IR_INVALID && !check_type_compatibility(position, local_type, result_type_id) do return IR_INVALID
 
 		return append_value(s, local_type, .Load, local.pointer, 0)
 	}
@@ -270,7 +273,7 @@ analyze_identifier :: proc(
 
 		binding_type := s.ir.values[binding.value].type
 
-		if result_type != IR_INVALID && !check_type_compatibility(position, binding_type, result_type) do return IR_INVALID
+		if result_type_id != IR_INVALID && !check_type_compatibility(position, binding_type, result_type_id) do return IR_INVALID
 
 		return binding.value
 	}
@@ -278,4 +281,66 @@ analyze_identifier :: proc(
 	sema_error(position, "undeclared name: %s", name)
 
 	return IR_INVALID
+}
+
+is_float_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Float:
+		fallthrough
+
+	case .Untyped_Float:
+		return true
+
+	case:
+		return false
+	}
+}
+
+is_int_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Unsigned_Int:
+		fallthrough
+
+	case .Signed_Int:
+		fallthrough
+
+	case .Untyped_Int:
+		return true
+	case:
+		return false
+	}
+}
+
+analyze_int :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	lower_bits := Ir_Index(node.a)
+	upper_bits := Ir_Index(node.b)
+
+	v := u64(upper_bits) << 32 | u64(lower_bits)
+
+	if result_type_id == IR_INVALID {
+		return append_value(s, intern_type(s, .Untyped_Int, 0, 0), .Int, upper_bits, lower_bits)
+	}
+
+	result_type := s.ir.types[result_type_id]
+
+	if is_float_type(result_type) {
+		vf := f64(v)
+		bvf := transmute(u64)vf
+
+		lower_bits = Ir_Index(bvf)
+		upper_bits = Ir_Index(bvf >> 32)
+
+		return append_value(s, result_type_id, .Float, upper_bits, lower_bits)
+	} else if !is_int_type(result_type) {
+		sema_error(position, "did not expect an integer")
+
+		return IR_INVALID
+	}
+
+	return append_value(s, result_type_id, .Int, upper_bits, lower_bits)
 }
