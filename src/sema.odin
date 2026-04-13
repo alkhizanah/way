@@ -339,6 +339,15 @@ is_int_type :: proc(type: Ir_Type) -> bool {
 	}
 }
 
+bits_needed_for_float :: proc(n: f64) -> uint {
+	return uint(math.ceil(math.log2(n + 1)))
+}
+
+bits_needed_for_int :: proc(#any_int n: int, signed: bool) -> uint {
+	return bits_needed_for_float(f64(n)) + (signed && (n > 0) ? 1 : 0)
+}
+
+
 analyze_int :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
@@ -370,13 +379,9 @@ analyze_int :: proc(
 		return IR_INVALID
 	}
 
-	bits_available := f64(result_type.a)
+	bits_needed := bits_needed_for_int(v, signed = result_type.tag == .Signed_Int)
 
-	bits_needed := math.ceil(math.log2(vf + 1))
-
-	if result_type.tag == .Signed_Int {
-		bits_needed += 1 // (to keep the sign)
-	}
+	bits_available := uint(result_type.a)
 
 	if bits_available < bits_needed {
 		sema_error(
