@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:math"
+import "core:strings"
 
 Sema_Global_Binding_State :: enum {
 	Hoisted,
@@ -51,6 +52,62 @@ Sema :: struct {
 sema_error :: proc(position: Position, format: string, args: ..any) {
 	fmt.eprintf("%v:%v:%v: semantic error: ", position.file_path, position.line, position.column)
 	fmt.eprintfln(format, args = args)
+}
+
+type_to_string :: proc(s: ^Sema, type_id: Ir_Index, builder: ^strings.Builder) {
+	type := s.ir.types[type_id]
+
+	switch type.tag {
+	case .Unsigned_Int:
+		fmt.sbprintf(builder, "u%v", type.a)
+
+	case .Signed_Int:
+		fmt.sbprintf(builder, "s%v", type.a)
+
+	case .Float:
+		fmt.sbprintf(builder, "f%v", type.a)
+
+	case .Untyped_Int:
+		strings.write_string(builder, "<untyped int>")
+
+	case .Untyped_Float:
+		strings.write_string(builder, "<untyped float>")
+
+	case .Bool:
+		strings.write_string(builder, "bool")
+
+	case .Void:
+		strings.write_string(builder, "void")
+
+	case .Type:
+		strings.write_string(builder, "type")
+
+	case .Pointer:
+		strings.write_byte(builder, '*')
+		type_to_string(s, type.a, builder)
+
+	case .Function:
+		strings.write_string(builder, "fn (")
+
+		parameters_count := s.ir.extra[type.a]
+
+		for i in 0 ..< parameters_count {
+			if i > 0 do strings.write_string(builder, ", ")
+
+			type_to_string(s, s.ir.extra[type.a + 1 + i], builder)
+		}
+
+		strings.write_string(builder, ") -> ")
+
+		type_to_string(s, type.b, builder)
+	}
+}
+
+type_to_string_temp :: proc(s: ^Sema, type_id: Ir_Index) -> string {
+	builder: strings.Builder
+	strings.builder_init_len_cap(&builder, 0, 32, context.temp_allocator)
+	type_to_string(s, type_id, &builder)
+	return strings.to_string(builder)
 }
 
 // NOTE(yhya): This is a naive O(n) algorithm for interning, if intern_type is a hotspot in the future
@@ -138,10 +195,15 @@ pointer_value_child_type :: proc(s: ^Sema, pointer: Ir_Index) -> Ir_Index {
 	return pointer_type.a
 }
 
-check_type_compatibility :: proc(position: Position, a: Ir_Index, b: Ir_Index) -> bool {
+check_type_compatibility :: proc(s: ^Sema, position: Position, a: Ir_Index, b: Ir_Index) -> bool {
 	// NOTE(yhya): Since types are interned then their indices should always be unique
 	if a != b {
-		sema_error(position, "incompatible types")
+		sema_error(
+			position,
+			"incompatible types '%s' and '%s'",
+			type_to_string_temp(s, a),
+			type_to_string_temp(s, b),
+		)
 
 		return false
 	}
@@ -294,7 +356,7 @@ analyze_identifier :: proc(
 	if local, ok := scope_lookup(&s.scope, name); ok {
 		local_type := pointer_value_child_type(s, local.pointer)
 
-		if result_type_id != IR_INVALID && !check_type_compatibility(position, local_type, result_type_id) do return IR_INVALID
+		if result_type_id != IR_INVALID && !check_type_compatibility(s, position, local_type, result_type_id) do return IR_INVALID
 
 		return append_value(s, local_type, .Load, local.pointer, 0)
 	}
@@ -312,7 +374,7 @@ analyze_identifier :: proc(
 
 		binding_type := s.ir.values[binding.value].type
 
-		if result_type_id != IR_INVALID && !check_type_compatibility(position, binding_type, result_type_id) do return IR_INVALID
+		if result_type_id != IR_INVALID && !check_type_compatibility(s, position, binding_type, result_type_id) do return IR_INVALID
 
 		return binding.value
 	}
@@ -404,7 +466,11 @@ analyze_int :: proc(
 
 		return append_value(s, result_type_id, .Float, upper_bits, lower_bits)
 	} else if !is_int_type(result_type) {
-		sema_error(position, "did not expect an integer")
+		sema_error(
+			position,
+			"did not expect an integer, expected '%s' value",
+			type_to_string_temp(s, result_type_id),
+		)
 
 		return IR_INVALID
 	}
@@ -442,7 +508,11 @@ analyze_int_type :: proc(
 		result_type := s.ir.types[result_type_id]
 
 		if result_type.tag != .Type {
-			sema_error(position, "did not expect a type in here")
+			sema_error(
+				position,
+				"did not expect a type in here, expected '%s' value",
+				type_to_string_temp(s, result_type_id),
+			)
 
 			return IR_INVALID
 		}
@@ -508,7 +578,11 @@ analyze_float :: proc(
 
 		return append_value(s, result_type_id, .Int, lower_bits, upper_bits)
 	} else if !is_float_type(result_type) {
-		sema_error(position, "did not expect an float")
+		sema_error(
+			position,
+			"did not expect a float, expected '%s' value",
+			type_to_string_temp(s, result_type_id),
+		)
 
 		return IR_INVALID
 	}
@@ -549,7 +623,11 @@ analyze_float_type :: proc(
 		result_type := s.ir.types[result_type_id]
 
 		if result_type.tag != .Type {
-			sema_error(position, "did not expect a type in here")
+			sema_error(
+				position,
+				"did not expect an type, expected '%s' value",
+				type_to_string_temp(s, result_type_id),
+			)
 
 			return IR_INVALID
 		}
