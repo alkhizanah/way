@@ -74,6 +74,7 @@ Ast_Node_Tag :: enum {
 	True,
 	False,
 	Null,
+	Bool_Type,
 	Void_Type,
 	Float16_Type,
 	Float32_Type,

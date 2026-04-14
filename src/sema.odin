@@ -320,14 +320,20 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Int:
 		return analyze_int(s, result_type, node, position)
 
+	case .Float:
+		return analyze_float(s, result_type, node, position)
+
+	case .True:
+		return analyze_bool(s, result_type, true, position)
+
+	case .False:
+		return analyze_bool(s, result_type, false, position)
+
 	case .Unsigned_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = false)
 
 	case .Signed_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = true)
-
-	case .Float:
-		return analyze_float(s, result_type, node, position)
 
 	case .Float16_Type:
 		return analyze_float_type(s, result_type, 16, position)
@@ -337,6 +343,12 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 
 	case .Float64_Type:
 		return analyze_float_type(s, result_type, 64, position)
+
+	case .Bool_Type:
+		return analyze_bool_type(s, result_type, position)
+
+	case .Void_Type:
+		return analyze_void_type(s, result_type, position)
 
 	case:
 		sema_error(position, "unhandled expression")
@@ -493,36 +505,6 @@ analyze_int :: proc(
 	return append_value(s, result_type_id, .Int, upper_bits, lower_bits)
 }
 
-analyze_int_type :: proc(
-	s: ^Sema,
-	result_type_id: Ir_Index,
-	node: Ast_Node,
-	position: Position,
-	signed: bool,
-) -> Ir_Index {
-	result_type_id := result_type_id
-
-	if result_type_id == IR_INVALID {
-		result_type_id = intern_type(s, .Type, 0, 0)
-	} else {
-		result_type := s.ir.types[result_type_id]
-
-		if result_type.tag != .Type {
-			sema_error(
-				position,
-				"did not expect a type in here, expected '%s' value",
-				type_to_string_temp(s, result_type_id),
-			)
-
-			return IR_INVALID
-		}
-	}
-
-	int_type := intern_type(s, signed ? .Signed_Int : .Unsigned_Int, Ir_Index(node.a), 0)
-
-	return append_value(s, result_type_id, .Type, int_type, 0)
-}
-
 analyze_float :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
@@ -609,31 +591,66 @@ analyze_float :: proc(
 	return append_value(s, result_type_id, .Float, upper_bits, lower_bits)
 }
 
+analyze_bool :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	value: bool,
+	position: Position,
+) -> Ir_Index {
+	bool_type := intern_type(s, .Bool, 0, 0)
+
+	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, bool_type, result_type_id) do return IR_INVALID
+
+	return append_value(s, bool_type, .Bool, Ir_Index(value), 0)
+}
+
+analyze_int_type :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+	signed: bool,
+) -> Ir_Index {
+	type_meta := intern_type(s, .Type, 0, 0)
+
+	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
+
+	int_type := intern_type(s, signed ? .Signed_Int : .Unsigned_Int, Ir_Index(node.a), 0)
+
+	return append_value(s, result_type_id, .Type, int_type, 0)
+}
+
 analyze_float_type :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
 	bit_width: u32,
 	position: Position,
 ) -> Ir_Index {
-	result_type_id := result_type_id
+	type_meta := intern_type(s, .Type, 0, 0)
 
-	if result_type_id == IR_INVALID {
-		result_type_id = intern_type(s, .Type, 0, 0)
-	} else {
-		result_type := s.ir.types[result_type_id]
-
-		if result_type.tag != .Type {
-			sema_error(
-				position,
-				"did not expect an type, expected '%s' value",
-				type_to_string_temp(s, result_type_id),
-			)
-
-			return IR_INVALID
-		}
-	}
+	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
 
 	float_type := intern_type(s, .Float, Ir_Index(bit_width), 0)
 
 	return append_value(s, result_type_id, .Type, float_type, 0)
+}
+
+analyze_bool_type :: proc(s: ^Sema, result_type_id: Ir_Index, position: Position) -> Ir_Index {
+	type_meta := intern_type(s, .Type, 0, 0)
+
+	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
+
+	bool_type := intern_type(s, .Bool, 0, 0)
+
+	return append_value(s, result_type_id, .Type, bool_type, 0)
+}
+
+analyze_void_type :: proc(s: ^Sema, result_type_id: Ir_Index, position: Position) -> Ir_Index {
+	type_meta := intern_type(s, .Type, 0, 0)
+
+	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
+
+	void_type := intern_type(s, .Void, 0, 0)
+
+	return append_value(s, result_type_id, .Type, void_type, 0)
 }

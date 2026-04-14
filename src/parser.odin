@@ -454,6 +454,9 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .Null:
 		return append_node(p, .Null, 0, 0, advance_token(p).position)
 
+	case .Bool:
+		return append_node(p, .Bool_Type, 0, 0, advance_token(p).position)
+
 	case .Void:
 		return append_node(p, .Void_Type, 0, 0, advance_token(p).position)
 

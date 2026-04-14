@@ -64,6 +64,7 @@ Token_Tag :: enum {
 	Else,
 	True,
 	False,
+	Bool,
 	Void,
 	Null,
 	Break,
@@ -73,7 +74,7 @@ Token_Tag :: enum {
 
 @(rodata)
 token_tag_string := [Token_Tag]string {
-	.Invalid            = "invalid bytes",
+	.Invalid            = "invalid token",
 	.EOF                = "end of file",
 	.Plus               = "+",
 	.Minus              = "-",
@@ -117,6 +118,7 @@ token_tag_string := [Token_Tag]string {
 	.Else               = "else",
 	.True               = "true",
 	.False              = "false",
+	.Bool               = "bool",
 	.Void               = "void",
 	.Null               = "null",
 	.Break              = "break",
@@ -273,6 +275,8 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 			token.tag = .True
 		case "false":
 			token.tag = .False
+		case "bool":
+			token.tag = .Bool
 		case "void":
 			token.tag = .Void
 		case "null":
