@@ -805,7 +805,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 	parameters_node := append_node(
 		p,
-		named ? .Function_Named_Parameters : .Function_Unamed_Parameters,
+		named ? .Function_Named_Parameters : .Function_Unnamed_Parameters,
 		Ast_Index(parameters_index),
 		Ast_Index(len(parameters)),
 		paren_open.position,

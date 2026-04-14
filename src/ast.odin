@@ -46,7 +46,7 @@ Ast_Node_Tag :: enum {
 	// a is an index into pairs of (identifier index, parameter type index) in extra, and b is the amount of parameters
 	Function_Named_Parameters,
 	// a is an index into array of parameter types in extra, and b is the amount of parameters
-	Function_Unamed_Parameters,
+	Function_Unnamed_Parameters,
 	// a is an index to Function_Named_Parameters or Function_Unnamed_Parameters and b is an index to the return type
 	Function_Type,
 	// a is an index to Function_Type and b is an index to Block
