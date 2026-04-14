@@ -820,7 +820,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 		if !ok do return AST_INVALID
 
-		return_type := parse_expr(p, .Lowest)
+		return_type = parse_expr(p, .Lowest)
 
 		if return_type == AST_INVALID do return AST_INVALID
 	}

@@ -576,7 +576,7 @@ analyze_float :: proc(
 			)
 		}
 
-		return append_value(s, result_type_id, .Int, lower_bits, upper_bits)
+		return append_value(s, result_type_id, .Int, upper_bits, lower_bits)
 	} else if !is_float_type(result_type) {
 		sema_error(
 			position,
@@ -606,7 +606,7 @@ analyze_float :: proc(
 		return IR_INVALID
 	}
 
-	return append_value(s, result_type_id, .Float, lower_bits, upper_bits)
+	return append_value(s, result_type_id, .Float, upper_bits, lower_bits)
 }
 
 analyze_float_type :: proc(
