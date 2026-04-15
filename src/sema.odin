@@ -229,7 +229,7 @@ hoist_global_bindings :: proc(s: ^Sema, bindings: []Ast_Binding, constant: bool)
 		if existing, ok := s.globals[binding.name.value]; ok {
 			sema_error(
 				binding.name.position,
-				"'%s' already defined, first defined at %v:%v:%v",
+				"'%s' is already defined, first definition is at %v:%v:%v",
 				binding.name.value,
 				existing.syntax.name.position.file_path,
 				existing.syntax.name.position.line,
