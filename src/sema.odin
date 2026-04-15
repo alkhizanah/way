@@ -496,6 +496,9 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .False:
 		return analyze_bool(s, result_type, false, position)
 
+	case .Bool_Not:
+		return analyze_bool_not(s, result_type, node, position)
+
 	case .Unsigned_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = false)
 
@@ -518,7 +521,7 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 		return analyze_void_type(s, result_type, position)
 
 	case:
-		sema_error(position, "unhandled expression")
+		sema_error(position, "unhandled expression: %v", node.tag)
 
 		return IR_INVALID
 	}
@@ -751,6 +754,23 @@ analyze_bool :: proc(
 	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, bool_type, result_type_id) do return IR_INVALID
 
 	return append_value(s, bool_type, .Bool, Ir_Index(value), 0)
+}
+
+analyze_bool_not :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	bool_type := intern_type(s, .Bool, 0, 0)
+
+	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, bool_type, result_type_id) do return IR_INVALID
+
+	value := analyze_expr(s, bool_type, node.b)
+
+	if value == IR_INVALID do return IR_INVALID
+
+	return append_value(s, bool_type, .Bool_Not, value, 0)
 }
 
 analyze_int_type :: proc(
