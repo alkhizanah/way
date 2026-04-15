@@ -273,14 +273,14 @@ pointer_value_child_type :: proc(s: ^Sema, pointer: Ir_Index) -> Ir_Index {
 	return pointer_type.a
 }
 
-cast_untyped_value :: proc(
+can_cast_untyped_value :: proc(
 	s: ^Sema,
 	position: Position,
 	value_id: Ir_Index,
 	desired_type_id: Ir_Index,
 ) -> bool {
-	value := &s.ir.values[value_id]
-	value_type := &s.ir.types[value.type]
+	value := s.ir.values[value_id]
+	value_type := s.ir.types[value.type]
 	desired_type := s.ir.types[desired_type_id]
 
 	upper_bits := value.a
@@ -352,8 +352,6 @@ cast_untyped_value :: proc(
 			return false
 		}
 	}
-
-	value_type^ = desired_type
 
 	return true
 }
@@ -560,23 +558,23 @@ analyze_identifier :: proc(
 		binding_value := s.ir.values[binding.value]
 		binding_type := s.ir.types[binding_value.type]
 
-		identifier_value_id := binding.value
-
 		if result_type_id != IR_INVALID {
 			if is_untyped_type(binding_type) {
-				identifier_value_id = append_value_with_struct(s, binding_value)
-
-				if !cast_untyped_value(s, position, identifier_value_id, result_type_id) {
+				if !can_cast_untyped_value(s, position, binding.value, result_type_id) {
 					return IR_INVALID
 				}
+
+				binding_value.type = result_type_id
+
+				return append_value_with_struct(s, binding_value)
 			}
 
-			if !check_type_compatibility(s, position, identifier_value_id, result_type_id) {
+			if !check_type_compatibility(s, position, binding.value, result_type_id) {
 				return IR_INVALID
 			}
 		}
 
-		return identifier_value_id
+		return binding.value
 	}
 
 	sema_error(position, "undeclared name: %s", name)
