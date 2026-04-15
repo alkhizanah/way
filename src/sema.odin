@@ -499,6 +499,9 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Bool_Not:
 		return analyze_bool_not(s, result_type, node, position)
 
+	case .Bit_Not:
+		return analyze_bit_not(s, result_type, node, position)
+
 	case .Unsigned_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = false)
 
@@ -771,6 +774,49 @@ analyze_bool_not :: proc(
 	if value == IR_INVALID do return IR_INVALID
 
 	return append_value(s, bool_type, .Bool_Not, value, 0)
+}
+
+analyze_bit_not :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	if result_type_id != IR_INVALID && !is_int_type(s.ir.types[result_type_id]) {
+		sema_error(
+			position,
+			"did not expect an integer, expected '%s' value",
+			type_to_string_temp(s, result_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	value := analyze_expr(s, result_type_id, node.b)
+
+	if value == IR_INVALID do return IR_INVALID
+
+	value_type_id := s.ir.values[value].type
+
+	value_type := s.ir.types[value_type_id]
+
+	if is_untyped_type(value_type) {
+		sema_error(position, "bitwise not can not work on untyped values")
+
+		return IR_INVALID
+	}
+
+	if !is_int_type(value_type) {
+		sema_error(
+			position,
+			"expected an integer value, but got '%s' value",
+			type_to_string_temp(s, value_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	return append_value(s, value_type_id, .Bit_Not, value, 0)
 }
 
 analyze_int_type :: proc(
