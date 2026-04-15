@@ -22,7 +22,9 @@ main :: proc() {
 
 		parser: Parser
 
-		parser_init(&parser, os.args[2])
+		if !parser_init(&parser, os.args[2]) {
+			os.exit(1)
+		}
 
 		if !parse(&parser) {
 			os.exit(1)

@@ -156,6 +156,14 @@ intern_type :: proc(s: ^Sema, tag: Ir_Type_Tag, a: Ir_Index, b: Ir_Index) -> Ir_
 	return index
 }
 
+append_value_with_struct :: proc(s: ^Sema, value: Ir_Value) -> Ir_Index {
+	index := Ir_Index(len(s.ir.values))
+
+	append(&s.ir.values, value)
+
+	return index
+}
+
 append_value :: proc(
 	s: ^Sema,
 	type: Ir_Index,
@@ -170,12 +178,9 @@ append_value :: proc(
 		b    = b,
 	}
 
-	index := Ir_Index(len(s.ir.values))
-
-	append(&s.ir.values, value)
-
-	return index
+	return append_value_with_struct(s, value)
 }
+
 
 value_as_type :: proc(s: ^Sema, position: Position, value_id: Ir_Index) -> Ir_Index {
 	value := s.ir.values[value_id]
@@ -189,7 +194,7 @@ value_as_type :: proc(s: ^Sema, position: Position, value_id: Ir_Index) -> Ir_In
 	}
 }
 
-value_is_const :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
+is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	value := s.ir.values[value_id]
 
 	switch value.tag {
@@ -197,7 +202,7 @@ value_is_const :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 		return true
 
 	case .Negate, .Bool_Not, .Bit_Not:
-		return value_is_const(s, value.a)
+		return is_const_value(s, value.a)
 
 	case .Add,
 	     .Sub,
@@ -215,7 +220,7 @@ value_is_const :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	     .Gt,
 	     .Lte,
 	     .Gte:
-		return value_is_const(s, value.a) && value_is_const(s, value.b)
+		return is_const_value(s, value.a) && is_const_value(s, value.b)
 
 	case .Global, .Alloca, .Load, .Store, .Get_Element_Ptr, .Call, .Parameter:
 		return false
@@ -224,10 +229,133 @@ value_is_const :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	return false
 }
 
+is_untyped_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Untyped_Int, .Untyped_Float:
+		return true
+
+	case:
+		return false
+	}
+}
+
+is_float_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Untyped_Float, .Float:
+		return true
+
+	case:
+		return false
+	}
+}
+
+is_int_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Unsigned_Int, .Signed_Int, .Untyped_Int:
+		return true
+
+	case:
+		return false
+	}
+}
+
+int_bits_needed :: proc(#any_int n: int, signed: bool) -> uint {
+	return uint(math.ceil(math.log2(f64(n + (signed && (n > 0) ? 1 : 0)) + 1)))
+}
+
+float_can_fit :: proc($T: typeid, v: $A) -> bool {
+	return f64(T(v)) == f64(v)
+}
+
 pointer_value_child_type :: proc(s: ^Sema, pointer: Ir_Index) -> Ir_Index {
 	pointer_type := s.ir.types[s.ir.values[pointer].type]
 	assert(pointer_type.tag == .Pointer)
 	return pointer_type.a
+}
+
+cast_untyped_value :: proc(
+	s: ^Sema,
+	position: Position,
+	value_id: Ir_Index,
+	desired_type_id: Ir_Index,
+) -> bool {
+	value := &s.ir.values[value_id]
+	value_type := &s.ir.types[value.type]
+	desired_type := s.ir.types[desired_type_id]
+
+	upper_bits := value.a
+	lower_bits := value.b
+
+	v := u64(upper_bits) << 32 | u64(lower_bits)
+
+	if value_type.tag == .Untyped_Int {
+		if !is_int_type(desired_type) {
+			sema_error(
+				position,
+				"untyped integer can not cast into '%v'",
+				type_to_string_temp(s, desired_type_id),
+			)
+
+			return false
+		}
+
+		if desired_type.tag == .Untyped_Int do return true
+
+
+		bits_needed := int_bits_needed(v, signed = desired_type.tag == .Signed_Int)
+
+		bits_available := uint(desired_type.a)
+
+		if bits_available < bits_needed {
+			sema_error(
+				position,
+				"integer literal '%v' needs %v or more bits which the type '%v%v' does not have",
+				v,
+				bits_needed,
+				desired_type.tag == .Signed_Int ? 's' : 'u',
+				bits_available,
+			)
+
+			return false
+		}
+	} else if value_type.tag == .Untyped_Float {
+		if !is_float_type(desired_type) {
+			sema_error(
+				position,
+				"untyped float can not cast into '%v'",
+				type_to_string_temp(s, desired_type_id),
+			)
+
+			return false
+		}
+
+		if desired_type.tag == .Untyped_Float do return true
+
+		v := transmute(f64)v
+
+		can_fit: bool
+
+		switch desired_type.a {
+		case 16:
+			can_fit = float_can_fit(f16, v)
+		case 32:
+			can_fit = float_can_fit(f32, v)
+		case 64:
+			can_fit = float_can_fit(f64, v)
+		case:
+			unreachable()
+		}
+
+		if !can_fit {
+			sema_error(position, "float literal '%v' can not fit into an f%v", v, desired_type.a)
+
+			return false
+		}
+	}
+
+	value_type^ = desired_type
+
+	return true
 }
 
 check_type_compatibility :: proc(s: ^Sema, position: Position, a: Ir_Index, b: Ir_Index) -> bool {
@@ -264,7 +392,7 @@ hoist_global_bindings :: proc(s: ^Sema, bindings: []Ast_Binding, constant: bool)
 		if existing, ok := s.globals[binding.name.value]; ok {
 			sema_error(
 				binding.name.position,
-				"'%s' is already defined, first definition is at %v:%v:%v",
+				"'%s' is already declared, first declaration is at %v:%v:%v",
 				binding.name.value,
 				existing.syntax.name.position.file_path,
 				existing.syntax.name.position.line,
@@ -311,7 +439,7 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 		if binding.value == IR_INVALID do return false
 	}
 
-	if !value_is_const(s, binding.value) {
+	if !is_const_value(s, binding.value) {
 		sema_error(binding.syntax.name.position, "initializer is not a constant value")
 
 		return false
@@ -409,7 +537,11 @@ analyze_identifier :: proc(
 	if local, ok := scope_lookup(&s.scope, name); ok {
 		local_type := pointer_value_child_type(s, local.pointer)
 
-		if result_type_id != IR_INVALID && !check_type_compatibility(s, position, local_type, result_type_id) do return IR_INVALID
+		if result_type_id != IR_INVALID {
+			if !check_type_compatibility(s, position, local_type, result_type_id) {
+				return IR_INVALID
+			}
+		}
 
 		return append_value(s, local_type, .Load, local.pointer, 0)
 	}
@@ -425,53 +557,31 @@ analyze_identifier :: proc(
 
 		assert(binding.state == .Analyzed)
 
-		binding_type := s.ir.values[binding.value].type
+		binding_value := s.ir.values[binding.value]
+		binding_type := s.ir.types[binding_value.type]
 
-		if result_type_id != IR_INVALID && !check_type_compatibility(s, position, binding_type, result_type_id) do return IR_INVALID
+		identifier_value_id := binding.value
 
-		return binding.value
+		if result_type_id != IR_INVALID {
+			if is_untyped_type(binding_type) {
+				identifier_value_id = append_value_with_struct(s, binding_value)
+
+				if !cast_untyped_value(s, position, identifier_value_id, result_type_id) {
+					return IR_INVALID
+				}
+			}
+
+			if !check_type_compatibility(s, position, identifier_value_id, result_type_id) {
+				return IR_INVALID
+			}
+		}
+
+		return identifier_value_id
 	}
 
 	sema_error(position, "undeclared name: %s", name)
 
 	return IR_INVALID
-}
-
-is_float_type :: proc(type: Ir_Type) -> bool {
-	#partial switch type.tag {
-	case .Float:
-		fallthrough
-
-	case .Untyped_Float:
-		return true
-
-	case:
-		return false
-	}
-}
-
-is_int_type :: proc(type: Ir_Type) -> bool {
-	#partial switch type.tag {
-	case .Unsigned_Int:
-		fallthrough
-
-	case .Signed_Int:
-		fallthrough
-
-	case .Untyped_Int:
-		return true
-
-	case:
-		return false
-	}
-}
-
-int_bits_needed :: proc(#any_int n: int, signed: bool) -> uint {
-	return uint(math.ceil(math.log2(f64(n + (signed && (n > 0) ? 1 : 0)) + 1)))
-}
-
-float_can_fit :: proc($T: typeid, v: $A) -> bool {
-	return f64(T(v)) == f64(v)
 }
 
 analyze_int :: proc(
