@@ -189,6 +189,41 @@ value_as_type :: proc(s: ^Sema, position: Position, value_id: Ir_Index) -> Ir_In
 	}
 }
 
+value_is_const :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
+	value := s.ir.values[value_id]
+
+	switch value.tag {
+	case .Int, .Float, .Bool, .Zero, .Null, .Type, .Function:
+		return true
+
+	case .Negate, .Bool_Not, .Bit_Not:
+		return value_is_const(s, value.a)
+
+	case .Add,
+	     .Sub,
+	     .Mul,
+	     .Div,
+	     .Mod,
+	     .Bit_Or,
+	     .Bit_Xor,
+	     .Bit_And,
+	     .Bit_Shl,
+	     .Bit_Shr,
+	     .Eql,
+	     .Neq,
+	     .Lt,
+	     .Gt,
+	     .Lte,
+	     .Gte:
+		return value_is_const(s, value.a) && value_is_const(s, value.b)
+
+	case .Global, .Alloca, .Load, .Store, .Get_Element_Ptr, .Call, .Parameter:
+		return false
+	}
+
+	return false
+}
+
 pointer_value_child_type :: proc(s: ^Sema, pointer: Ir_Index) -> Ir_Index {
 	pointer_type := s.ir.types[s.ir.values[pointer].type]
 	assert(pointer_type.tag == .Pointer)
@@ -274,6 +309,12 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 		binding.value = analyze_expr(s, explicit_type, binding.syntax.value)
 
 		if binding.value == IR_INVALID do return false
+	}
+
+	if !value_is_const(s, binding.value) {
+		sema_error(binding.syntax.name.position, "initializer is not a constant value")
+
+		return false
 	}
 
 	if !binding.constant {
