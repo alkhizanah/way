@@ -4,17 +4,15 @@ import "core:fmt"
 import "core:math"
 import "core:strings"
 
-Sema_Global_Binding_State :: enum {
-	Hoisted,
-	In_Progress,
-	Analyzed,
-}
-
 Sema_Global_Binding :: struct {
 	syntax:   ^Ast_Binding,
 	value:    Ir_Index,
-	state:    Sema_Global_Binding_State,
 	constant: bool,
+	state:    enum {
+		Hoisted,
+		In_Progress,
+		Analyzed,
+	},
 }
 
 Sema_Local_Binding :: struct {
