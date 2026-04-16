@@ -500,6 +500,9 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Bit_Not:
 		return analyze_bit_not(s, result_type, node, position)
 
+	case .Negate:
+		return analyze_negate(s, result_type, node, position)
+
 	case .Unsigned_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = false)
 
@@ -815,6 +818,47 @@ analyze_bit_not :: proc(
 	}
 
 	return append_value(s, value_type_id, .Bit_Not, value, 0)
+}
+
+analyze_negate :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	if result_type_id != IR_INVALID {
+		result_type := s.ir.types[result_type_id]
+
+		if !is_int_type(result_type) && !is_float_type(result_type) {
+			sema_error(
+				position,
+				"did not expect a number, expected '%s' value",
+				type_to_string_temp(s, result_type_id),
+			)
+
+			return IR_INVALID
+		}
+	}
+
+	value_id := analyze_expr(s, result_type_id, node.b)
+
+	if value_id == IR_INVALID do return IR_INVALID
+
+	value_type_id := s.ir.values[value_id].type
+
+	value_type := s.ir.types[value_type_id]
+
+	if !is_int_type(value_type) && !is_float_type(value_type) {
+		sema_error(
+			position,
+			"expected a number value, but got '%s' value",
+			type_to_string_temp(s, value_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	return append_value(s, value_type_id, .Negate, value_id, 0)
 }
 
 analyze_int_type :: proc(
