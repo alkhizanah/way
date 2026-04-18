@@ -543,7 +543,10 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 		return analyze_bitwise_operation(s, result_type, node, position, .Bit_Shr)
 
 	case .Eql:
-		return analyze_equality_operation(s, result_type, node, position)
+		return analyze_equality_operation(s, result_type, node, position, .Eql)
+
+	case .Neq:
+		return analyze_equality_operation(s, result_type, node, position, .Neq)
 
 	case .Lt:
 		return analyze_ordering_operation(s, result_type, node, position, .Lt)
@@ -1157,6 +1160,7 @@ analyze_equality_operation :: proc(
 	result_type_id: Ir_Index,
 	node: Ast_Node,
 	position: Position,
+	op_tag: Ir_Value_Tag,
 ) -> Ir_Index {
 	if result_type_id != IR_INVALID {
 		result_type := s.ir.types[result_type_id]
@@ -1234,7 +1238,7 @@ analyze_equality_operation :: proc(
 		return IR_INVALID
 	}
 
-	return append_value(s, bool_type, .Eql, lhs_id, rhs_id)
+	return append_value(s, bool_type, op_tag, lhs_id, rhs_id)
 }
 
 analyze_ordering_operation :: proc(
