@@ -11,7 +11,12 @@ Ir_Type_Tag :: enum {
 	Function,
 
 	// a is the child type
-	Pointer,
+	Single_Pointer,
+	Multi_Pointer,
+	Slice,
+
+	// a is the child type, b is the amount of elements
+	Array,
 
 	// a is the bit width in these
 	Unsigned_Int,
@@ -36,6 +41,9 @@ Ir_Value_Tag :: enum {
 	// a is upper bits and b is the lower bits for these
 	Int,
 	Float,
+
+	// a is an index into strings and b is the amount of bytes the string contains
+	String,
 
 	// a is either 1 or 0
 	Bool,
@@ -153,4 +161,5 @@ Ir :: struct {
 	blocks:       [dynamic]Ir_Block,
 	functions:    [dynamic]Ir_Function,
 	globals:      [dynamic]Ir_Global,
+	strings:      [dynamic]u8,
 }

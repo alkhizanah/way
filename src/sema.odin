@@ -80,8 +80,20 @@ type_to_string :: proc(s: ^Sema, type_id: Ir_Index, builder: ^strings.Builder) {
 	case .Type:
 		strings.write_string(builder, "type")
 
-	case .Pointer:
+	case .Single_Pointer:
 		strings.write_byte(builder, '*')
+		type_to_string(s, type.a, builder)
+
+	case .Multi_Pointer:
+		strings.write_string(builder, "[*]")
+		type_to_string(s, type.a, builder)
+
+	case .Slice:
+		strings.write_string(builder, "[]")
+		type_to_string(s, type.a, builder)
+
+	case .Array:
+		fmt.sbprintf(builder, "[%v]", type.b)
 		type_to_string(s, type.a, builder)
 
 	case .Function:
@@ -196,7 +208,7 @@ is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	value := s.ir.values[value_id]
 
 	switch value.tag {
-	case .Int, .Float, .Bool, .Zero, .Null, .Type, .Function:
+	case .Int, .Float, .Bool, .Zero, .Null, .Type, .Function, .String:
 		return true
 
 	case .Negate, .Bool_Not, .Bit_Not:
@@ -263,12 +275,6 @@ int_bits_needed :: proc(#any_int n: int, signed: bool) -> uint {
 
 float_can_fit :: proc($T: typeid, v: $A) -> bool {
 	return f64(T(v)) == f64(v)
-}
-
-pointer_value_child_type :: proc(s: ^Sema, pointer: Ir_Index) -> Ir_Index {
-	pointer_type := s.ir.types[s.ir.values[pointer].type]
-	assert(pointer_type.tag == .Pointer)
-	return pointer_type.a
 }
 
 can_cast_untyped_value :: proc(
@@ -482,6 +488,9 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Identifier:
 		return analyze_identifier(s, result_type, node, position)
 
+	case .String:
+		return analyze_string(s, result_type, node, position)
+
 	case .Int:
 		return analyze_int(s, result_type, node, position)
 
@@ -570,7 +579,11 @@ analyze_identifier :: proc(
 	name := string(s.ast.strings[node.a:][:node.b])
 
 	if local, ok := scope_lookup(&s.scope, name); ok {
-		local_type := pointer_value_child_type(s, local.pointer)
+		pointer_type := s.ir.types[s.ir.values[local.pointer].type]
+
+		assert(pointer_type.tag == .Single_Pointer)
+
+		local_type := pointer_type.a
 
 		if result_type_id != IR_INVALID {
 			if !check_type_compatibility(s, position, local_type, result_type_id) {
@@ -617,6 +630,29 @@ analyze_identifier :: proc(
 	sema_error(position, "undeclared name: %s", name)
 
 	return IR_INVALID
+}
+
+analyze_string :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	u8_type := intern_type(s, .Unsigned_Int, 8, 0)
+	string_type := intern_type(s, .Slice, u8_type, 0)
+
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, string_type, result_type_id) {
+		return IR_INVALID
+	}
+
+	index := len(s.ir.strings)
+
+	append(&s.ir.strings, ..s.ast.strings[node.a:][:node.b])
+
+	count := node.b
+
+	return append_value(s, string_type, .String, Ir_Index(index), Ir_Index(count))
 }
 
 analyze_int :: proc(
