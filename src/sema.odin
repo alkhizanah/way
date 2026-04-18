@@ -542,6 +542,21 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Bit_Shr:
 		return analyze_bitwise_operation(s, result_type, node, position, .Bit_Shr)
 
+	case .Eql:
+		return analyze_equality_operation(s, result_type, node, position)
+
+	case .Lt:
+		return analyze_ordering_operation(s, result_type, node, position, .Lt)
+
+	case .Lte:
+		return analyze_ordering_operation(s, result_type, node, position, .Lte)
+
+	case .Gt:
+		return analyze_ordering_operation(s, result_type, node, position, .Gt)
+
+	case .Gte:
+		return analyze_ordering_operation(s, result_type, node, position, .Gte)
+
 	case .Unsigned_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = false)
 
@@ -1115,6 +1130,219 @@ analyze_bitwise_operation :: proc(
 	}
 
 	return append_value(s, lhs_type_id, op_tag, lhs_id, rhs_id)
+}
+
+can_perform_equality :: proc(type: Ir_Type) -> bool {
+	switch (type.tag) {
+	case .Unsigned_Int,
+	     .Signed_Int,
+	     .Untyped_Int,
+	     .Untyped_Float,
+	     .Float,
+	     .Bool,
+	     .Single_Pointer,
+	     .Multi_Pointer:
+		return true
+
+	case .Slice, .Array, .Type, .Function, .Void:
+		return false
+
+	case:
+		return false
+	}
+}
+
+analyze_equality_operation :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	if result_type_id != IR_INVALID {
+		result_type := s.ir.types[result_type_id]
+
+		if result_type.tag != .Bool {
+			sema_error(
+				position,
+				"did not expect a boolean, expected '%s' value",
+				type_to_string_temp(s, result_type_id),
+			)
+
+			return IR_INVALID
+		}
+	}
+
+	bool_type := intern_type(s, .Bool, 0, 0)
+
+	lhs_id := analyze_expr(s, IR_INVALID, node.a)
+	rhs_id := analyze_expr(s, IR_INVALID, node.b)
+
+	if lhs_id == IR_INVALID || rhs_id == IR_INVALID do return IR_INVALID
+
+	lhs := s.ir.values[lhs_id]
+	rhs := s.ir.values[rhs_id]
+
+	lhs_type_id := lhs.type
+	rhs_type_id := rhs.type
+
+	lhs_type := s.ir.types[lhs_type_id]
+	rhs_type := s.ir.types[rhs_type_id]
+
+	if !can_perform_equality(lhs_type) {
+		sema_error(
+			position,
+			"can not perform equality operation on '%s' value",
+			type_to_string_temp(s, lhs_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	if !can_perform_equality(rhs_type) {
+		sema_error(
+			position,
+			"can not perform equality operation on '%s' value",
+			type_to_string_temp(s, rhs_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
+		if !can_cast_untyped_value(s, position, lhs_id, rhs_type_id) {
+			return IR_INVALID
+		}
+
+		lhs.type = rhs_type_id
+
+		lhs_type_id = rhs_type_id
+		lhs_type = rhs_type
+
+		lhs_id = append_value_with_struct(s, lhs)
+	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
+		if !can_cast_untyped_value(s, position, rhs_id, lhs_type_id) {
+			return IR_INVALID
+		}
+
+		rhs.type = lhs_type_id
+
+		rhs_type_id = lhs_type_id
+		rhs_type = lhs_type
+
+		rhs_id = append_value_with_struct(s, rhs)
+	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
+		return IR_INVALID
+	}
+
+	return append_value(s, bool_type, .Eql, lhs_id, rhs_id)
+}
+
+analyze_ordering_operation :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+	op_tag: Ir_Value_Tag,
+) -> Ir_Index {
+	if result_type_id != IR_INVALID {
+		result_type := s.ir.types[result_type_id]
+
+		if result_type.tag != .Bool {
+			sema_error(
+				position,
+				"did not expect a boolean, expected '%s' value",
+				type_to_string_temp(s, result_type_id),
+			)
+
+			return IR_INVALID
+		}
+	}
+
+	bool_type := intern_type(s, .Bool, 0, 0)
+
+	lhs_id := analyze_expr(s, IR_INVALID, node.a)
+	rhs_id := analyze_expr(s, IR_INVALID, node.b)
+
+	if lhs_id == IR_INVALID || rhs_id == IR_INVALID do return IR_INVALID
+
+	lhs := s.ir.values[lhs_id]
+	rhs := s.ir.values[rhs_id]
+
+	lhs_type_id := lhs.type
+	rhs_type_id := rhs.type
+
+	lhs_type := s.ir.types[lhs_type_id]
+	rhs_type := s.ir.types[rhs_type_id]
+
+	if !is_int_type(lhs_type) && !is_float_type(lhs_type) {
+		sema_error(
+			position,
+			"expected a number value, but got '%s' value",
+			type_to_string_temp(s, lhs_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	if !is_int_type(rhs_type) && !is_float_type(rhs_type) {
+		sema_error(
+			position,
+			"expected a number value, but got '%s' value",
+			type_to_string_temp(s, rhs_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
+		if !can_cast_untyped_value(s, position, lhs_id, rhs_type_id) {
+			return IR_INVALID
+		}
+
+		lhs.type = rhs_type_id
+
+		lhs_type_id = rhs_type_id
+		lhs_type = rhs_type
+
+		lhs_id = append_value_with_struct(s, lhs)
+	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
+		if !can_cast_untyped_value(s, position, rhs_id, lhs_type_id) {
+			return IR_INVALID
+		}
+
+		rhs.type = lhs_type_id
+
+		rhs_type_id = lhs_type_id
+		rhs_type = lhs_type
+
+		rhs_id = append_value_with_struct(s, rhs)
+	} else if is_untyped_type(lhs_type) && is_untyped_type(rhs_type) {
+		if lhs_type.tag == .Untyped_Float || rhs_type.tag == .Untyped_Float {
+			untyped_float_id := intern_type(s, .Untyped_Float, 0, 0)
+
+			lhs_type_id = untyped_float_id
+			rhs_type_id = untyped_float_id
+
+			lhs.type = untyped_float_id
+			rhs.type = untyped_float_id
+
+			if lhs.tag == .Int {
+				bvf := transmute(u64)(f64(u64(lhs.b) << 32 | u64(lhs.a)))
+				lhs.a = Ir_Index(bvf)
+				lhs.b = Ir_Index(bvf >> 32)
+				lhs_id = append_value_with_struct(s, lhs)
+			} else if rhs.tag == .Int {
+				bvf := transmute(u64)(f64(u64(rhs.b) << 32 | u64(rhs.a)))
+				rhs.a = Ir_Index(bvf)
+				rhs.b = Ir_Index(bvf >> 32)
+				rhs_id = append_value_with_struct(s, rhs)
+			}
+		}
+	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
+		return IR_INVALID
+	}
+
+	return append_value(s, bool_type, op_tag, lhs_id, rhs_id)
 }
 
 analyze_int_type :: proc(
