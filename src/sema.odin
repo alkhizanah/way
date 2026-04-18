@@ -518,6 +518,21 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 	case .Mod:
 		return analyze_arithmetic_operation(s, result_type, node, position, .Mod)
 
+	case .Bit_Or:
+		return analyze_bitwise_operation(s, result_type, node, position, .Bit_Or)
+
+	case .Bit_Xor:
+		return analyze_bitwise_operation(s, result_type, node, position, .Bit_Xor)
+
+	case .Bit_And:
+		return analyze_bitwise_operation(s, result_type, node, position, .Bit_And)
+
+	case .Bit_Shl:
+		return analyze_bitwise_operation(s, result_type, node, position, .Bit_Shl)
+
+	case .Bit_Shr:
+		return analyze_bitwise_operation(s, result_type, node, position, .Bit_Shr)
+
 	case .Unsigned_Int_Type:
 		return analyze_int_type(s, result_type, node, position, signed = false)
 
@@ -975,6 +990,90 @@ analyze_arithmetic_operation :: proc(
 				rhs_id = append_value_with_struct(s, rhs)
 			}
 		}
+	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
+		return IR_INVALID
+	}
+
+	return append_value(s, lhs_type_id, op_tag, lhs_id, rhs_id)
+}
+
+analyze_bitwise_operation :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+	op_tag: Ir_Value_Tag,
+) -> Ir_Index {
+	if result_type_id != IR_INVALID {
+		result_type := s.ir.types[result_type_id]
+
+		if !is_int_type(result_type) {
+			sema_error(
+				position,
+				"did not expect an integer, expected '%s' value",
+				type_to_string_temp(s, result_type_id),
+			)
+
+			return IR_INVALID
+		}
+	}
+
+	lhs_id := analyze_expr(s, result_type_id, node.a)
+	rhs_id := analyze_expr(s, result_type_id, node.b)
+
+	if lhs_id == IR_INVALID || rhs_id == IR_INVALID do return IR_INVALID
+
+	lhs := s.ir.values[lhs_id]
+	rhs := s.ir.values[rhs_id]
+
+	lhs_type_id := lhs.type
+	rhs_type_id := rhs.type
+
+	lhs_type := s.ir.types[lhs_type_id]
+	rhs_type := s.ir.types[rhs_type_id]
+
+	if !is_int_type(lhs_type) {
+		sema_error(
+			position,
+			"expected an integer value, but got '%s' value",
+			type_to_string_temp(s, lhs_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	if !is_int_type(rhs_type) {
+		sema_error(
+			position,
+			"expected an integer value, but got '%s' value",
+			type_to_string_temp(s, rhs_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
+		if !can_cast_untyped_value(s, position, lhs_id, rhs_type_id) {
+			return IR_INVALID
+		}
+
+		lhs.type = rhs_type_id
+
+		lhs_type_id = rhs_type_id
+		lhs_type = rhs_type
+
+		lhs_id = append_value_with_struct(s, lhs)
+	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
+		if !can_cast_untyped_value(s, position, rhs_id, lhs_type_id) {
+			return IR_INVALID
+		}
+
+		rhs.type = lhs_type_id
+
+		rhs_type_id = lhs_type_id
+		rhs_type = lhs_type
+
+		rhs_id = append_value_with_struct(s, rhs)
 	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
 		return IR_INVALID
 	}
