@@ -674,7 +674,7 @@ analyze_identifier :: proc(
 				return append_value_with_struct(s, binding_value)
 			}
 
-			if !check_type_compatibility(s, position, binding.value, result_type_id) {
+			if !check_type_compatibility(s, position, binding_value.type, result_type_id) {
 				return IR_INVALID
 			}
 		}
