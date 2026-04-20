@@ -290,7 +290,7 @@ can_cast_untyped_value :: proc(
 	upper_bits := value.a
 	lower_bits := value.b
 
-	v := u64(upper_bits) << 32 | u64(lower_bits)
+	v := (u64(upper_bits) << 32) | u64(lower_bits)
 
 	if value_type.tag == .Untyped_Int {
 		if !is_int_type(desired_type) {
@@ -682,7 +682,7 @@ analyze_int :: proc(
 	upper_bits := Ir_Index(node.a)
 	lower_bits := Ir_Index(node.b)
 
-	v := u64(upper_bits) << 32 | u64(lower_bits)
+	v := (u64(upper_bits) << 32) | u64(lower_bits)
 	vf := f64(v)
 
 	if result_type_id == IR_INVALID {
@@ -754,7 +754,7 @@ analyze_float :: proc(
 	upper_bits := Ir_Index(node.a)
 	lower_bits := Ir_Index(node.b)
 
-	v := transmute(f64)(u64(upper_bits) << 32 | u64(lower_bits))
+	v := transmute(f64)((u64(upper_bits) << 32) | u64(lower_bits))
 	vi := u64(v)
 
 	if result_type_id == IR_INVALID {
@@ -945,6 +945,83 @@ analyze_negate :: proc(
 	return append_value(s, value_type_id, .Negate, value_id, 0)
 }
 
+perform_arithmetic_operation :: proc(
+	s: ^Sema,
+	position: Position,
+	op_tag: Ir_Value_Tag,
+	lhs_id: Ir_Index,
+	rhs_id: Ir_Index,
+) -> Ir_Index {
+	lhs := s.ir.values[lhs_id]
+	rhs := s.ir.values[rhs_id]
+
+	lhs_type_id := lhs.type
+	rhs_type_id := rhs.type
+
+	lhs_type := s.ir.types[lhs_type_id]
+	rhs_type := s.ir.types[rhs_type_id]
+
+	if lhs.tag == .Int && rhs.tag == .Int {
+		lhs_v := (u64(lhs.a) << 32) | u64(lhs.b)
+		rhs_v := (u64(rhs.a) << 32) | u64(rhs.b)
+
+		result_v: u64
+
+		#partial switch op_tag {
+		case .Add:
+			result_v = lhs_v + rhs_v
+
+		case .Sub:
+			result_v = lhs_v - rhs_v
+
+		case .Mul:
+			result_v = lhs_v * rhs_v
+
+		case .Div:
+			result_v = lhs_v / rhs_v
+
+		case .Mod:
+			result_v = lhs_v % rhs_v
+		}
+
+		result_upper := Ir_Index(result_v >> 32)
+		result_lower := Ir_Index(result_v)
+
+		return append_value(s, lhs_type_id, .Int, result_upper, result_lower)
+	} else if lhs.tag == .Float && rhs.tag == .Float {
+		lhs_v := transmute(f64)((u64(lhs.a) << 32) | u64(lhs.b))
+		rhs_v := transmute(f64)((u64(rhs.a) << 32) | u64(rhs.b))
+
+		result_v: f64
+
+		#partial switch op_tag {
+		case .Add:
+			result_v = lhs_v + rhs_v
+
+		case .Sub:
+			result_v = lhs_v - rhs_v
+
+		case .Mul:
+			result_v = lhs_v * rhs_v
+
+		case .Div:
+			result_v = lhs_v / rhs_v
+
+		case .Mod:
+			unreachable()
+		}
+
+		result_vb := transmute(u64)result_v
+
+		result_upper := Ir_Index(result_vb >> 32)
+		result_lower := Ir_Index(result_vb)
+
+		return append_value(s, lhs_type_id, .Float, result_upper, result_lower)
+	} else {
+		return append_value(s, lhs_type_id, op_tag, lhs_id, rhs_id)
+	}
+}
+
 analyze_arithmetic_operation :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
@@ -1033,12 +1110,12 @@ analyze_arithmetic_operation :: proc(
 			rhs.type = untyped_float_id
 
 			if lhs.tag == .Int {
-				bvf := transmute(u64)(f64(u64(lhs.b) << 32 | u64(lhs.a)))
+				bvf := transmute(u64)(f64((u64(lhs.b) << 32) | u64(lhs.a)))
 				lhs.a = Ir_Index(bvf)
 				lhs.b = Ir_Index(bvf >> 32)
 				lhs_id = append_value_with_struct(s, lhs)
 			} else if rhs.tag == .Int {
-				bvf := transmute(u64)(f64(u64(rhs.b) << 32 | u64(rhs.a)))
+				bvf := transmute(u64)(f64((u64(rhs.b) << 32) | u64(rhs.a)))
 				rhs.a = Ir_Index(bvf)
 				rhs.b = Ir_Index(bvf >> 32)
 				rhs_id = append_value_with_struct(s, rhs)
@@ -1048,7 +1125,13 @@ analyze_arithmetic_operation :: proc(
 		return IR_INVALID
 	}
 
-	return append_value(s, lhs_type_id, op_tag, lhs_id, rhs_id)
+	if op_tag == .Mod && (is_float_type(lhs_type) || is_float_type(rhs_type)) {
+		sema_error(position, "operation '%%' can only performed on integers")
+
+		return IR_INVALID
+	}
+
+	return perform_arithmetic_operation(s, position, op_tag, lhs_id, rhs_id)
 }
 
 analyze_bitwise_operation :: proc(
@@ -1331,12 +1414,12 @@ analyze_ordering_operation :: proc(
 			rhs.type = untyped_float_id
 
 			if lhs.tag == .Int {
-				bvf := transmute(u64)(f64(u64(lhs.b) << 32 | u64(lhs.a)))
+				bvf := transmute(u64)(f64((u64(lhs.b) << 32) | u64(lhs.a)))
 				lhs.a = Ir_Index(bvf)
 				lhs.b = Ir_Index(bvf >> 32)
 				lhs_id = append_value_with_struct(s, lhs)
 			} else if rhs.tag == .Int {
-				bvf := transmute(u64)(f64(u64(rhs.b) << 32 | u64(rhs.a)))
+				bvf := transmute(u64)(f64((u64(rhs.b) << 32) | u64(rhs.a)))
 				rhs.a = Ir_Index(bvf)
 				rhs.b = Ir_Index(bvf >> 32)
 				rhs_id = append_value_with_struct(s, rhs)
