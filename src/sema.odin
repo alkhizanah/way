@@ -287,11 +287,6 @@ can_cast_untyped_value :: proc(
 	value_type := s.ir.types[value.type]
 	desired_type := s.ir.types[desired_type_id]
 
-	upper_bits := value.a
-	lower_bits := value.b
-
-	v := (u64(upper_bits) << 32) | u64(lower_bits)
-
 	if value_type.tag == .Untyped_Int {
 		if !is_int_type(desired_type) {
 			sema_error(
@@ -306,6 +301,8 @@ can_cast_untyped_value :: proc(
 		if desired_type.tag == .Untyped_Int do return true
 
 		if value.tag != .Int do return true
+
+		v := extract_int_value(value)
 
 		bits_needed := int_bits_needed(v, signed = desired_type.tag == .Signed_Int)
 
@@ -338,7 +335,7 @@ can_cast_untyped_value :: proc(
 
 		if value.tag != .Float do return true
 
-		v := transmute(f64)v
+		v := extract_float_value(value)
 
 		can_fit: bool
 
@@ -676,30 +673,53 @@ analyze_string :: proc(
 	return append_value(s, string_type, .String, Ir_Index(index), Ir_Index(count))
 }
 
+append_int_value :: proc(s: ^Sema, type: Ir_Index, value: u64) -> Ir_Index {
+	upper_bits := Ir_Index(value >> 32)
+	lower_bits := Ir_Index(value)
+
+	return append_value(s, type, .Int, upper_bits, lower_bits)
+}
+
+extract_int_value :: proc(container: $T) -> u64 {
+	upper_bits := u64(container.a)
+	lower_bits := u64(container.b)
+
+	return (upper_bits << 32) | lower_bits
+}
+
+append_float_value :: proc(s: ^Sema, type: Ir_Index, value: f64) -> Ir_Index {
+	value_reinterpreted := transmute(u64)value
+
+	upper_bits := Ir_Index(value_reinterpreted >> 32)
+	lower_bits := Ir_Index(value_reinterpreted)
+
+	return append_value(s, type, .Float, upper_bits, lower_bits)
+}
+
+extract_float_value :: proc(container: $T) -> f64 {
+	upper_bits := u64(container.a)
+	lower_bits := u64(container.b)
+
+	return transmute(f64)((upper_bits << 32) | lower_bits)
+}
+
 analyze_int :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
 	node: Ast_Node,
 	position: Position,
 ) -> Ir_Index {
-	upper_bits := Ir_Index(node.a)
-	lower_bits := Ir_Index(node.b)
+	v := extract_int_value(node)
 
-	v := (u64(upper_bits) << 32) | u64(lower_bits)
 	vf := f64(v)
 
 	if result_type_id == IR_INVALID {
-		return append_value(s, intern_type(s, .Untyped_Int, 0, 0), .Int, upper_bits, lower_bits)
+		return append_int_value(s, intern_type(s, .Untyped_Int, 0, 0), v)
 	}
 
 	result_type := s.ir.types[result_type_id]
 
 	if is_float_type(result_type) {
-		bvf := transmute(u64)vf
-
-		lower_bits = Ir_Index(bvf)
-		upper_bits = Ir_Index(bvf >> 32)
-
 		can_fit: bool
 
 		switch result_type.a {
@@ -719,7 +739,7 @@ analyze_int :: proc(
 			return IR_INVALID
 		}
 
-		return append_value(s, result_type_id, .Float, upper_bits, lower_bits)
+		return append_float_value(s, result_type_id, vf)
 	} else if !is_int_type(result_type) {
 		sema_error(
 			position,
@@ -745,7 +765,7 @@ analyze_int :: proc(
 		)
 	}
 
-	return append_value(s, result_type_id, .Int, upper_bits, lower_bits)
+	return append_int_value(s, result_type_id, v)
 }
 
 analyze_float :: proc(
@@ -754,25 +774,28 @@ analyze_float :: proc(
 	node: Ast_Node,
 	position: Position,
 ) -> Ir_Index {
-	upper_bits := Ir_Index(node.a)
-	lower_bits := Ir_Index(node.b)
-
-	v := transmute(f64)((u64(upper_bits) << 32) | u64(lower_bits))
-	vi := u64(v)
+	v := extract_float_value(node)
 
 	if result_type_id == IR_INVALID {
-		return append_value(
-			s,
-			intern_type(s, .Untyped_Float, 0, 0),
-			.Float,
-			upper_bits,
-			lower_bits,
-		)
+		return append_float_value(s, intern_type(s, .Untyped_Float, 0, 0), v)
 	}
 
 	result_type := s.ir.types[result_type_id]
 
 	if is_int_type(result_type) {
+		if result_type.tag != .Signed_Int && v < 0 {
+			sema_error(
+				position,
+				"float literal '%v' can not transform into '%v' since that does not allow negative values",
+				v,
+				type_to_string_temp(s, result_type_id),
+			)
+
+			return IR_INVALID
+		}
+
+		vi := u64(v)
+
 		if v - f64(vi) != 0 {
 			sema_error(
 				position,
@@ -782,9 +805,6 @@ analyze_float :: proc(
 
 			return IR_INVALID
 		}
-
-		lower_bits = Ir_Index(vi)
-		upper_bits = Ir_Index(vi >> 32)
 
 		bits_needed := int_bits_needed(vi, signed = result_type.tag == .Signed_Int)
 
@@ -801,7 +821,7 @@ analyze_float :: proc(
 			)
 		}
 
-		return append_value(s, result_type_id, .Int, upper_bits, lower_bits)
+		return append_int_value(s, result_type_id, vi)
 	} else if !is_float_type(result_type) {
 		sema_error(
 			position,
@@ -831,7 +851,7 @@ analyze_float :: proc(
 		return IR_INVALID
 	}
 
-	return append_value(s, result_type_id, .Float, upper_bits, lower_bits)
+	return append_float_value(s, result_type_id, v)
 }
 
 analyze_bool :: proc(
@@ -965,61 +985,53 @@ perform_arithmetic_operation :: proc(
 	rhs_type := s.ir.types[rhs_type_id]
 
 	if lhs.tag == .Int && rhs.tag == .Int {
-		lhs_v := (u64(lhs.a) << 32) | u64(lhs.b)
-		rhs_v := (u64(rhs.a) << 32) | u64(rhs.b)
+		lhs := extract_int_value(lhs)
+		rhs := extract_int_value(rhs)
 
-		result_v: u64
+		result: u64
 
 		#partial switch op_tag {
 		case .Add:
-			result_v = lhs_v + rhs_v
+			result = lhs + rhs
 
 		case .Sub:
-			result_v = lhs_v - rhs_v
+			result = lhs - rhs
 
 		case .Mul:
-			result_v = lhs_v * rhs_v
+			result = lhs * rhs
 
 		case .Div:
-			result_v = lhs_v / rhs_v
+			result = lhs / rhs
 
 		case .Mod:
-			result_v = lhs_v % rhs_v
+			result = lhs % rhs
 		}
 
-		result_upper := Ir_Index(result_v >> 32)
-		result_lower := Ir_Index(result_v)
-
-		return append_value(s, lhs_type_id, .Int, result_upper, result_lower)
+		return append_int_value(s, lhs_type_id, result)
 	} else if lhs.tag == .Float && rhs.tag == .Float {
-		lhs_v := transmute(f64)((u64(lhs.a) << 32) | u64(lhs.b))
-		rhs_v := transmute(f64)((u64(rhs.a) << 32) | u64(rhs.b))
+		lhs := extract_float_value(lhs)
+		rhs := extract_float_value(rhs)
 
-		result_v: f64
+		result: f64
 
 		#partial switch op_tag {
 		case .Add:
-			result_v = lhs_v + rhs_v
+			result = lhs + rhs
 
 		case .Sub:
-			result_v = lhs_v - rhs_v
+			result = lhs - rhs
 
 		case .Mul:
-			result_v = lhs_v * rhs_v
+			result = lhs * rhs
 
 		case .Div:
-			result_v = lhs_v / rhs_v
+			result = lhs / rhs
 
 		case .Mod:
 			unreachable()
 		}
 
-		result_vb := transmute(u64)result_v
-
-		result_upper := Ir_Index(result_vb >> 32)
-		result_lower := Ir_Index(result_vb)
-
-		return append_value(s, lhs_type_id, .Float, result_upper, result_lower)
+		return append_float_value(s, lhs_type_id, result)
 	} else {
 		return append_value(s, lhs_type_id, op_tag, lhs_id, rhs_id)
 	}
@@ -1113,15 +1125,11 @@ analyze_arithmetic_operation :: proc(
 			rhs.type = untyped_float_id
 
 			if lhs.tag == .Int {
-				bvf := transmute(u64)(f64((u64(lhs.b) << 32) | u64(lhs.a)))
-				lhs.a = Ir_Index(bvf)
-				lhs.b = Ir_Index(bvf >> 32)
-				lhs_id = append_value_with_struct(s, lhs)
+				lhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(lhs)))
+				lhs = s.ir.values[lhs_id]
 			} else if rhs.tag == .Int {
-				bvf := transmute(u64)(f64((u64(rhs.b) << 32) | u64(rhs.a)))
-				rhs.a = Ir_Index(bvf)
-				rhs.b = Ir_Index(bvf >> 32)
-				rhs_id = append_value_with_struct(s, rhs)
+				rhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(rhs)))
+				rhs = s.ir.values[rhs_id]
 			}
 		}
 	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
@@ -1417,15 +1425,11 @@ analyze_ordering_operation :: proc(
 			rhs.type = untyped_float_id
 
 			if lhs.tag == .Int {
-				bvf := transmute(u64)(f64((u64(lhs.b) << 32) | u64(lhs.a)))
-				lhs.a = Ir_Index(bvf)
-				lhs.b = Ir_Index(bvf >> 32)
-				lhs_id = append_value_with_struct(s, lhs)
+				lhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(lhs)))
+				lhs = s.ir.values[lhs_id]
 			} else if rhs.tag == .Int {
-				bvf := transmute(u64)(f64((u64(rhs.b) << 32) | u64(rhs.a)))
-				rhs.a = Ir_Index(bvf)
-				rhs.b = Ir_Index(bvf >> 32)
-				rhs_id = append_value_with_struct(s, rhs)
+				rhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(rhs)))
+				rhs = s.ir.values[rhs_id]
 			}
 		}
 	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
