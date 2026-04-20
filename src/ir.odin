@@ -163,3 +163,33 @@ Ir :: struct {
 	globals:      [dynamic]Ir_Global,
 	strings:      [dynamic]u8,
 }
+
+is_untyped_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Untyped_Int, .Untyped_Float:
+		return true
+
+	case:
+		return false
+	}
+}
+
+is_float_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Untyped_Float, .Float:
+		return true
+
+	case:
+		return false
+	}
+}
+
+is_int_type :: proc(type: Ir_Type) -> bool {
+	#partial switch type.tag {
+	case .Unsigned_Int, .Signed_Int, .Untyped_Int:
+		return true
+
+	case:
+		return false
+	}
+}

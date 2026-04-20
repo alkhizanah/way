@@ -239,36 +239,6 @@ is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	return false
 }
 
-is_untyped_type :: proc(type: Ir_Type) -> bool {
-	#partial switch type.tag {
-	case .Untyped_Int, .Untyped_Float:
-		return true
-
-	case:
-		return false
-	}
-}
-
-is_float_type :: proc(type: Ir_Type) -> bool {
-	#partial switch type.tag {
-	case .Untyped_Float, .Float:
-		return true
-
-	case:
-		return false
-	}
-}
-
-is_int_type :: proc(type: Ir_Type) -> bool {
-	#partial switch type.tag {
-	case .Unsigned_Int, .Signed_Int, .Untyped_Int:
-		return true
-
-	case:
-		return false
-	}
-}
-
 can_fit_into_int_type :: proc(position: Position, v: $T, desired_type: Ir_Type) -> bool {
 	bits_available := uint(desired_type.a)
 
@@ -396,6 +366,37 @@ can_cast_untyped_value :: proc(
 
 	return true
 }
+
+append_int_value :: proc(s: ^Sema, type: Ir_Index, value: u64) -> Ir_Index {
+	upper_bits := Ir_Index(value >> 32)
+	lower_bits := Ir_Index(value)
+
+	return append_value(s, type, .Int, upper_bits, lower_bits)
+}
+
+extract_int_value :: proc(container: $T) -> u64 {
+	upper_bits := u64(container.a)
+	lower_bits := u64(container.b)
+
+	return (upper_bits << 32) | lower_bits
+}
+
+append_float_value :: proc(s: ^Sema, type: Ir_Index, value: f64) -> Ir_Index {
+	value_reinterpreted := transmute(u64)value
+
+	upper_bits := Ir_Index(value_reinterpreted >> 32)
+	lower_bits := Ir_Index(value_reinterpreted)
+
+	return append_value(s, type, .Float, upper_bits, lower_bits)
+}
+
+extract_float_value :: proc(container: $T) -> f64 {
+	upper_bits := u64(container.a)
+	lower_bits := u64(container.b)
+
+	return transmute(f64)((upper_bits << 32) | lower_bits)
+}
+
 
 check_type_compatibility :: proc(s: ^Sema, position: Position, a: Ir_Index, b: Ir_Index) -> bool {
 	// NOTE(yhya): Since types are interned then their indices should always be unique
@@ -708,36 +709,6 @@ analyze_string :: proc(
 	count := node.b
 
 	return append_value(s, string_type, .String, Ir_Index(index), Ir_Index(count))
-}
-
-append_int_value :: proc(s: ^Sema, type: Ir_Index, value: u64) -> Ir_Index {
-	upper_bits := Ir_Index(value >> 32)
-	lower_bits := Ir_Index(value)
-
-	return append_value(s, type, .Int, upper_bits, lower_bits)
-}
-
-extract_int_value :: proc(container: $T) -> u64 {
-	upper_bits := u64(container.a)
-	lower_bits := u64(container.b)
-
-	return (upper_bits << 32) | lower_bits
-}
-
-append_float_value :: proc(s: ^Sema, type: Ir_Index, value: f64) -> Ir_Index {
-	value_reinterpreted := transmute(u64)value
-
-	upper_bits := Ir_Index(value_reinterpreted >> 32)
-	lower_bits := Ir_Index(value_reinterpreted)
-
-	return append_value(s, type, .Float, upper_bits, lower_bits)
-}
-
-extract_float_value :: proc(container: $T) -> f64 {
-	upper_bits := u64(container.a)
-	lower_bits := u64(container.b)
-
-	return transmute(f64)((upper_bits << 32) | lower_bits)
 }
 
 analyze_int :: proc(
@@ -1165,25 +1136,6 @@ analyze_bitwise_operation :: proc(
 	return append_value(s, lhs_type_id, op_tag, lhs_id, rhs_id)
 }
 
-can_perform_equality :: proc(type: Ir_Type) -> bool {
-	switch (type.tag) {
-	case .Unsigned_Int,
-	     .Signed_Int,
-	     .Untyped_Int,
-	     .Untyped_Float,
-	     .Float,
-	     .Bool,
-	     .Single_Pointer,
-	     .Multi_Pointer:
-		return true
-
-	case .Slice, .Array, .Type, .Function, .Void:
-		return false
-
-	case:
-		return false
-	}
-}
 
 analyze_equality_operation :: proc(
 	s: ^Sema,
@@ -1219,6 +1171,26 @@ analyze_equality_operation :: proc(
 
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
+
+	can_perform_equality :: proc(type: Ir_Type) -> bool {
+		switch (type.tag) {
+		case .Unsigned_Int,
+		     .Signed_Int,
+		     .Untyped_Int,
+		     .Untyped_Float,
+		     .Float,
+		     .Bool,
+		     .Single_Pointer,
+		     .Multi_Pointer:
+			return true
+
+		case .Slice, .Array, .Type, .Function, .Void:
+			return false
+
+		case:
+			return false
+		}
+	}
 
 	if !can_perform_equality(lhs_type) {
 		sema_error(
