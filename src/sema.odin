@@ -1,5 +1,6 @@
 package main
 
+import "base:intrinsics"
 import "core:fmt"
 import "core:math"
 import "core:strings"
@@ -191,7 +192,6 @@ append_value :: proc(
 	return append_value_with_struct(s, value)
 }
 
-
 value_as_type :: proc(s: ^Sema, position: Position, value_id: Ir_Index) -> Ir_Index {
 	value := s.ir.values[value_id]
 
@@ -269,12 +269,81 @@ is_int_type :: proc(type: Ir_Type) -> bool {
 	}
 }
 
-int_bits_needed :: proc(#any_int n: int, signed: bool) -> uint {
-	return uint(math.ceil(math.log2(f64(n + (signed && (n > 0) ? 1 : 0)) + 1)))
+can_fit_into_int_type :: proc(position: Position, v: $T, desired_type: Ir_Type) -> bool {
+	bits_available := uint(desired_type.a)
+
+	when intrinsics.type_is_float(T) {
+		if v < 0 && desired_type.tag != .Signed_Int {
+			sema_error(
+				position,
+				"negative value '%v' can not fit into unsigned type 'u%v'",
+				v,
+				bits_available,
+			)
+
+			return false
+		}
+
+		if v - T(u64(v)) != 0 {
+			sema_error(
+				position,
+				"'%v' can not fit into '%v%v' since it has decimal points",
+				v,
+				desired_type.tag == .Signed_Int ? 's' : 'u',
+				bits_available,
+			)
+
+			return false
+		}
+	}
+
+	helper :: proc(n: $T, signed: bool) -> uint {
+		return uint(math.ceil(math.log2(f64(n + ((signed && (n > 0)) ? 1 : 0)) + 1)))
+	}
+
+	bits_needed := helper(v, signed = desired_type.tag == .Signed_Int)
+
+	if bits_available < bits_needed {
+		sema_error(
+			position,
+			"'%v' needs %v or more bits which the type '%v%v' does not have",
+			v,
+			bits_needed,
+			desired_type.tag == .Signed_Int ? 's' : 'u',
+			bits_available,
+		)
+
+		return false
+	}
+
+	return true
 }
 
-float_can_fit :: proc($T: typeid, v: $A) -> bool {
-	return f64(T(v)) == f64(v)
+can_fit_into_float_type :: proc(position: Position, v: $T, desired_type: Ir_Type) -> bool {
+	can_fit: bool
+
+	helper :: proc($T: typeid, v: $A) -> bool {
+		return f64(T(v)) == f64(v)
+	}
+
+	switch desired_type.a {
+	case 16:
+		can_fit = helper(f16, v)
+	case 32:
+		can_fit = helper(f32, v)
+	case 64:
+		can_fit = helper(f64, v)
+	case:
+		unreachable()
+	}
+
+	if !can_fit {
+		sema_error(position, "'%v' can not fit into 'f%v'", v, desired_type.a)
+
+		return false
+	}
+
+	return true
 }
 
 can_cast_untyped_value :: proc(
@@ -304,22 +373,7 @@ can_cast_untyped_value :: proc(
 
 		v := extract_int_value(value)
 
-		bits_needed := int_bits_needed(v, signed = desired_type.tag == .Signed_Int)
-
-		bits_available := uint(desired_type.a)
-
-		if bits_available < bits_needed {
-			sema_error(
-				position,
-				"integer literal '%v' needs %v or more bits which the type '%v%v' does not have",
-				v,
-				bits_needed,
-				desired_type.tag == .Signed_Int ? 's' : 'u',
-				bits_available,
-			)
-
-			return false
-		}
+		return can_fit_into_int_type(position, v, desired_type)
 	} else if value_type.tag == .Untyped_Float {
 		if !is_float_type(desired_type) {
 			sema_error(
@@ -337,24 +391,7 @@ can_cast_untyped_value :: proc(
 
 		v := extract_float_value(value)
 
-		can_fit: bool
-
-		switch desired_type.a {
-		case 16:
-			can_fit = float_can_fit(f16, v)
-		case 32:
-			can_fit = float_can_fit(f32, v)
-		case 64:
-			can_fit = float_can_fit(f64, v)
-		case:
-			unreachable()
-		}
-
-		if !can_fit {
-			sema_error(position, "float literal '%v' can not fit into an f%v", v, desired_type.a)
-
-			return false
-		}
+		return can_fit_into_float_type(position, v, desired_type)
 	}
 
 	return true
@@ -711,8 +748,6 @@ analyze_int :: proc(
 ) -> Ir_Index {
 	v := extract_int_value(node)
 
-	vf := f64(v)
-
 	if result_type_id == IR_INVALID {
 		return append_int_value(s, intern_type(s, .Untyped_Int, 0, 0), v)
 	}
@@ -720,26 +755,9 @@ analyze_int :: proc(
 	result_type := s.ir.types[result_type_id]
 
 	if is_float_type(result_type) {
-		can_fit: bool
+		if !can_fit_into_float_type(position, v, result_type) do return IR_INVALID
 
-		switch result_type.a {
-		case 16:
-			can_fit = float_can_fit(f16, v)
-		case 32:
-			can_fit = float_can_fit(f32, v)
-		case 64:
-			can_fit = float_can_fit(f64, v)
-		case:
-			unreachable()
-		}
-
-		if !can_fit {
-			sema_error(position, "integer literal '%v' can not fit into an f%v", v, result_type.a)
-
-			return IR_INVALID
-		}
-
-		return append_float_value(s, result_type_id, vf)
+		return append_float_value(s, result_type_id, f64(v))
 	} else if !is_int_type(result_type) {
 		sema_error(
 			position,
@@ -750,20 +768,7 @@ analyze_int :: proc(
 		return IR_INVALID
 	}
 
-	bits_needed := int_bits_needed(v, signed = result_type.tag == .Signed_Int)
-
-	bits_available := uint(result_type.a)
-
-	if bits_available < bits_needed {
-		sema_error(
-			position,
-			"integer literal '%v' needs %v or more bits which the type '%v%v' does not have",
-			v,
-			bits_needed,
-			result_type.tag == .Signed_Int ? 's' : 'u',
-			bits_available,
-		)
-	}
+	if !can_fit_into_int_type(position, v, result_type) do return IR_INVALID
 
 	return append_int_value(s, result_type_id, v)
 }
@@ -783,45 +788,9 @@ analyze_float :: proc(
 	result_type := s.ir.types[result_type_id]
 
 	if is_int_type(result_type) {
-		if result_type.tag != .Signed_Int && v < 0 {
-			sema_error(
-				position,
-				"float literal '%v' can not transform into '%v' since that does not allow negative values",
-				v,
-				type_to_string_temp(s, result_type_id),
-			)
+		if !can_fit_into_int_type(position, v, result_type) do return IR_INVALID
 
-			return IR_INVALID
-		}
-
-		vi := u64(v)
-
-		if v - f64(vi) != 0 {
-			sema_error(
-				position,
-				"float literal '%v' can not transform to integer since it has decimal points",
-				v,
-			)
-
-			return IR_INVALID
-		}
-
-		bits_needed := int_bits_needed(vi, signed = result_type.tag == .Signed_Int)
-
-		bits_available := uint(result_type.a)
-
-		if bits_available < bits_needed {
-			sema_error(
-				position,
-				"integer literal '%v' needs %v or more bits which the type '%v%v' does not have",
-				vi,
-				bits_needed,
-				result_type.tag == .Signed_Int ? 's' : 'u',
-				bits_available,
-			)
-		}
-
-		return append_int_value(s, result_type_id, vi)
+		return append_int_value(s, result_type_id, u64(v))
 	} else if !is_float_type(result_type) {
 		sema_error(
 			position,
@@ -832,24 +801,7 @@ analyze_float :: proc(
 		return IR_INVALID
 	}
 
-	can_fit: bool
-
-	switch result_type.a {
-	case 16:
-		can_fit = float_can_fit(f16, v)
-	case 32:
-		can_fit = float_can_fit(f32, v)
-	case 64:
-		can_fit = float_can_fit(f64, v)
-	case:
-		unreachable()
-	}
-
-	if !can_fit {
-		sema_error(position, "float literal '%v' can not fit into an f%v", v, result_type.a)
-
-		return IR_INVALID
-	}
+	if !can_fit_into_float_type(position, v, result_type) do return IR_INVALID
 
 	return append_float_value(s, result_type_id, v)
 }
