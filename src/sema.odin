@@ -989,6 +989,64 @@ perform_arithmetic_operation :: proc(
 	}
 }
 
+unify_binary_types :: proc(
+	s: ^Sema,
+	position: Position,
+	lhs_id: ^Ir_Index,
+	rhs_id: ^Ir_Index,
+) -> (
+	lhs_type_id: Ir_Index,
+	rhs_type_id: Ir_Index,
+	ok: bool,
+) {
+	lhs := s.ir.values[lhs_id^]
+	rhs := s.ir.values[rhs_id^]
+
+	lhs_type_id = lhs.type
+	rhs_type_id = rhs.type
+
+	lhs_type := s.ir.types[lhs_type_id]
+	rhs_type := s.ir.types[rhs_type_id]
+
+	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
+		if !can_cast_untyped_value(s, position, lhs_id^, rhs_type_id) do return {}, {}, false
+
+		lhs.type = rhs_type_id
+
+		lhs_id^ = append_value_with_struct(s, lhs)
+
+		return rhs_type_id, rhs_type_id, true
+	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
+		if !can_cast_untyped_value(s, position, rhs_id^, lhs_type_id) do return {}, {}, false
+
+		rhs.type = lhs_type_id
+
+		rhs_id^ = append_value_with_struct(s, rhs)
+
+		return lhs_type_id, lhs_type_id, true
+	} else if is_untyped_type(lhs_type) && is_untyped_type(rhs_type) {
+		if lhs_type.tag == .Untyped_Float || rhs_type.tag == .Untyped_Float {
+			uf := intern_type(s, .Untyped_Float, 0, 0)
+
+			if lhs.tag == .Int {
+				lhs_id^ = append_float_value(s, uf, f64(extract_int_value(lhs)))
+			}
+
+			if rhs.tag == .Int {
+				rhs_id^ = append_float_value(s, uf, f64(extract_int_value(rhs)))
+			}
+
+			return uf, uf, true
+		}
+
+		return lhs_type_id, rhs_type_id, true
+	}
+
+	if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) do return {}, {}, false
+
+	return lhs_type_id, rhs_type_id, true
+}
+
 analyze_arithmetic_operation :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
@@ -1015,11 +1073,12 @@ analyze_arithmetic_operation :: proc(
 
 	if lhs_id == IR_INVALID || rhs_id == IR_INVALID do return IR_INVALID
 
+	lhs_type_id, rhs_type_id, ok := unify_binary_types(s, position, &lhs_id, &rhs_id)
+
+	if !ok do return IR_INVALID
+
 	lhs := s.ir.values[lhs_id]
 	rhs := s.ir.values[rhs_id]
-
-	lhs_type_id := lhs.type
-	rhs_type_id := rhs.type
 
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
@@ -1041,50 +1100,6 @@ analyze_arithmetic_operation :: proc(
 			type_to_string_temp(s, rhs_type_id),
 		)
 
-		return IR_INVALID
-	}
-
-	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
-		if !can_cast_untyped_value(s, position, lhs_id, rhs_type_id) {
-			return IR_INVALID
-		}
-
-		lhs.type = rhs_type_id
-
-		lhs_type_id = rhs_type_id
-		lhs_type = rhs_type
-
-		lhs_id = append_value_with_struct(s, lhs)
-	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
-		if !can_cast_untyped_value(s, position, rhs_id, lhs_type_id) {
-			return IR_INVALID
-		}
-
-		rhs.type = lhs_type_id
-
-		rhs_type_id = lhs_type_id
-		rhs_type = lhs_type
-
-		rhs_id = append_value_with_struct(s, rhs)
-	} else if is_untyped_type(lhs_type) && is_untyped_type(rhs_type) {
-		if lhs_type.tag == .Untyped_Float || rhs_type.tag == .Untyped_Float {
-			untyped_float_id := intern_type(s, .Untyped_Float, 0, 0)
-
-			lhs_type_id = untyped_float_id
-			rhs_type_id = untyped_float_id
-
-			lhs.type = untyped_float_id
-			rhs.type = untyped_float_id
-
-			if lhs.tag == .Int {
-				lhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(lhs)))
-				lhs = s.ir.values[lhs_id]
-			} else if rhs.tag == .Int {
-				rhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(rhs)))
-				rhs = s.ir.values[rhs_id]
-			}
-		}
-	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
 		return IR_INVALID
 	}
 
@@ -1123,11 +1138,12 @@ analyze_bitwise_operation :: proc(
 
 	if lhs_id == IR_INVALID || rhs_id == IR_INVALID do return IR_INVALID
 
+	lhs_type_id, rhs_type_id, ok := unify_binary_types(s, position, &lhs_id, &rhs_id)
+
+	if !ok do return IR_INVALID
+
 	lhs := s.ir.values[lhs_id]
 	rhs := s.ir.values[rhs_id]
-
-	lhs_type_id := lhs.type
-	rhs_type_id := rhs.type
 
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
@@ -1149,32 +1165,6 @@ analyze_bitwise_operation :: proc(
 			type_to_string_temp(s, rhs_type_id),
 		)
 
-		return IR_INVALID
-	}
-
-	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
-		if !can_cast_untyped_value(s, position, lhs_id, rhs_type_id) {
-			return IR_INVALID
-		}
-
-		lhs.type = rhs_type_id
-
-		lhs_type_id = rhs_type_id
-		lhs_type = rhs_type
-
-		lhs_id = append_value_with_struct(s, lhs)
-	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
-		if !can_cast_untyped_value(s, position, rhs_id, lhs_type_id) {
-			return IR_INVALID
-		}
-
-		rhs.type = lhs_type_id
-
-		rhs_type_id = lhs_type_id
-		rhs_type = lhs_type
-
-		rhs_id = append_value_with_struct(s, rhs)
-	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
 		return IR_INVALID
 	}
 
@@ -1229,11 +1219,12 @@ analyze_equality_operation :: proc(
 
 	if lhs_id == IR_INVALID || rhs_id == IR_INVALID do return IR_INVALID
 
+	lhs_type_id, rhs_type_id, ok := unify_binary_types(s, position, &lhs_id, &rhs_id)
+
+	if !ok do return IR_INVALID
+
 	lhs := s.ir.values[lhs_id]
 	rhs := s.ir.values[rhs_id]
-
-	lhs_type_id := lhs.type
-	rhs_type_id := rhs.type
 
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
@@ -1255,32 +1246,6 @@ analyze_equality_operation :: proc(
 			type_to_string_temp(s, rhs_type_id),
 		)
 
-		return IR_INVALID
-	}
-
-	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
-		if !can_cast_untyped_value(s, position, lhs_id, rhs_type_id) {
-			return IR_INVALID
-		}
-
-		lhs.type = rhs_type_id
-
-		lhs_type_id = rhs_type_id
-		lhs_type = rhs_type
-
-		lhs_id = append_value_with_struct(s, lhs)
-	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
-		if !can_cast_untyped_value(s, position, rhs_id, lhs_type_id) {
-			return IR_INVALID
-		}
-
-		rhs.type = lhs_type_id
-
-		rhs_type_id = lhs_type_id
-		rhs_type = lhs_type
-
-		rhs_id = append_value_with_struct(s, rhs)
-	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
 		return IR_INVALID
 	}
 
@@ -1315,11 +1280,12 @@ analyze_ordering_operation :: proc(
 
 	if lhs_id == IR_INVALID || rhs_id == IR_INVALID do return IR_INVALID
 
+	lhs_type_id, rhs_type_id, ok := unify_binary_types(s, position, &lhs_id, &rhs_id)
+
+	if !ok do return IR_INVALID
+
 	lhs := s.ir.values[lhs_id]
 	rhs := s.ir.values[rhs_id]
-
-	lhs_type_id := lhs.type
-	rhs_type_id := rhs.type
 
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
@@ -1341,50 +1307,6 @@ analyze_ordering_operation :: proc(
 			type_to_string_temp(s, rhs_type_id),
 		)
 
-		return IR_INVALID
-	}
-
-	if is_untyped_type(lhs_type) && !is_untyped_type(rhs_type) {
-		if !can_cast_untyped_value(s, position, lhs_id, rhs_type_id) {
-			return IR_INVALID
-		}
-
-		lhs.type = rhs_type_id
-
-		lhs_type_id = rhs_type_id
-		lhs_type = rhs_type
-
-		lhs_id = append_value_with_struct(s, lhs)
-	} else if is_untyped_type(rhs_type) && !is_untyped_type(lhs_type) {
-		if !can_cast_untyped_value(s, position, rhs_id, lhs_type_id) {
-			return IR_INVALID
-		}
-
-		rhs.type = lhs_type_id
-
-		rhs_type_id = lhs_type_id
-		rhs_type = lhs_type
-
-		rhs_id = append_value_with_struct(s, rhs)
-	} else if is_untyped_type(lhs_type) && is_untyped_type(rhs_type) {
-		if lhs_type.tag == .Untyped_Float || rhs_type.tag == .Untyped_Float {
-			untyped_float_id := intern_type(s, .Untyped_Float, 0, 0)
-
-			lhs_type_id = untyped_float_id
-			rhs_type_id = untyped_float_id
-
-			lhs.type = untyped_float_id
-			rhs.type = untyped_float_id
-
-			if lhs.tag == .Int {
-				lhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(lhs)))
-				lhs = s.ir.values[lhs_id]
-			} else if rhs.tag == .Int {
-				rhs_id = append_float_value(s, untyped_float_id, f64(extract_int_value(rhs)))
-				rhs = s.ir.values[rhs_id]
-			}
-		}
-	} else if !check_type_compatibility(s, position, lhs_type_id, rhs_type_id) {
 		return IR_INVALID
 	}
 
