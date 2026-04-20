@@ -305,6 +305,7 @@ can_cast_untyped_value :: proc(
 
 		if desired_type.tag == .Untyped_Int do return true
 
+		if value.tag != .Int do return true
 
 		bits_needed := int_bits_needed(v, signed = desired_type.tag == .Signed_Int)
 
@@ -334,6 +335,8 @@ can_cast_untyped_value :: proc(
 		}
 
 		if desired_type.tag == .Untyped_Float do return true
+
+		if value.tag != .Float do return true
 
 		v := transmute(f64)v
 
