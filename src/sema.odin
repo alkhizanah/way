@@ -1077,9 +1077,6 @@ analyze_arithmetic_operation :: proc(
 
 	if !ok do return IR_INVALID
 
-	lhs := s.ir.values[lhs_id]
-	rhs := s.ir.values[rhs_id]
-
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
 
@@ -1141,9 +1138,6 @@ analyze_bitwise_operation :: proc(
 	lhs_type_id, rhs_type_id, ok := unify_binary_types(s, position, &lhs_id, &rhs_id)
 
 	if !ok do return IR_INVALID
-
-	lhs := s.ir.values[lhs_id]
-	rhs := s.ir.values[rhs_id]
 
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
@@ -1223,9 +1217,6 @@ analyze_equality_operation :: proc(
 
 	if !ok do return IR_INVALID
 
-	lhs := s.ir.values[lhs_id]
-	rhs := s.ir.values[rhs_id]
-
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
 
@@ -1283,9 +1274,6 @@ analyze_ordering_operation :: proc(
 	lhs_type_id, rhs_type_id, ok := unify_binary_types(s, position, &lhs_id, &rhs_id)
 
 	if !ok do return IR_INVALID
-
-	lhs := s.ir.values[lhs_id]
-	rhs := s.ir.values[rhs_id]
 
 	lhs_type := s.ir.types[lhs_type_id]
 	rhs_type := s.ir.types[rhs_type_id]
