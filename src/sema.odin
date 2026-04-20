@@ -1309,10 +1309,12 @@ analyze_primitive_type :: proc(
 	a: Ir_Index = 0,
 	b: Ir_Index = 0,
 ) -> Ir_Index {
+	type_meta := intern_type(s, .Type, 0, 0)
+
 	if result_type_id != IR_INVALID &&
-	   !check_type_compatibility(s, position, intern_type(s, .Type, 0, 0), result_type_id) {
+	   !check_type_compatibility(s, position, type_meta, result_type_id) {
 		return IR_INVALID
 	}
 
-	return append_value(s, result_type_id, .Type, intern_type(s, tag, a, b), 0)
+	return append_value(s, type_meta, .Type, intern_type(s, tag, a, b), 0)
 }
