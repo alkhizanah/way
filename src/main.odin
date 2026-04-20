@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:os"
+import "core:strings"
 
 main :: proc() {
 	program := os.args[0]
@@ -37,6 +38,15 @@ main :: proc() {
 		if !analyze(&sema) {
 			os.exit(1)
 		}
+
+		transpiler: Transpiler
+
+		transpiler_init(&transpiler, sema.ir)
+
+		transpile(&transpiler)
+
+		fmt.println(strings.to_string(transpiler.output))
+
 	case:
 		fmt.eprintfln("error: unhandled command: %v", command)
 		os.exit(1)

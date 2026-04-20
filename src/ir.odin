@@ -161,7 +161,7 @@ Ir :: struct {
 	blocks:       [dynamic]Ir_Block,
 	functions:    [dynamic]Ir_Function,
 	globals:      [dynamic]Ir_Global,
-	strings:      [dynamic]u8,
+	strings:      [dynamic]byte,
 }
 
 is_untyped_type :: proc(type: Ir_Type) -> bool {
