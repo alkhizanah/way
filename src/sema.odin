@@ -598,25 +598,25 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 		return analyze_ordering_operation(s, result_type, node, position, .Gte)
 
 	case .Unsigned_Int_Type:
-		return analyze_int_type(s, result_type, node, position, signed = false)
+		return analyze_primitive_type(s, result_type, position, .Unsigned_Int, Ir_Index(node.a))
 
 	case .Signed_Int_Type:
-		return analyze_int_type(s, result_type, node, position, signed = true)
+		return analyze_primitive_type(s, result_type, position, .Signed_Int, Ir_Index(node.a))
 
 	case .Float16_Type:
-		return analyze_float_type(s, result_type, 16, position)
+		return analyze_primitive_type(s, result_type, position, .Float, 16)
 
 	case .Float32_Type:
-		return analyze_float_type(s, result_type, 32, position)
+		return analyze_primitive_type(s, result_type, position, .Float, 32)
 
 	case .Float64_Type:
-		return analyze_float_type(s, result_type, 64, position)
+		return analyze_primitive_type(s, result_type, position, .Float, 64)
 
 	case .Bool_Type:
-		return analyze_bool_type(s, result_type, position)
+		return analyze_primitive_type(s, result_type, position, .Bool)
 
 	case .Void_Type:
-		return analyze_void_type(s, result_type, position)
+		return analyze_primitive_type(s, result_type, position, .Void)
 
 	case:
 		sema_error(position, "unhandled expression: %v", node.tag)
@@ -1391,53 +1391,18 @@ analyze_ordering_operation :: proc(
 	return append_value(s, bool_type, op_tag, lhs_id, rhs_id)
 }
 
-analyze_int_type :: proc(
+analyze_primitive_type :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
-	node: Ast_Node,
 	position: Position,
-	signed: bool,
+	tag: Ir_Type_Tag,
+	a: Ir_Index = 0,
+	b: Ir_Index = 0,
 ) -> Ir_Index {
-	type_meta := intern_type(s, .Type, 0, 0)
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, intern_type(s, .Type, 0, 0), result_type_id) {
+		return IR_INVALID
+	}
 
-	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
-
-	int_type := intern_type(s, signed ? .Signed_Int : .Unsigned_Int, Ir_Index(node.a), 0)
-
-	return append_value(s, result_type_id, .Type, int_type, 0)
-}
-
-analyze_float_type :: proc(
-	s: ^Sema,
-	result_type_id: Ir_Index,
-	bit_width: u32,
-	position: Position,
-) -> Ir_Index {
-	type_meta := intern_type(s, .Type, 0, 0)
-
-	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
-
-	float_type := intern_type(s, .Float, Ir_Index(bit_width), 0)
-
-	return append_value(s, result_type_id, .Type, float_type, 0)
-}
-
-analyze_bool_type :: proc(s: ^Sema, result_type_id: Ir_Index, position: Position) -> Ir_Index {
-	type_meta := intern_type(s, .Type, 0, 0)
-
-	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
-
-	bool_type := intern_type(s, .Bool, 0, 0)
-
-	return append_value(s, result_type_id, .Type, bool_type, 0)
-}
-
-analyze_void_type :: proc(s: ^Sema, result_type_id: Ir_Index, position: Position) -> Ir_Index {
-	type_meta := intern_type(s, .Type, 0, 0)
-
-	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, type_meta, result_type_id) do return IR_INVALID
-
-	void_type := intern_type(s, .Void, 0, 0)
-
-	return append_value(s, result_type_id, .Type, void_type, 0)
+	return append_value(s, result_type_id, .Type, intern_type(s, tag, a, b), 0)
 }
