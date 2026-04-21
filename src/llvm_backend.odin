@@ -13,7 +13,7 @@ LLVM_Backend :: struct {
 	cached_values: map[Ir_Index]llvm.ValueRef,
 }
 
-llvm_backend_init :: proc(l: ^LLVM_Backend, name: cstring, ir: ^Ir) {
+llvm_init :: proc(l: ^LLVM_Backend, name: cstring, ir: ^Ir) {
 	l.ir = ir
 
 	l.ctx = llvm.ContextCreate()

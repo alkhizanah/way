@@ -37,18 +37,18 @@ main :: proc() {
 
 		delete_ast(parser.ast)
 
-		when #config(C_TRANSPILER, false) {
-			transpiler: Transpiler
+		when #config(C_BACKEND, false) {
+			c_backend: C_Backend
 
-			transpiler_init(&transpiler, sema.ir)
+			c_init(&c_backend, sema.ir)
 
-			transpile(&transpiler)
+			c_start(&c_backend)
 
-			fmt.println(strings.to_string(transpiler.output))
+			fmt.println(strings.to_string(c_backend.output))
 		} else {
 			llvm_backend: LLVM_Backend
 
-			llvm_backend_init(
+			llvm_init(
 				&llvm_backend,
 				strings.clone_to_cstring(parser.lexer.position.file_path),
 				&sema.ir,
