@@ -888,6 +888,12 @@ analyze_negate :: proc(
 		return IR_INVALID
 	}
 
+	if !is_float_type(value_type) && value_type.tag != .Signed_Int {
+		sema_error(position, "can not negate an unsigned value")
+
+		return IR_INVALID
+	}
+
 	return append_value(s, value_type_id, .Negate, value_id, 0)
 }
 

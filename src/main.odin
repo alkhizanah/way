@@ -4,6 +4,8 @@ import "core:fmt"
 import "core:os"
 import "core:strings"
 
+import "llvm"
+
 main :: proc() {
 	program := os.args[0]
 
@@ -39,13 +41,27 @@ main :: proc() {
 			os.exit(1)
 		}
 
-		transpiler: Transpiler
+		when #config(C_TRANSPILER, false) {
+			transpiler: Transpiler
 
-		transpiler_init(&transpiler, sema.ir)
+			transpiler_init(&transpiler, sema.ir)
 
-		transpile(&transpiler)
+			transpile(&transpiler)
 
-		fmt.println(strings.to_string(transpiler.output))
+			fmt.println(strings.to_string(transpiler.output))
+		} else {
+			llvm_backend: LLVM_Backend
+
+			llvm_backend_init(
+				&llvm_backend,
+				strings.clone_to_cstring(parser.lexer.position.file_path),
+				&sema.ir,
+			)
+
+			llvm_start(&llvm_backend)
+
+			llvm.DumpModule(llvm_backend.module)
+		}
 
 	case:
 		fmt.eprintfln("error: unhandled command: %v", command)
