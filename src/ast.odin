@@ -101,3 +101,12 @@ Ast :: struct {
 	extra:            [dynamic]Ast_Index,
 	strings:          [dynamic]u8,
 }
+
+delete_ast :: proc(ast: Ast) {
+	delete(ast.global_variables)
+	delete(ast.global_constants)
+	delete(ast.nodes)
+	delete(ast.positions)
+	delete(ast.extra)
+	delete(ast.strings)
+}

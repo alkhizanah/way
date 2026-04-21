@@ -25,21 +25,17 @@ main :: proc() {
 
 		parser: Parser
 
-		if !parser_init(&parser, os.args[2]) {
-			os.exit(1)
-		}
+		if !parser_init(&parser, os.args[2]) do os.exit(1)
 
-		if !parse(&parser) {
-			os.exit(1)
-		}
+		if !parse(&parser) do os.exit(1)
 
 		sema: Sema
 
 		sema.ast = &parser.ast
 
-		if !analyze(&sema) {
-			os.exit(1)
-		}
+		if !analyze(&sema) do os.exit(1)
+
+		delete_ast(parser.ast)
 
 		when #config(C_TRANSPILER, false) {
 			transpiler: Transpiler
