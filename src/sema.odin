@@ -232,7 +232,7 @@ is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	     .Gte:
 		return is_const_value(s, value.a) && is_const_value(s, value.b)
 
-	case .Global, .Alloca, .Load, .Store, .Get_Element_Ptr, .Call, .Parameter:
+	case .Global, .Alloca, .Load, .Get_Element_Ptr, .Call, .Parameter:
 		return false
 	}
 

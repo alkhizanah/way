@@ -88,9 +88,6 @@ Ir_Value_Tag :: enum {
 	// a is an index to value which is the pointer
 	Load,
 
-	// a is an index to value which is the pointer, and b is an index to the value to store
-	Store,
-
 	// a is an index to value which is the base pointer, and b is an index to the value which is the offset
 	Get_Element_Ptr,
 
@@ -115,6 +112,9 @@ Ir_Value :: struct {
 Ir_Instruction_Tag :: enum {
 	// a is a value index (this is needed for values that do side effect but its return is not needed)
 	Value,
+
+	// a is an index to value which is the pointer, and b is an index to the value to store
+	Store,
 
 	// a is a block index to branch into
 	Branch,
