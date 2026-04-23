@@ -235,6 +235,8 @@ parse_block :: proc(p: ^Parser) -> Ast_Index {
 
 	stmts := make([dynamic]Ast_Index)
 
+	defer delete(stmts)
+
 	for !allow_token(p, .Brace_Close) {
 		stmt := parse_stmt(p)
 
@@ -256,8 +258,6 @@ parse_block :: proc(p: ^Parser) -> Ast_Index {
 	append(&p.ast.extra, ..stmts[:])
 
 	stmts_count := len(stmts)
-
-	delete(stmts)
 
 	return append_node(
 		p,
@@ -675,7 +675,9 @@ parse_call :: proc(p: ^Parser, callee: Ast_Index) -> Ast_Index {
 
 	if !ok do return AST_INVALID
 
-	arguments: [dynamic]Ast_Index
+	arguments := make([dynamic]Ast_Index)
+
+	defer delete(arguments)
 
 	for !allow_token(p, .Paren_Close) {
 		argument := parse_expr(p, .Lowest)
@@ -739,6 +741,8 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 	named := false
 
+	parameters_count := u32(0)
+
 	for !allow_token(p, .Paren_Close) {
 		if named {
 			if !peek_token(p, .Identifier) {
@@ -800,6 +804,8 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 			return AST_INVALID
 		}
+
+		parameters_count += 1
 	}
 
 	parameters_index := len(p.ast.extra)
@@ -810,7 +816,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 		p,
 		named ? .Function_Named_Parameters : .Function_Unnamed_Parameters,
 		Ast_Index(parameters_index),
-		Ast_Index(len(parameters)),
+		Ast_Index(parameters_count),
 		paren_open.position,
 	)
 

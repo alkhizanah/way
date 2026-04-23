@@ -53,6 +53,21 @@ sema_error :: proc(position: Position, format: string, args: ..any) {
 	fmt.eprintfln(format, args = args)
 }
 
+sema_redeclaration_error :: proc(
+	position: Position,
+	existing_position: Position,
+	redeclared_name: string,
+) {
+	sema_error(
+		position,
+		"'%s' is already declared, first declaration is at %v:%v:%v",
+		redeclared_name,
+		existing_position.file_path,
+		existing_position.line,
+		existing_position.column,
+	)
+}
+
 type_to_string :: proc(s: ^Sema, type_id: Ir_Index, builder: ^strings.Builder) {
 	type := s.ir.types[type_id]
 
@@ -167,6 +182,10 @@ intern_type :: proc(s: ^Sema, tag: Ir_Type_Tag, a: Ir_Index, b: Ir_Index) -> Ir_
 	return index
 }
 
+unchecked_value_as_type :: proc(s: ^Sema, value_id: Ir_Index) -> Ir_Index {
+	return s.ir.values[value_id].a
+}
+
 append_value_with_struct :: proc(s: ^Sema, value: Ir_Value) -> Ir_Index {
 	index := Ir_Index(len(s.ir.values))
 
@@ -190,18 +209,6 @@ append_value :: proc(
 	}
 
 	return append_value_with_struct(s, value)
-}
-
-value_as_type :: proc(s: ^Sema, position: Position, value_id: Ir_Index) -> Ir_Index {
-	value := s.ir.values[value_id]
-
-	if value.tag == .Type {
-		return value.a
-	} else {
-		sema_error(position, "expected a type")
-
-		return IR_INVALID
-	}
 }
 
 is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
@@ -397,9 +404,7 @@ extract_float_value :: proc(container: $T) -> f64 {
 	return transmute(f64)((upper_bits << 32) | lower_bits)
 }
 
-
 check_type_compatibility :: proc(s: ^Sema, position: Position, a: Ir_Index, b: Ir_Index) -> bool {
-	// NOTE(yhya): Since types are interned then their indices should always be unique
 	if a != b {
 		sema_error(
 			position,
@@ -430,13 +435,10 @@ analyze :: proc(s: ^Sema) -> bool {
 hoist_global_bindings :: proc(s: ^Sema, bindings: []Ast_Binding, constant: bool) -> bool {
 	for &binding in bindings {
 		if existing, ok := s.globals[binding.name.value]; ok {
-			sema_error(
+			sema_redeclaration_error(
 				binding.name.position,
-				"'%s' is already declared, first declaration is at %v:%v:%v",
+				existing.syntax.name.position,
 				binding.name.value,
-				existing.syntax.name.position.file_path,
-				existing.syntax.name.position.line,
-				existing.syntax.name.position.column,
 			)
 
 			return false
@@ -460,13 +462,12 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 
 	if binding.syntax.type != AST_INVALID {
 		type_meta := intern_type(s, .Type, 0, 0)
+
 		type_value := analyze_expr(s, type_meta, binding.syntax.type)
 
 		if type_value == IR_INVALID do return false
 
-		explicit_type = value_as_type(s, binding.syntax.name.position, type_value)
-
-		if explicit_type == IR_INVALID do return false
+		explicit_type = unchecked_value_as_type(s, type_value)
 	}
 
 	if binding.syntax.value == AST_INVALID {
@@ -618,6 +619,9 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 
 	case .Void_Type:
 		return analyze_primitive_type(s, result_type, position, .Void)
+
+	case .Function_Type:
+		return analyze_function_type(s, result_type, node, position)
 
 	case:
 		sema_error(position, "unhandled expression: %v", node.tag)
@@ -1295,4 +1299,91 @@ analyze_primitive_type :: proc(
 	}
 
 	return append_value(s, type_meta, .Type, intern_type(s, tag, a, b), 0)
+}
+
+analyze_function_type :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	type_meta := intern_type(s, .Type, 0, 0)
+
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, type_meta, result_type_id) {
+		return IR_INVALID
+	}
+
+	parameters_node := s.ast.nodes[node.a]
+
+	parameter_nodes_base := parameters_node.a
+	parameter_nodes_len := parameters_node.b
+
+	parameter_types := make([dynamic]Ir_Index)
+
+	defer delete(parameter_types)
+
+	if parameters_node.tag == .Function_Named_Parameters {
+		seen := make(map[string]Position)
+		defer delete(seen)
+
+		for i in 0..<parameter_nodes_len {
+			parameter_name_node_id := s.ast.extra[parameter_nodes_base + i*2]
+
+			parameter_name_node := s.ast.nodes[parameter_name_node_id]
+			parameter_name_position := s.ast.positions[parameter_name_node_id]
+
+			parameter_name := string(s.ast.strings[parameter_name_node.a:][:parameter_name_node.b])
+
+			if existing_position, ok := seen[parameter_name]; ok {
+				sema_redeclaration_error(
+					parameter_name_position,
+					existing_position,
+					parameter_name,
+				)
+
+				return IR_INVALID
+			} else {
+				seen[parameter_name] = parameter_name_position
+			}
+
+			parameter_type_node_id := s.ast.extra[parameter_nodes_base + i*2 + 1]
+
+			parameter_type_value := analyze_expr(s, type_meta, parameter_type_node_id)
+
+			if parameter_type_value == IR_INVALID do return IR_INVALID
+
+			append(&parameter_types, unchecked_value_as_type(s, parameter_type_value))
+		}
+	} else {
+		for i in 0 ..< parameter_nodes_len {
+			parameter_type_value := analyze_expr(
+				s,
+				type_meta,
+				s.ast.extra[parameter_nodes_base + i],
+			)
+
+			if parameter_type_value == IR_INVALID do return IR_INVALID
+
+			append(&parameter_types, unchecked_value_as_type(s, parameter_type_value))
+		}
+	}
+
+	parameters_index := len(s.ir.extra)
+
+	append(&s.ir.extra, Ir_Index(len(parameter_types)))
+	append(&s.ir.extra, ..parameter_types[:])
+
+	return_type_value := analyze_expr(s, type_meta, node.b)
+
+	if return_type_value == IR_INVALID do return IR_INVALID
+
+	function_type := intern_type(
+		s,
+		.Function,
+		Ir_Index(parameters_index),
+		unchecked_value_as_type(s, return_type_value),
+	)
+
+	return append_value(s, type_meta, .Type, function_type, 0)
 }
