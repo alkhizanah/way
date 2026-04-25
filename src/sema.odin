@@ -1772,7 +1772,9 @@ analyze_local_binding :: proc(
 	initializer := IR_INVALID
 
 	if initializer_node_id != AST_INVALID {
-		initializer = analyze_expr(s, explicit_type, initializer_node_id)
+		name_for_initializer := fmt.tprintf("%s::%s", s.ir.functions[s.function].name.value, name)
+
+		initializer = analyze_expr(s, explicit_type, initializer_node_id, name_for_initializer)
 
 		if initializer == IR_INVALID do return false
 
