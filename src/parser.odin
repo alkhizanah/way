@@ -194,7 +194,7 @@ parse_binding :: proc(p: ^Parser) -> Ast_Index {
 	tag: Ast_Node_Tag
 
 	if !peek_token(p, .Colon) && !peek_token(p, .Assign) {
-		type = parse_expr(p, .Lowest)
+		type = parse_expr(p, .Lowest, stop_on_assign = true)
 
 		if type == AST_INVALID do return AST_INVALID
 	}

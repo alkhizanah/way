@@ -702,10 +702,22 @@ analyze_identifier :: proc(
 
 	if local, ok := scope_lookup(&s.scope, name); ok {
 		if local.constant {
-			local_type := s.ir.values[local.value].type
+			local_value := s.ir.values[local.value]
+			local_type_id := local_value.type
+			local_type := s.ir.types[local_type_id]
 
 			if result_type_id != IR_INVALID {
-				if !check_type_compatibility(s, position, local_type, result_type_id) {
+				if is_untyped_type(local_type) {
+					if !can_cast_untyped_value(s, position, local.value, result_type_id) {
+						return IR_INVALID
+					}
+
+					local_value.type = result_type_id
+
+					return append_value_with_struct(s, local_value)
+				}
+
+				if !check_type_compatibility(s, position, local_type_id, result_type_id) {
 					return IR_INVALID
 				}
 			}
@@ -1710,7 +1722,13 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 	case .Return:
 		return analyze_return(s, node, position)
 
-	case .If, .While, .For, .Variable, .Constant, .Break, .Continue:
+	case .Variable:
+		return analyze_local_binding(s, node, position, false)
+
+	case .Constant:
+		return analyze_local_binding(s, node, position, true)
+
+	case .If, .While, .For, .Break, .Continue:
 		sema_error(position, "unhandled statement: %v", node.tag)
 
 		return false
@@ -1726,6 +1744,89 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 	}
 }
 
+analyze_local_binding :: proc(
+	s: ^Sema,
+	node: Ast_Node,
+	position: Position,
+	constant: bool,
+) -> bool {
+	identifier := s.ast.nodes[s.ast.extra[node.a]]
+
+	name := string(s.ast.strings[identifier.a:][:identifier.b])
+
+	explicit_type := IR_INVALID
+
+	explicit_type_node_id := s.ast.extra[node.a + 1]
+
+	if explicit_type_node_id != AST_INVALID {
+		type_meta := intern_type(s, .Type, 0, 0)
+		type_value := analyze_expr(s, type_meta, explicit_type_node_id)
+
+		if type_value == IR_INVALID do return false
+
+		explicit_type = unchecked_value_as_type(s, type_value)
+	}
+
+	initializer_node_id := node.b
+
+	initializer := IR_INVALID
+
+	if initializer_node_id != AST_INVALID {
+		initializer = analyze_expr(s, explicit_type, initializer_node_id)
+
+		if initializer == IR_INVALID do return false
+
+		if !constant {
+
+		}
+	} else {
+		assert(explicit_type != IR_INVALID)
+
+		initializer = append_value(s, explicit_type, .Zero, 0, 0)
+	}
+
+	assert(initializer != IR_INVALID)
+
+	if constant {
+		if !is_const_value(s, initializer) {
+			sema_error(position, "expected a compile-time known constant value")
+
+			return false
+		}
+
+		scope_add(&s.scope, name, initializer, constant, position)
+	} else {
+		initializer_type_id := s.ir.values[initializer].type
+
+		initializer_type := s.ir.types[initializer_type_id]
+
+		if initializer_type.tag == .Untyped_Int {
+			sema_error(
+				position,
+				"please specify a type for your integer variable, the compiler can't decide on its own",
+			)
+
+			return false
+		} else if initializer_type.tag == .Untyped_Float {
+			sema_error(
+				position,
+				"please specify a type for your float variable, the compiler can't decide on its own",
+			)
+
+			return false
+		}
+
+		pointer_type := intern_type(s, .Single_Pointer, initializer_type_id, 0)
+		alloca := append_value(s, pointer_type, .Alloca, initializer_type_id, 0)
+
+		append_instruction(s, .Value, alloca, 0)
+		append_instruction(s, .Store, alloca, initializer)
+
+		scope_add(&s.scope, name, alloca, constant, position)
+	}
+
+	return true
+}
 
 analyze_return :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 	assert(s.function != IR_INVALID)

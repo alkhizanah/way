@@ -98,8 +98,8 @@ Ir_Value_Tag :: enum {
 	Parameter,
 
 	// no payload is needed
-	Zero, // ZII, zero initializer of the type it is associated with
-	Null,
+	Zero, // zero initializer of the type it is associated with
+	Null, // a null pointer that should not be dereferenced
 }
 
 Ir_Value :: struct {
