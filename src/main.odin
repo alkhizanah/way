@@ -31,7 +31,7 @@ main :: proc() {
 
 		sema: Sema
 
-		sema.ast = &parser.ast
+		sema_init(&sema, &parser.ast)
 
 		if !analyze(&sema) do os.exit(1)
 

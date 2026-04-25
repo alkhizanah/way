@@ -122,7 +122,7 @@ Ir_Instruction_Tag :: enum {
 	// a is a value index which is the condition and b is an index to a pair of (true case block index, false case block index) in extra
 	Conditional_Branch,
 
-	// a is a value index
+	// a is a value index which may be IR_INVALID then the function returns with no value
 	Return,
 
 	// doesn't need a payload, and should never be reached
@@ -136,15 +136,13 @@ Ir_Instruction :: struct {
 }
 
 Ir_Block :: struct {
-	instructions_start: Ir_Index,
-	instructions_count: u32,
+	instructions: [dynamic]Ir_Instruction,
 }
 
 Ir_Function :: struct {
-	name:         Token,
-	type:         Ir_Index,
-	blocks_start: Ir_Index,
-	blocks_count: u32,
+	name:   Token,
+	type:   Ir_Index,
+	blocks: [dynamic]Ir_Block,
 }
 
 Ir_Global :: struct {
@@ -153,15 +151,13 @@ Ir_Global :: struct {
 }
 
 Ir :: struct {
-	values:       [dynamic]Ir_Value,
-	types:        [dynamic]Ir_Type,
-	extra:        [dynamic]Ir_Index,
-	instructions: [dynamic]Ir_Instruction,
-	positions:    [dynamic]Position,
-	blocks:       [dynamic]Ir_Block,
-	functions:    [dynamic]Ir_Function,
-	globals:      [dynamic]Ir_Global,
-	strings:      [dynamic]byte,
+	values:    [dynamic]Ir_Value,
+	types:     [dynamic]Ir_Type,
+	extra:     [dynamic]Ir_Index,
+	positions: [dynamic]Position,
+	functions: [dynamic]Ir_Function,
+	globals:   [dynamic]Ir_Global,
+	strings:   [dynamic]byte,
 }
 
 is_untyped_type :: proc(type: Ir_Type) -> bool {

@@ -3,6 +3,7 @@ package main
 import "base:intrinsics"
 import "core:fmt"
 import "core:math"
+import "core:math/rand"
 import "core:strings"
 
 Sema_Global_Binding :: struct {
@@ -18,13 +19,17 @@ Sema_Global_Binding :: struct {
 
 Sema_Local_Binding :: struct {
 	position: Position,
-	pointer:  Ir_Index,
+	value:    Ir_Index,
 	constant: bool,
 }
 
 Scope :: struct {
 	parent: ^Scope,
 	locals: map[string]Sema_Local_Binding,
+}
+
+make_scope :: proc(parent: ^Scope) -> Scope {
+	return {parent = parent, locals = make(map[string]Sema_Local_Binding)}
 }
 
 scope_lookup :: proc(s: ^Scope, name: string) -> (Sema_Local_Binding, bool) {
@@ -41,11 +46,29 @@ scope_lookup :: proc(s: ^Scope, name: string) -> (Sema_Local_Binding, bool) {
 	return {}, false
 }
 
+scope_add :: proc(s: ^Scope, name: string, value: Ir_Index, constant: bool, position: Position) {
+	s.locals[name] = {
+		value    = value,
+		constant = constant,
+		position = position,
+	}
+}
+
 Sema :: struct {
-	ast:     ^Ast,
-	ir:      Ir,
-	scope:   Scope,
-	globals: map[string]Sema_Global_Binding,
+	ast:      ^Ast,
+	ir:       Ir,
+	globals:  map[string]Sema_Global_Binding,
+	function: Ir_Index,
+	block:    Ir_Index,
+	scope:    Scope,
+}
+
+sema_init :: proc(s: ^Sema, ast: ^Ast) {
+	s.ast = ast
+	s.function = IR_INVALID
+	s.block = IR_INVALID
+	s.scope = make_scope(nil)
+	s.globals = make(map[string]Sema_Global_Binding)
 }
 
 sema_error :: proc(position: Position, format: string, args: ..any) {
@@ -209,6 +232,29 @@ append_value :: proc(
 	}
 
 	return append_value_with_struct(s, value)
+}
+
+append_instruction :: proc(
+	s: ^Sema,
+	tag: Ir_Instruction_Tag,
+	a: Ir_Index,
+	b: Ir_Index,
+) -> Ir_Index {
+	instruction := Ir_Instruction {
+		tag = tag,
+		a   = a,
+		b   = b,
+	}
+
+	function := &s.ir.functions[s.function]
+
+	block := &function.blocks[s.block]
+
+	index := Ir_Index(len(block.instructions))
+
+	append(&block.instructions, instruction)
+
+	return index
 }
 
 is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
@@ -475,7 +521,12 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 
 		binding.value = append_value(s, explicit_type, .Zero, 0, 0)
 	} else {
-		binding.value = analyze_expr(s, explicit_type, binding.syntax.value)
+		binding.value = analyze_expr(
+			s,
+			explicit_type,
+			binding.syntax.value,
+			binding.syntax.name.value,
+		)
 
 		if binding.value == IR_INVALID do return false
 	}
@@ -519,7 +570,12 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 	return true
 }
 
-analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_Index {
+analyze_expr :: proc(
+	s: ^Sema,
+	result_type: Ir_Index,
+	node_id: Ast_Index,
+	name: Maybe(string) = nil,
+) -> Ir_Index {
 	node := s.ast.nodes[node_id]
 	position := s.ast.positions[node_id]
 
@@ -541,6 +597,12 @@ analyze_expr :: proc(s: ^Sema, result_type: Ir_Index, node_id: Ast_Index) -> Ir_
 
 	case .False:
 		return analyze_bool(s, result_type, false, position)
+
+	case .Function:
+		return analyze_function(s, result_type, node, position, name)
+
+	case .Call:
+		return analyze_call(s, result_type, node, position)
 
 	case .Bool_Not:
 		return analyze_bool_not(s, result_type, node, position)
@@ -639,19 +701,32 @@ analyze_identifier :: proc(
 	name := string(s.ast.strings[node.a:][:node.b])
 
 	if local, ok := scope_lookup(&s.scope, name); ok {
-		pointer_type := s.ir.types[s.ir.values[local.pointer].type]
+		if local.constant {
+			local_type := s.ir.values[local.value].type
 
-		assert(pointer_type.tag == .Single_Pointer)
-
-		local_type := pointer_type.a
-
-		if result_type_id != IR_INVALID {
-			if !check_type_compatibility(s, position, local_type, result_type_id) {
-				return IR_INVALID
+			if result_type_id != IR_INVALID {
+				if !check_type_compatibility(s, position, local_type, result_type_id) {
+					return IR_INVALID
+				}
 			}
+
+			return local.value
+		} else {
+			pointer_type := s.ir.types[s.ir.values[local.value].type]
+
+			assert(pointer_type.tag == .Single_Pointer)
+
+			local_type := pointer_type.a
+
+			if result_type_id != IR_INVALID {
+				if !check_type_compatibility(s, position, local_type, result_type_id) {
+					return IR_INVALID
+				}
+			}
+
+			return append_value(s, local_type, .Load, local.value, 0)
 		}
 
-		return append_value(s, local_type, .Load, local.pointer, 0)
 	}
 
 	if binding, ok := &s.globals[name]; ok {
@@ -1327,8 +1402,8 @@ analyze_function_type :: proc(
 		seen := make(map[string]Position)
 		defer delete(seen)
 
-		for i in 0..<parameter_nodes_len {
-			parameter_name_node_id := s.ast.extra[parameter_nodes_base + i*2]
+		for i in 0 ..< parameter_nodes_len {
+			parameter_name_node_id := s.ast.extra[parameter_nodes_base + i * 2]
 
 			parameter_name_node := s.ast.nodes[parameter_name_node_id]
 			parameter_name_position := s.ast.positions[parameter_name_node_id]
@@ -1347,7 +1422,7 @@ analyze_function_type :: proc(
 				seen[parameter_name] = parameter_name_position
 			}
 
-			parameter_type_node_id := s.ast.extra[parameter_nodes_base + i*2 + 1]
+			parameter_type_node_id := s.ast.extra[parameter_nodes_base + i * 2 + 1]
 
 			parameter_type_value := analyze_expr(s, type_meta, parameter_type_node_id)
 
@@ -1386,4 +1461,317 @@ analyze_function_type :: proc(
 	)
 
 	return append_value(s, type_meta, .Type, function_type, 0)
+}
+
+analyze_call :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	callee_value_id := analyze_expr(s, IR_INVALID, node.a)
+
+	if callee_value_id == IR_INVALID do return IR_INVALID
+
+	callee_value := s.ir.values[callee_value_id]
+
+	callee_type_id := callee_value.type
+
+	callee_type := s.ir.types[callee_type_id]
+
+	if callee_type.tag == .Single_Pointer {
+		pointer_callee_type_id := callee_type_id
+
+		callee_type_id := callee_type.a
+
+		callee_type := s.ir.types[callee_type_id]
+
+		if callee_type.tag != .Function {
+			sema_error(
+				position,
+				"can not call a '%s' value",
+				type_to_string_temp(s, pointer_callee_type_id),
+			)
+
+			return IR_INVALID
+		}
+	} else if callee_type.tag != .Function {
+		sema_error(position, "can not call a '%s' value", type_to_string_temp(s, callee_type_id))
+
+		return IR_INVALID
+	}
+
+	callee_parameters_base := callee_type.a + 1
+	callee_parameters_count := u32(s.ir.extra[callee_type.a])
+
+	call_arguments_node := s.ast.nodes[node.b]
+
+	call_arguments_base := call_arguments_node.a
+	call_arguments_count := u32(call_arguments_node.b)
+
+	if callee_parameters_count != call_arguments_count {
+		sema_error(
+			position,
+			"expected '%v' argument(s), but got '%v'",
+			callee_parameters_count,
+			call_arguments_count,
+		)
+
+		return IR_INVALID
+	}
+
+	call_arguments := make([dynamic]Ir_Index)
+
+	for i in 0 ..< call_arguments_count {
+		callee_parameter_type := s.ir.extra[callee_parameters_base + Ir_Index(i)]
+		call_argument_id := s.ast.extra[call_arguments_base + Ast_Index(i)]
+
+		call_argument := analyze_expr(s, callee_parameter_type, call_argument_id)
+
+		if call_argument == IR_INVALID do return IR_INVALID
+
+		append(&call_arguments, call_argument)
+	}
+
+	call_arguments_index := len(s.ir.extra)
+
+	append(&s.ir.extra, Ir_Index(call_arguments_count))
+	append(&s.ir.extra, ..call_arguments[:])
+
+	return append_value(s, callee_type.b, .Call, callee_value_id, Ir_Index(call_arguments_index))
+}
+
+analyze_function :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+	name: Maybe(string),
+) -> Ir_Index {
+	function_type_node := s.ast.nodes[node.a]
+
+	parameters_node := s.ast.nodes[function_type_node.a]
+
+	function_type_value := analyze_function_type(s, IR_INVALID, function_type_node, position)
+
+	function_type_id := unchecked_value_as_type(s, function_type_value)
+
+	function_type := s.ir.types[function_type_id]
+
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, function_type_id, result_type_id) {
+		return IR_INVALID
+	}
+
+	name := Token {
+		tag      = .Identifier,
+		value    = name == nil ? fmt.tprintf("way_anonymous_function::%v", rand.uint128()) : name.(string),
+		position = position,
+	}
+
+	old_function := s.function
+	old_scope := s.scope
+	old_block := s.block
+
+	function_id := Ir_Index(len(s.ir.functions))
+
+	s.function = function_id
+	s.scope = make_scope(nil)
+	s.block = IR_INVALID
+
+	append(&s.ir.functions, Ir_Function{type = function_type_id, name = name})
+
+	parameter_nodes_base := parameters_node.a
+	parameter_nodes_len := parameters_node.b
+
+	if parameters_node.tag != .Function_Named_Parameters && parameter_nodes_len > 0 {
+		sema_error(position, "function with a body must have named parameters")
+
+		return IR_INVALID
+	}
+
+	for i in 0 ..< parameter_nodes_len {
+		parameter_name_node_id := s.ast.extra[parameter_nodes_base + i * 2]
+
+		parameter_name_node := s.ast.nodes[parameter_name_node_id]
+		parameter_name_position := s.ast.positions[parameter_name_node_id]
+
+		parameter_name := string(s.ast.strings[parameter_name_node.a:][:parameter_name_node.b])
+
+		parameter_type_id := s.ir.extra[function_type.a + 1 + Ir_Index(i)]
+
+		parameter_value := append_value(s, parameter_type_id, .Parameter, Ir_Index(i), 0)
+
+		scope_add(&s.scope, parameter_name, parameter_value, true, position)
+	}
+
+	if !analyze_block(s, s.ast.nodes[node.b], position) do return IR_INVALID
+
+	if !ends_with_terminator(s) {
+		function_type := s.ir.types[function_type_id]
+
+		function_return_type_id := function_type.b
+
+		function_return_type := s.ir.types[function_return_type_id]
+
+		if function_return_type.tag == .Void {
+			if s.block == IR_INVALID {
+				new_block(s)
+			}
+
+			append_instruction(s, .Return, IR_INVALID, 0)
+		} else {
+			sema_error(
+				position,
+				"function did not return a value of type '%s'",
+				type_to_string_temp(s, function_return_type_id),
+			)
+
+			return IR_INVALID
+		}
+	}
+
+	function := &s.ir.functions[function_id]
+
+	s.function = old_function
+	s.block = old_block
+	s.scope = old_scope
+
+	return append_value(s, function_type_id, .Function, function_id, 0)
+}
+
+ends_with_terminator :: proc(s: ^Sema) -> bool {
+	function := s.ir.functions[s.function]
+
+	block := function.blocks[s.block]
+
+	if len(block.instructions) == 0 do return false
+
+	last_instruction := block.instructions[len(block.instructions) - 1]
+
+	switch last_instruction.tag {
+	case .Return, .Branch, .Conditional_Branch, .Unreachable:
+		return true
+
+	case .Value, .Store:
+		return false
+
+	case:
+		return false
+	}
+}
+
+new_block :: proc(s: ^Sema) -> Ir_Index {
+	function := &s.ir.functions[s.function]
+
+	new_block_id := Ir_Index(len(function.blocks))
+
+	append(&function.blocks, Ir_Block{})
+
+	if s.block != IR_INVALID {
+		if !ends_with_terminator(s) {
+			append_instruction(s, .Branch, new_block_id, 0)
+		}
+	}
+
+	s.block = new_block_id
+
+	return new_block_id
+}
+
+analyze_block :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
+	block_id := new_block(s)
+
+	old_scope := s.scope
+
+	s.scope = make_scope(&old_scope)
+
+	stmts := s.ast.extra[node.a:][:node.b]
+
+	for stmt in stmts {
+		analyze_stmt(s, stmt) or_return
+	}
+
+	delete(s.scope.locals)
+
+	s.scope = old_scope
+
+	return true
+}
+
+analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
+	node := s.ast.nodes[node_id]
+	position := s.ast.positions[node_id]
+
+	#partial switch node.tag {
+	case .Block:
+		return analyze_block(s, node, position)
+
+	case .Return:
+		return analyze_return(s, node, position)
+
+	case .If, .While, .For, .Variable, .Constant, .Break, .Continue:
+		sema_error(position, "unhandled statement: %v", node.tag)
+
+		return false
+
+	case:
+		value := analyze_expr(s, IR_INVALID, node_id)
+
+		if value == IR_INVALID do return false
+
+		append_instruction(s, .Value, value, 0)
+
+		return true
+	}
+}
+
+
+analyze_return :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
+	assert(s.function != IR_INVALID)
+
+	function := s.ir.functions[s.function]
+
+	function_type_id := function.type
+
+	function_type := s.ir.types[function_type_id]
+
+	assert(function_type.tag == .Function)
+
+	return_type_id := function_type.b
+
+	return_type := s.ir.types[return_type_id]
+
+	if return_type.tag == .Void {
+		if node.b != AST_INVALID {
+			sema_error(
+				position,
+				"function of type '%s' should not return a value (return type is 'void')",
+				type_to_string_temp(s, function.type),
+			)
+
+			return false
+		}
+
+		append_instruction(s, .Return, IR_INVALID, 0)
+	} else {
+		if node.b == AST_INVALID {
+			sema_error(
+				position,
+				"function of type '%s' should return a value (return type is not 'void', it is '%s')",
+				type_to_string_temp(s, function.type),
+				type_to_string_temp(s, return_type_id),
+			)
+
+			return false
+		}
+
+		return_value := analyze_expr(s, return_type_id, node.b)
+
+		if return_value == IR_INVALID do return false
+
+		append_instruction(s, .Return, return_value, 0)
+	}
+
+	return true
 }

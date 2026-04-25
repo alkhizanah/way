@@ -59,20 +59,16 @@ llvm_start :: proc(l: ^LLVM_Backend) {
 
 		clear(&l.cached_values)
 
-		reserve(&l.blocks, function.blocks_count)
+		reserve(&l.blocks, len(function.blocks))
 
-		blocks := l.ir.blocks[function.blocks_start:][:function.blocks_count]
-
-		for block in blocks {
+		for block in function.blocks {
 			append(&l.blocks, llvm.AppendBasicBlock(l.function, ""))
 		}
 
-		for block, i in blocks {
+		for block, i in function.blocks {
 			llvm.PositionBuilderAtEnd(l.builder, l.blocks[i])
 
-			instructions := l.ir.instructions[block.instructions_start:][:block.instructions_count]
-
-			for instruction in instructions {
+			for instruction in block.instructions {
 				llvm_compile_instruction(l, instruction)
 			}
 		}
@@ -374,7 +370,15 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 	case .Call:
 		callee_value := l.ir.values[value.a]
 
-		callee_type := llvm_compile_type(l, callee_value.type)
+		callee_type_id := callee_value.type
+
+		if l.ir.types[callee_type_id].tag == .Single_Pointer {
+			callee_type_id = l.ir.types[callee_type_id].a
+		}
+
+		assert(l.ir.types[callee_type_id].tag == .Function)
+
+		llvm_callee_type := llvm_compile_type(l, callee_type_id)
 
 		llvm_callee := llvm_compile_value(l, value.a)
 
@@ -384,13 +388,13 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 		args := make([]llvm.ValueRef, arg_count)
 
 		for i in 0 ..< arg_count {
-			arg_id := args_data[1 + i]
+			arg_id := args_data[i + 1]
 			args[i] = llvm_compile_value(l, arg_id)
 		}
 
 		llvm_value = llvm.BuildCall2(
 			l.builder,
-			callee_type,
+			llvm_callee_type,
 			llvm_callee,
 			raw_data(args),
 			u32(arg_count),

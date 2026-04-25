@@ -86,7 +86,7 @@ expect_token :: proc(p: ^Parser, tag: Token_Tag) -> (Token, bool) {
 }
 
 expect_semicolon :: proc(p: ^Parser) -> bool {
-	if (p.previous_token.tag != .Brace_Close) {
+	if p.previous_token.tag != .Brace_Close {
 		expect_token(p, .Semicolon) or_return
 	}
 
@@ -140,11 +140,13 @@ parse_global :: proc(p: ^Parser) -> bool {
 parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 	#partial switch p.current_token.tag {
 	case .Identifier:
+		lexer := p.lexer
 		previous_token := p.previous_token
 		identifier := advance_token(p)
 
 		is_colon := peek_token(p, .Colon)
 
+		p.lexer = lexer
 		p.previous_token = previous_token
 		p.current_token = identifier
 
