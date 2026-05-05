@@ -294,9 +294,7 @@ parse_for_loop :: proc(p: ^Parser) -> Ast_Index {
 
 		if inital == AST_INVALID do return AST_INVALID
 
-		_, ok := expect_token(p, .Semicolon)
-
-		if !ok do return AST_INVALID
+		if _, ok := expect_token(p, .Semicolon); !ok do return AST_INVALID
 	}
 
 	condition := AST_INVALID
@@ -306,9 +304,7 @@ parse_for_loop :: proc(p: ^Parser) -> Ast_Index {
 
 		if condition == AST_INVALID do return AST_INVALID
 
-		_, ok := expect_token(p, .Semicolon)
-
-		if !ok do return AST_INVALID
+		if _, ok := expect_token(p, .Semicolon); !ok do return AST_INVALID
 	}
 
 	ending := AST_INVALID
@@ -486,6 +482,12 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .Fn:
 		return parse_function(p)
 
+	case .Star:
+		return parse_pointer_type(p, single = true)
+
+	case .Bracket_Open:
+		return parse_pointer_type(p, single = false)
+
 	case:
 		syntax_error(p.current_token.position, "unknown expression")
 
@@ -503,8 +505,7 @@ parse_unary_op :: proc(p: ^Parser, tag: Ast_Node_Tag) -> Ast_Index {
 parse_grouped_expr :: proc(p: ^Parser) -> Ast_Index {
 	advance_token(p)
 	expr := parse_expr(p, .Lowest)
-	_, ok := expect_token(p, .Paren_Close)
-	if !ok do return AST_INVALID
+	if _, ok := expect_token(p, .Paren_Close); !ok do return AST_INVALID
 	return expr
 }
 
@@ -572,8 +573,7 @@ parse_subscript :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 	token := advance_token(p)
 	index := parse_expr(p, .Lowest)
 	if index == AST_INVALID do return AST_INVALID
-	_, ok := expect_token(p, .Bracket_Close)
-	if !ok do return AST_INVALID
+	if _, ok := expect_token(p, .Bracket_Close); !ok do return AST_INVALID
 	return append_node(p, .Subscript, target, index, token.position)
 }
 
@@ -837,4 +837,50 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 	}
 
 	return append_node(p, .Function_Type, parameters_node, return_type, paren_open.position)
+}
+
+parse_pointer_type :: proc(p: ^Parser, single: bool) -> Ast_Index {
+	token := advance_token(p)
+
+	if single {
+		assert(token.tag == .Star)
+
+		child_type := parse_expr(p, .Prefix)
+
+		if child_type == AST_INVALID do return AST_INVALID
+
+		return append_node(p, .Single_Pointer_Type, child_type, 0, token.position)
+	} else if peek_token(p, .Star) {
+		assert(token.tag == .Bracket_Open)
+
+		advance_token(p)
+
+		if _, ok := expect_token(p, .Bracket_Close); !ok do return AST_INVALID
+
+		child_type := parse_expr(p, .Prefix)
+
+		if child_type == AST_INVALID do return AST_INVALID
+
+		return append_node(p, .Multi_Pointer_Type, child_type, 0, token.position)
+	} else if peek_token(p, .Bracket_Close) {
+		advance_token(p)
+
+		child_type := parse_expr(p, .Prefix)
+
+		if child_type == AST_INVALID do return AST_INVALID
+
+		return append_node(p, .Slice_Type, child_type, 0, token.position)
+	} else {
+		length := parse_expr(p, .Lowest)
+
+		if length == AST_INVALID do return AST_INVALID
+
+		if _, ok := expect_token(p, .Bracket_Close); !ok do return AST_INVALID
+
+		child_type := parse_expr(p, .Prefix)
+
+		if child_type == AST_INVALID do return AST_INVALID
+
+		return append_node(p, .Array_Type, child_type, length, token.position)
+	}
 }

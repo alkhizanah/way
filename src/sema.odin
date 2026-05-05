@@ -598,6 +598,9 @@ analyze_expr :: proc(
 	case .False:
 		return analyze_bool(s, result_type, false, position)
 
+	case .Null:
+		return analyze_null(s, result_type, position)
+
 	case .Function:
 		return analyze_function(s, result_type, node, position, name)
 
@@ -684,6 +687,18 @@ analyze_expr :: proc(
 
 	case .Function_Type:
 		return analyze_function_type(s, result_type, node, position)
+
+	case .Single_Pointer_Type:
+		return analyze_pointer_type(s, result_type, node, position, .Single_Pointer)
+
+	case .Multi_Pointer_Type:
+		return analyze_pointer_type(s, result_type, node, position, .Multi_Pointer)
+
+	case .Slice_Type:
+		return analyze_pointer_type(s, result_type, node, position, .Slice)
+
+	case .Array_Type:
+		return analyze_array_type(s, result_type, node, position)
 
 	case:
 		sema_error(position, "unhandled expression: %v", node.tag)
@@ -879,6 +894,30 @@ analyze_bool :: proc(
 	if result_type_id != IR_INVALID && !check_type_compatibility(s, position, bool_type, result_type_id) do return IR_INVALID
 
 	return append_value(s, bool_type, .Bool, Ir_Index(value), 0)
+}
+
+analyze_null :: proc(s: ^Sema, result_type_id: Ir_Index, position: Position) -> Ir_Index {
+	if result_type_id == IR_INVALID {
+		sema_error(position, "null can not be used without a type hint")
+
+		return IR_INVALID
+	}
+
+	result_type := s.ir.types[result_type_id]
+
+	if result_type.tag != .Single_Pointer &&
+	   result_type.tag != .Multi_Pointer &&
+	   result_type.tag != .Slice {
+		sema_error(
+			position,
+			"null's type must be a pointer or a slice, got '%s'",
+			type_to_string_temp(s, result_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	return append_value(s, result_type_id, .Null, 0, 0)
 }
 
 analyze_bool_not :: proc(
@@ -1386,6 +1425,71 @@ analyze_primitive_type :: proc(
 	}
 
 	return append_value(s, type_meta, .Type, intern_type(s, tag, a, b), 0)
+}
+
+analyze_pointer_type :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+	type_tag: Ir_Type_Tag,
+) -> Ir_Index {
+	type_meta := intern_type(s, .Type, 0, 0)
+
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, type_meta, result_type_id) {
+		return IR_INVALID
+	}
+
+	child_type_value := analyze_expr(s, type_meta, node.a)
+
+	if child_type_value == IR_INVALID do return IR_INVALID
+
+	assert(s.ir.values[child_type_value].tag == .Type)
+
+	child_type_id := s.ir.values[child_type_value].a
+
+	return append_value(s, type_meta, .Type, intern_type(s, type_tag, child_type_id, 0), 0)
+}
+
+analyze_array_type :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	type_meta := intern_type(s, .Type, 0, 0)
+
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, type_meta, result_type_id) {
+		return IR_INVALID
+	}
+
+	u32_type_id := intern_type(s, .Unsigned_Int, 32, 0)
+
+	length_value := analyze_expr(s, u32_type_id, node.b)
+
+	if length_value == IR_INVALID do return IR_INVALID
+
+	assert(s.ir.values[length_value].tag == .Int)
+
+	length := extract_int_value(s.ir.values[length_value])
+
+	child_type_value := analyze_expr(s, type_meta, node.a)
+
+	if child_type_value == IR_INVALID do return IR_INVALID
+
+	assert(s.ir.values[child_type_value].tag == .Type)
+
+	child_type_id := s.ir.values[child_type_value].a
+
+	return append_value(
+		s,
+		type_meta,
+		.Type,
+		intern_type(s, .Array, child_type_id, Ir_Index(length)),
+		0,
+	)
 }
 
 analyze_function_type :: proc(

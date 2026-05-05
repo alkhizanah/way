@@ -16,6 +16,12 @@ Ast_Node_Tag :: enum {
 	// a is the bit width
 	Unsigned_Int_Type,
 	Signed_Int_Type,
+	// a is the child type index
+	Single_Pointer_Type,
+	Multi_Pointer_Type,
+	Slice_Type,
+	// a is the child type index and b is the length value index
+	Array_Type,
 	// the following are left as an exercise to the reader (they are unary operations, a is unused)
 	Negate,
 	Bool_Not,
