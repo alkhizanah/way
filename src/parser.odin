@@ -138,8 +138,7 @@ parse_global :: proc(p: ^Parser) -> bool {
 }
 
 parse_stmt :: proc(p: ^Parser) -> Ast_Index {
-	#partial switch p.current_token.tag {
-	case .Identifier:
+	if peek_token(p, .Identifier) {
 		lexer := p.lexer
 		previous_token := p.previous_token
 		identifier := advance_token(p)
@@ -152,10 +151,10 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 
 		if is_colon {
 			return parse_binding(p)
-		} else {
-			return parse_expr(p, .Lowest)
 		}
+	}
 
+	#partial switch p.current_token.tag {
 	case .Brace_Open:
 		return parse_block(p)
 
@@ -178,7 +177,15 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 		return append_node(p, .Continue, 0, 0, advance_token(p).position)
 
 	case:
-		return parse_expr(p, .Lowest)
+		e := parse_expr(p, .Lowest)
+
+		if e == AST_INVALID do return AST_INVALID
+
+		if peek_token(p, .Assign) {
+			return parse_assign(p, e)
+		}
+
+		return e
 	}
 }
 
@@ -386,7 +393,6 @@ parse_return :: proc(p: ^Parser) -> Ast_Index {
 
 Precedence :: enum {
 	Lowest,
-	Assign,
 	Bitwise,
 	Comparison,
 	Shift,
@@ -415,9 +421,6 @@ precedence_of_token :: proc(tag: Token_Tag) -> Precedence {
 
 	case .Paren_Open, .Bracket_Open, .Dot:
 		return .Postfix
-
-	case .Assign:
-		return .Assign
 
 	case:
 		return .Lowest
@@ -551,9 +554,6 @@ parse_binary_expr :: proc(p: ^Parser, a: Ast_Index) -> Ast_Index {
 
 	case .Bracket_Open:
 		return parse_subscript(p, a)
-
-	case .Assign:
-		return parse_assign(p, a)
 
 	case:
 		syntax_error(p.current_token.position, "unhandled binary operator")

@@ -753,7 +753,6 @@ analyze_identifier :: proc(
 
 			return append_value(s, local_type, .Load, local.value, 0)
 		}
-
 	}
 
 	if binding, ok := &s.globals[name]; ok {
@@ -786,7 +785,7 @@ analyze_identifier :: proc(
 			}
 		}
 
-		return binding.value
+		return append_value(s, binding_value.type, .Load, binding.value, 0)
 	}
 
 	sema_error(position, "undeclared name: %s", name)
@@ -1832,6 +1831,9 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 	case .Constant:
 		return analyze_local_binding(s, node, position, true)
 
+	case .Assign:
+		return analyze_assign(s, node, position)
+
 	case .If, .While, .For, .Break, .Continue:
 		sema_error(position, "unhandled statement: %v", node.tag)
 
@@ -1981,4 +1983,26 @@ analyze_return :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 	}
 
 	return true
+}
+
+analyze_assign :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
+	target_value_id := analyze_expr(s, IR_INVALID, node.a)
+
+	if target_value_id == IR_INVALID do return false
+
+	target_value := s.ir.values[target_value_id]
+
+	if target_value.tag == .Load {
+		stored_value_id := analyze_expr(s, target_value.type, node.b)
+
+		if stored_value_id == IR_INVALID do return false
+
+		append_instruction(s, .Store, target_value.a, stored_value_id)
+
+		return true
+	} else {
+		sema_error(position, "cannot assign to an rvalue")
+
+		return false
+	}
 }
