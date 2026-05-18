@@ -37,27 +37,17 @@ main :: proc() {
 
 		delete_ast(parser.ast)
 
-		when #config(C_BACKEND, false) {
-			c_backend: C_Backend
+		llvm_backend: LLVM_Backend
 
-			c_init(&c_backend, sema.ir)
+		llvm_init(
+			&llvm_backend,
+			strings.clone_to_cstring(parser.lexer.position.file_path),
+			&sema.ir,
+		)
 
-			c_start(&c_backend)
+		llvm_start(&llvm_backend)
 
-			fmt.println(strings.to_string(c_backend.output))
-		} else {
-			llvm_backend: LLVM_Backend
-
-			llvm_init(
-				&llvm_backend,
-				strings.clone_to_cstring(parser.lexer.position.file_path),
-				&sema.ir,
-			)
-
-			llvm_start(&llvm_backend)
-
-			llvm.DumpModule(llvm_backend.module)
-		}
+		llvm.DumpModule(llvm_backend.module)
 
 	case:
 		fmt.eprintfln("error: unhandled command: %v", command)
