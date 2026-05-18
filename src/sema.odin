@@ -4,6 +4,7 @@ import "base:intrinsics"
 import "core:fmt"
 import "core:math"
 import "core:math/rand"
+import "core:prof/spall"
 import "core:strings"
 
 Sema_Global_Binding :: struct {
@@ -562,7 +563,9 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 
 		append(&s.ir.globals, Ir_Global{name = binding.syntax.name, value = binding.value})
 
-		binding.value = append_value(s, initializer.type, .Global, index, 0)
+		initializer_pointer_type := intern_type(s, .Single_Pointer, initializer.type, 0)
+
+		binding.value = append_value(s, initializer_pointer_type, .Global, index, 0)
 	}
 
 	binding.state = .Analyzed
@@ -615,6 +618,12 @@ analyze_expr :: proc(
 
 	case .Negate:
 		return analyze_negate(s, result_type, node, position)
+
+	case .Reference:
+		return analyze_reference(s, result_type, node, position)
+
+	case .Dereference:
+		return analyze_dereference(s, result_type, node, position)
 
 	case .Add:
 		return analyze_arithmetic_operation(s, result_type, node, position, .Add)
@@ -1024,6 +1033,72 @@ analyze_negate :: proc(
 	}
 
 	return append_value(s, value_type_id, .Negate, value_id, 0)
+}
+
+analyze_reference :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	target_value_id := analyze_expr(s, IR_INVALID, node.b)
+
+	if target_value_id == IR_INVALID do return IR_INVALID
+
+	target_value := s.ir.values[target_value_id]
+
+	if target_value.tag == .Load {
+		pointer_value_id := target_value.a
+
+		pointer_value := s.ir.values[pointer_value_id]
+
+		if result_type_id != IR_INVALID &&
+		   !check_type_compatibility(s, position, pointer_value.type, result_type_id) {
+			return IR_INVALID
+		}
+
+		return pointer_value_id
+	} else {
+		sema_error(position, "cannot reference an rvalue")
+
+		return IR_INVALID
+	}
+}
+
+analyze_dereference :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	target_value_id := analyze_expr(s, IR_INVALID, node.b)
+
+	if target_value_id == IR_INVALID do return IR_INVALID
+
+	target_value := s.ir.values[target_value_id]
+
+	target_value_type := s.ir.types[target_value.type]
+
+	if target_value_type.tag != .Single_Pointer {
+		sema_error(
+			position,
+			"cannot dereference a value of type '%s', can only dereference a single pointer",
+			type_to_string_temp(s, target_value.type),
+		)
+
+		return IR_INVALID
+	}
+
+	child_type_id := target_value_type.a
+
+	child_type := s.ir.types[child_type_id]
+
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, child_type_id, result_type_id) {
+		return IR_INVALID
+	}
+
+	return append_value(s, child_type_id, .Load, target_value_id, 0)
 }
 
 perform_arithmetic_operation :: proc(
@@ -1593,6 +1668,11 @@ analyze_call :: proc(
 	callee_type_id := callee_value.type
 
 	callee_type := s.ir.types[callee_type_id]
+
+	if callee_value.tag == .Load && callee_type.tag == .Function {
+		callee_value_id = callee_value.a
+		callee_value = s.ir.values[callee_value_id]
+	}
 
 	if callee_type.tag == .Single_Pointer {
 		pointer_callee_type_id := callee_type_id

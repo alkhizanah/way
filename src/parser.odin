@@ -479,6 +479,9 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .Bool_Not:
 		return parse_unary_op(p, .Bool_Not)
 
+	case .Bit_And:
+		return parse_unary_op(p, .Reference)
+
 	case .Paren_Open:
 		return parse_grouped_expr(p)
 
@@ -555,6 +558,9 @@ parse_binary_expr :: proc(p: ^Parser, a: Ast_Index) -> Ast_Index {
 	case .Bracket_Open:
 		return parse_subscript(p, a)
 
+	case .Dot:
+		return parse_field_access(p, a)
+
 	case:
 		syntax_error(p.current_token.position, "unhandled binary operator")
 
@@ -575,6 +581,23 @@ parse_subscript :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 	if index == AST_INVALID do return AST_INVALID
 	if _, ok := expect_token(p, .Bracket_Close); !ok do return AST_INVALID
 	return append_node(p, .Subscript, target, index, token.position)
+}
+
+parse_field_access :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
+	token := advance_token(p)
+
+	if !peek_token(p, .Star) {
+		syntax_error(
+			p.current_token.position,
+			"field access is not implemented yet, only dereference is, using .* suffix",
+		)
+
+		return AST_INVALID
+	}
+
+	advance_token(p)
+
+	return append_node(p, .Dereference, 0, target, token.position)
 }
 
 parse_assign :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {

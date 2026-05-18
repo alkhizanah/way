@@ -26,6 +26,8 @@ Ast_Node_Tag :: enum {
 	Negate,
 	Bool_Not,
 	Bit_Not,
+	Reference,
+	Dereference,
 	// like the above but if b is AST_INVALID then the user didn't provide any return value
 	Return,
 	// the following are left as an exercise to the reader (they are binary operations, a and b are node indices)
