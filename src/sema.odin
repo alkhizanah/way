@@ -4,7 +4,6 @@ import "base:intrinsics"
 import "core:fmt"
 import "core:math"
 import "core:math/rand"
-import "core:prof/spall"
 import "core:strings"
 
 Sema_Global_Binding :: struct {
@@ -527,6 +526,7 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 			explicit_type,
 			binding.syntax.value,
 			binding.syntax.name.value,
+			binding,
 		)
 
 		if binding.value == IR_INVALID do return false
@@ -578,6 +578,7 @@ analyze_expr :: proc(
 	result_type: Ir_Index,
 	node_id: Ast_Index,
 	name: Maybe(string) = nil,
+	binding: Maybe(^Sema_Global_Binding) = nil,
 ) -> Ir_Index {
 	node := s.ast.nodes[node_id]
 	position := s.ast.positions[node_id]
@@ -605,7 +606,7 @@ analyze_expr :: proc(
 		return analyze_null(s, result_type, position)
 
 	case .Function:
-		return analyze_function(s, result_type, node, position, name)
+		return analyze_function(s, result_type, node, position, name, binding)
 
 	case .Call:
 		return analyze_call(s, result_type, node, position)
@@ -1742,6 +1743,7 @@ analyze_function :: proc(
 	node: Ast_Node,
 	position: Position,
 	name: Maybe(string),
+	binding: Maybe(^Sema_Global_Binding),
 ) -> Ir_Index {
 	function_type_node := s.ast.nodes[node.a]
 
@@ -1783,6 +1785,13 @@ analyze_function :: proc(
 		sema_error(position, "function with a body must have named parameters")
 
 		return IR_INVALID
+	}
+
+	function_value := append_value(s, function_type_id, .Function, function_id, 0)
+
+	if binding != nil {
+		binding.(^Sema_Global_Binding).value = function_value
+		binding.(^Sema_Global_Binding).state = .Analyzed
 	}
 
 	for i in 0 ..< parameter_nodes_len {
@@ -1832,7 +1841,7 @@ analyze_function :: proc(
 	s.block = old_block
 	s.scope = old_scope
 
-	return append_value(s, function_type_id, .Function, function_id, 0)
+	return function_value
 }
 
 ends_with_terminator :: proc(s: ^Sema) -> bool {
