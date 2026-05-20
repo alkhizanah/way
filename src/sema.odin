@@ -710,6 +710,9 @@ analyze_expr :: proc(
 	case .Array_Type:
 		return analyze_array_type(s, result_type, node, position)
 
+	case .Subscript:
+		return analyze_subscript(s, result_type, node, position)
+
 	case:
 		sema_error(position, "unhandled expression: %v", node.tag)
 
@@ -1654,6 +1657,62 @@ analyze_function_type :: proc(
 	return append_value(s, type_meta, .Type, function_type, 0)
 }
 
+analyze_subscript :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	target_value_id := analyze_expr(s, IR_INVALID, node.a)
+	if target_value_id == IR_INVALID do return IR_INVALID
+
+	target_value := s.ir.values[target_value_id]
+	target_value_type_id := target_value.type
+	target_value_type := s.ir.types[target_value_type_id]
+
+	index_value_id := analyze_expr(s, IR_INVALID, node.b)
+	if index_value_id == IR_INVALID do return IR_INVALID
+
+	index_value := s.ir.values[index_value_id]
+	index_value_type_id := index_value.type
+	index_value_type := s.ir.types[index_value_type_id]
+
+	if !is_int_type(index_value_type) {
+		sema_error(
+			position,
+			"can not use a value of type '%s' as an index",
+			type_to_string_temp(s, index_value_type_id),
+		)
+
+		return IR_INVALID
+	}
+
+	if target_value_type.tag == .Slice {
+		sema_error(position, "todo: subscript a slice")
+
+		return IR_INVALID
+	} else if target_value_type.tag == .Multi_Pointer {
+		child_type_id := target_value_type.a
+
+		if result_type_id != IR_INVALID &&
+		   !check_type_compatibility(s, position, child_type_id, result_type_id) {
+			return IR_INVALID
+		}
+
+		element_ptr := append_value(s, target_value_type_id, .Get_Element_Ptr, target_value_id, index_value_id)
+
+		return append_value(s, child_type_id, .Load, element_ptr, 0)
+	} else {
+		sema_error(
+			position,
+			"can not subscript a value of type '%s'",
+			type_to_string_temp(s, target_value_type_id),
+		)
+
+		return IR_INVALID
+	}
+}
+
 analyze_call :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
@@ -1661,13 +1720,10 @@ analyze_call :: proc(
 	position: Position,
 ) -> Ir_Index {
 	callee_value_id := analyze_expr(s, IR_INVALID, node.a)
-
 	if callee_value_id == IR_INVALID do return IR_INVALID
 
 	callee_value := s.ir.values[callee_value_id]
-
 	callee_type_id := callee_value.type
-
 	callee_type := s.ir.types[callee_type_id]
 
 	if callee_value.tag == .Load && callee_type.tag == .Function {

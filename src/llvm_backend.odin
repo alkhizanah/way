@@ -127,10 +127,16 @@ llvm_compile_type :: proc(l: ^LLVM_Backend, type_id: Ir_Index) -> (llvm_type: ll
 
 		llvm_type = llvm.FunctionType(return_type, raw_data(param_types), u32(param_count), 0)
 
+	case .Untyped_Int:
+		llvm_type = llvm.Int64TypeInContext(l.ctx)
+
+	case .Untyped_Float:
+		llvm_type = llvm.DoubleTypeInContext(l.ctx)
+
 	case .Slice:
 		assert(false, "todo")
 
-	case .Untyped_Int, .Untyped_Float, .Type:
+	case .Type:
 		assert(false, "should be unreachable")
 	}
 
