@@ -134,7 +134,17 @@ llvm_compile_type :: proc(l: ^LLVM_Backend, type_id: Ir_Index) -> (llvm_type: ll
 		llvm_type = llvm.DoubleTypeInContext(l.ctx)
 
 	case .Slice:
-		assert(false, "todo")
+		element_types := []llvm.TypeRef {
+			llvm.PointerTypeInContext(l.ctx, 0),
+			llvm.Int64TypeInContext(l.ctx),
+		}
+
+		llvm_type = llvm.StructTypeInContext(
+			l.ctx,
+			raw_data(element_types),
+			u32(len(element_types)),
+			Packed = 0,
+		)
 
 	case .Type:
 		assert(false, "should be unreachable")
@@ -408,7 +418,28 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 		)
 
 	case .String:
-		assert(false, "todo")
+		string_value := llvm.ConstStringInContext2(
+			l.ctx,
+			cstring(&l.ir.strings[value.a]),
+			i32(value.b),
+			DontNullTerminate = 0,
+		)
+
+		string_global := llvm.AddGlobal(l.module, llvm.TypeOf(string_value), "")
+
+		llvm.SetInitializer(string_global, string_value)
+
+		constant_vals := []llvm.ValueRef {
+			string_global,
+			llvm.ConstInt(llvm.Int64TypeInContext(l.ctx), u64(value.b), 0),
+		}
+
+		llvm_value = llvm.ConstStructInContext(
+			l.ctx,
+			raw_data(constant_vals),
+			u32(len(constant_vals)),
+			Packed = 0,
+		)
 
 	case .Type:
 		assert(false, "should be unreachable")
