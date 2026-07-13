@@ -285,7 +285,14 @@ is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	     .Gte:
 		return is_const_value(s, value.a) && is_const_value(s, value.b)
 
-	case .Global, .Alloca, .Load, .Get_Element_Ptr, .Call, .Parameter:
+	case .Global,
+	     .Alloca,
+	     .Call,
+	     .Parameter,
+	     .Get_Element_Ptr,
+	     .Get_Slice_Ptr,
+	     .Get_Slice_Len,
+	     .Load:
 		return false
 	}
 
@@ -432,6 +439,10 @@ extract_int_value :: proc(container: $T) -> u64 {
 	lower_bits := u64(container.b)
 
 	return (upper_bits << 32) | lower_bits
+}
+
+extract_string_value :: proc(s: ^Sema, container: $T) -> string {
+	return string(s.ir.strings[container.a:][:container.b])
 }
 
 append_float_value :: proc(s: ^Sema, type: Ir_Index, value: f64) -> Ir_Index {
@@ -782,23 +793,31 @@ analyze_identifier :: proc(
 		binding_value := s.ir.values[binding.value]
 		binding_type := s.ir.types[binding_value.type]
 
+		actual_value_id := binding.constant ? binding.value : binding_value.a
+		actual_value := s.ir.values[actual_value_id]
+
+		actual_type_id := binding.constant ? binding_value.type : binding_type.a
+		actual_type := s.ir.types[actual_type_id]
+
 		if result_type_id != IR_INVALID {
-			if is_untyped_type(binding_type) {
-				if !can_cast_untyped_value(s, position, binding.value, result_type_id) {
+			if is_untyped_type(actual_type) {
+				if !can_cast_untyped_value(s, position, actual_value_id, result_type_id) {
 					return IR_INVALID
 				}
 
-				binding_value.type = result_type_id
+				actual_value.type = result_type_id
 
-				return append_value_with_struct(s, binding_value)
+				return append_value_with_struct(s, actual_value)
 			}
 
-			if !check_type_compatibility(s, position, binding_value.type, result_type_id) {
+			if !check_type_compatibility(s, position, actual_type_id, result_type_id) {
 				return IR_INVALID
 			}
 		}
 
-		return append_value(s, binding_value.type, .Load, binding.value, 0)
+		return(
+			binding.constant ? binding.value : append_value(s, actual_type_id, .Load, binding.value, 0) \
+		)
 	}
 
 	sema_error(position, "undeclared name: %s", name)
@@ -1687,10 +1706,48 @@ analyze_subscript :: proc(
 		return IR_INVALID
 	}
 
-	if target_value_type.tag == .Slice {
-		sema_error(position, "todo: subscript a slice")
+	if target_value.tag == .String && index_value.tag == .Int {
+		index := extract_int_value(index_value)
 
-		return IR_INVALID
+		target_string := extract_string_value(s, target_value)
+
+		if index > u64(len(target_string)) {
+			sema_error(position, "'%v' is more than the string's length")
+			return IR_INVALID
+		} else if index == u64(len(target_string)) {
+			sema_error(
+				position,
+				"'%v' is equal to the string's length, subscripting is zero-based",
+			)
+			return IR_INVALID
+		}
+
+		return append_int_value(s, intern_type(s, .Unsigned_Int, 8, 0), u64(target_string[index]))
+	} else if target_value_type.tag == .Slice {
+		child_type_id := target_value_type.a
+
+		if result_type_id != IR_INVALID &&
+		   !check_type_compatibility(s, position, child_type_id, result_type_id) {
+			return IR_INVALID
+		}
+
+		slice_ptr := append_value(
+			s,
+			intern_type(s, .Multi_Pointer, child_type_id, 0),
+			.Get_Slice_Ptr,
+			target_value_id,
+			0,
+		)
+
+		element_ptr := append_value(
+			s,
+			intern_type(s, .Single_Pointer, child_type_id, 0),
+			.Get_Element_Ptr,
+			slice_ptr,
+			index_value_id,
+		)
+
+		return append_value(s, child_type_id, .Load, element_ptr, 0)
 	} else if target_value_type.tag == .Multi_Pointer {
 		child_type_id := target_value_type.a
 
@@ -1699,7 +1756,13 @@ analyze_subscript :: proc(
 			return IR_INVALID
 		}
 
-		element_ptr := append_value(s, target_value_type_id, .Get_Element_Ptr, target_value_id, index_value_id)
+		element_ptr := append_value(
+			s,
+			intern_type(s, .Single_Pointer, child_type_id, 0),
+			.Get_Element_Ptr,
+			target_value_id,
+			index_value_id,
+		)
 
 		return append_value(s, child_type_id, .Load, element_ptr, 0)
 	} else {

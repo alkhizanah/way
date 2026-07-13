@@ -91,6 +91,10 @@ Ir_Value_Tag :: enum {
 	// a is an index to value which is the base pointer, and b is an index to the value which is the offset
 	Get_Element_Ptr,
 
+	// a is an index to the slice value
+	Get_Slice_Ptr,
+	Get_Slice_Len,
+
 	// a is an index to a value which is the callee, b is an index into extra for call arguments
 	Call,
 

@@ -167,7 +167,6 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 	llvm_value_type := llvm_compile_type(l, value.type)
 
 	#partial switch value.tag {
-
 	case .Int:
 		llvm_value = llvm.ConstInt(llvm_value_type, extract_int_value(value), 0)
 
@@ -348,9 +347,39 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 		llvm.PositionBuilderAtEnd(l.builder, ip)
 
 	case .Load:
-		pointer_value := llvm_compile_value(l, value.a)
+		pointer_value := l.ir.values[value.a]
 
-		llvm_value = llvm.BuildLoad2(l.builder, llvm_value_type, pointer_value, "")
+		llvm_pointer_value := llvm_compile_value(l, value.a)
+
+		if pointer_value.tag == .Get_Element_Ptr {
+			llvm_slice := llvm_compile_value(l, pointer_value.a)
+
+			if llvm.IsAConstant(llvm_slice) != nil {
+				llvm_slice := llvm_compile_value(l, pointer_value.a)
+
+				index_value := l.ir.values[pointer_value.b]
+
+				if index_value.tag == .Int {
+					llvm_value = llvm.BuildExtractValue(
+						l.builder,
+						llvm_slice,
+						u32(extract_int_value(index_value)),
+						"",
+					)
+				} else {
+					llvm_value = llvm.BuildLoad2(
+						l.builder,
+						llvm_value_type,
+						llvm_pointer_value,
+						"",
+					)
+				}
+			} else {
+				llvm_value = llvm.BuildLoad2(l.builder, llvm_value_type, llvm_pointer_value, "")
+			}
+		} else {
+			llvm_value = llvm.BuildLoad2(l.builder, llvm_value_type, llvm_pointer_value, "")
+		}
 
 	case .Global:
 		llvm_value = l.globals[value.a]
@@ -360,6 +389,37 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 
 	case .Parameter:
 		llvm_value = llvm.GetParam(l.function, u32(value.a))
+
+	case .Get_Slice_Ptr, .Get_Slice_Len:
+		slice_type := l.ir.types[l.ir.values[value.a].type]
+
+		llvm_slice := llvm_compile_value(l, value.a)
+
+		if slice_type.tag == .Single_Pointer {
+			llvm_slice_ptr_index := llvm.ConstInt(
+				llvm.Int8TypeInContext(l.ctx),
+				value.tag == .Get_Slice_Ptr ? 0 : 1,
+				0,
+			)
+
+			llvm_slice_ptr_ptr := llvm.BuildGEP2(
+				l.builder,
+				llvm_value_type,
+				llvm_slice,
+				&llvm_slice_ptr_index,
+				1,
+				"",
+			)
+
+			llvm_value = llvm.BuildLoad2(l.builder, llvm_value_type, llvm_slice_ptr_ptr, "")
+		} else if slice_type.tag == .Slice {
+			llvm_value = llvm.BuildExtractValue(
+				l.builder,
+				llvm_slice,
+				value.tag == .Get_Slice_Ptr ? 0 : 1,
+				"",
+			)
+		}
 
 	case .Get_Element_Ptr:
 		assert(value_type.tag == .Single_Pointer || value_type.tag == .Multi_Pointer)
