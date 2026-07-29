@@ -2042,7 +2042,10 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 	case .Assign:
 		return analyze_assign(s, node, position)
 
-	case .If, .While, .For, .Break, .Continue:
+	case .If:
+		return analyze_if_condition(s, node, position)
+
+	case .While, .For, .Break, .Continue:
 		sema_error(position, "unhandled statement: %v", node.tag)
 
 		return false
@@ -2213,4 +2216,91 @@ analyze_assign :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 
 		return false
 	}
+}
+
+get_last_instruction :: proc(s: ^Sema) -> Ir_Instruction {
+	instructions := s.ir.functions[s.function].blocks[s.block].instructions
+
+	if len(instructions) == 0 {
+		return Ir_Instruction{a = 0, b = 0, tag = .Unreachable}
+	}
+
+	return instructions[len(instructions) - 1]
+}
+
+pop_last_instruction :: proc(s: ^Sema) -> Ir_Instruction {
+	return pop(&s.ir.functions[s.function].blocks[s.block].instructions)
+}
+
+pop_last_branch :: proc(s: ^Sema) {
+	if get_last_instruction(s).tag == .Branch {
+		pop_last_instruction(s)
+	}
+}
+
+analyze_if_condition :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
+	condition := analyze_expr(s, intern_type(s, .Bool, 0, 0), node.a)
+
+	if condition == IR_INVALID do return false
+
+	true_case := s.ast.extra[node.b]
+	false_case := s.ast.extra[node.b + 1]
+
+	previous_block_id := s.block
+
+	assert(s.ast.nodes[true_case].tag == .Block)
+
+	analyze_block(s, s.ast.nodes[true_case], position) or_return
+
+	true_case_block_id := s.block
+	false_case_block_id := IR_INVALID
+
+	if false_case == AST_INVALID {
+		false_case_block_id = new_block(s)
+	} else if s.ast.nodes[false_case].tag == .Block {
+		analyze_block(s, s.ast.nodes[false_case], position) or_return
+
+		false_case_block_id = s.block
+	} else {
+		assert(s.ast.nodes[false_case].tag == .If)
+
+		false_case_block_id = new_block(s)
+
+		analyze_if_condition(s, s.ast.nodes[false_case], position) or_return
+	}
+
+	continuation_block_id := new_block(s)
+
+	s.block = true_case_block_id
+
+	pop_last_branch(s)
+
+	if get_last_instruction(s).tag != .Conditional_Branch {
+		append_instruction(s, .Branch, continuation_block_id, 0)
+	}
+
+	s.block = false_case_block_id
+
+	pop_last_branch(s)
+
+	if get_last_instruction(s).tag != .Conditional_Branch {
+		append_instruction(s, .Branch, continuation_block_id, 0)
+	}
+
+	s.block = previous_block_id
+
+	pair_index := len(s.ir.extra)
+
+	append(&s.ir.extra, true_case_block_id)
+	append(&s.ir.extra, false_case_block_id)
+
+	pop_last_branch(s)
+
+	if get_last_instruction(s).tag != .Conditional_Branch {
+		append_instruction(s, .Conditional_Branch, condition, Ir_Index(pair_index))
+	}
+
+	s.block = continuation_block_id
+
+	return true
 }

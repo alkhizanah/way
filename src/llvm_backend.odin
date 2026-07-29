@@ -1,5 +1,6 @@
 package main
 
+import "core:fmt"
 import "core:strings"
 import "llvm"
 
@@ -61,8 +62,8 @@ llvm_start :: proc(l: ^LLVM_Backend) {
 
 		reserve(&l.blocks, len(function.blocks))
 
-		for block in function.blocks {
-			append(&l.blocks, llvm.AppendBasicBlock(l.function, ""))
+		for block, i in function.blocks {
+			append(&l.blocks, llvm.AppendBasicBlock(l.function, fmt.ctprintf("b%v", i)))
 		}
 
 		for block, i in function.blocks {
