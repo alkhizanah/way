@@ -1,3 +1,6 @@
 /src.bin
 /way
 /.ccls-cache
+/a.out
+/test.ll
+/test.way
