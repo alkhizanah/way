@@ -54,13 +54,20 @@ scope_add :: proc(s: ^Scope, name: string, value: Ir_Index, constant: bool, posi
 	}
 }
 
+Ir_Instruction_Position :: struct {
+	block:       Ir_Index,
+	instruction: Ir_Index,
+}
+
 Sema :: struct {
-	ast:      ^Ast,
-	ir:       Ir,
-	globals:  map[string]Sema_Global_Binding,
-	function: Ir_Index,
-	block:    Ir_Index,
-	scope:    Scope,
+	ast:         ^Ast,
+	ir:          Ir,
+	globals:     map[string]Sema_Global_Binding,
+	function:    Ir_Index,
+	block:       Ir_Index,
+	scope:       Scope,
+	loop_breaks: [dynamic]Ir_Instruction_Position,
+	loop_header: Ir_Index,
 }
 
 sema_init :: proc(s: ^Sema, ast: ^Ast) {
@@ -249,6 +256,10 @@ append_instruction :: proc(
 	function := &s.ir.functions[s.function]
 
 	block := &function.blocks[s.block]
+
+	if ends_with_terminator(s) {
+		return IR_INVALID
+	}
 
 	index := Ir_Index(len(block.instructions))
 
@@ -1888,12 +1899,16 @@ analyze_function :: proc(
 	old_function := s.function
 	old_scope := s.scope
 	old_block := s.block
+	old_loop_header := s.loop_header
+	old_loop_breaks := s.loop_breaks
 
 	function_id := Ir_Index(len(s.ir.functions))
 
 	s.function = function_id
 	s.scope = make_scope(nil)
 	s.block = IR_INVALID
+	s.loop_header = IR_INVALID
+	s.loop_breaks = make([dynamic]Ir_Instruction_Position)
 
 	append(&s.ir.functions, Ir_Function{type = function_type_id, name = name})
 
@@ -1959,6 +1974,8 @@ analyze_function :: proc(
 	s.function = old_function
 	s.block = old_block
 	s.scope = old_scope
+	s.loop_breaks = old_loop_breaks
+	s.loop_header = old_loop_header
 
 	return function_value
 }
@@ -2045,7 +2062,16 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 	case .If:
 		return analyze_if_condition(s, node, position)
 
-	case .While, .For, .Break, .Continue:
+	case .While:
+		return analyze_while_loop(s, node, position)
+
+	case .Break:
+		return analyze_break_stmt(s, position)
+
+	case .Continue:
+		return analyze_continue_stmt(s, position)
+
+	case .For:
 		sema_error(position, "unhandled statement: %v", node.tag)
 
 		return false
@@ -2301,6 +2327,91 @@ analyze_if_condition :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bo
 	}
 
 	s.block = continuation_block_id
+
+	return true
+}
+
+analyze_while_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
+	old_loop_breaks := s.loop_breaks
+	old_loop_header := s.loop_header
+
+	defer s.loop_breaks = old_loop_breaks
+	defer s.loop_header = old_loop_header
+
+	header_block_id := new_block(s)
+
+	s.loop_header = header_block_id
+
+	s.block = IR_INVALID
+
+	assert(s.ast.nodes[node.b].tag == .Block)
+
+	analyze_block(s, s.ast.nodes[node.b], position) or_return
+
+	repeated_block_id := s.block
+
+	s.block = IR_INVALID
+
+	continuation_block_id := new_block(s)
+
+	s.block = header_block_id
+
+	condition := analyze_expr(s, intern_type(s, .Bool, 0, 0), node.a)
+
+	if condition == IR_INVALID do return false
+
+	pair_index := len(s.ir.extra)
+
+	append(&s.ir.extra, repeated_block_id)
+	append(&s.ir.extra, continuation_block_id)
+
+	append_instruction(s, .Conditional_Branch, condition, Ir_Index(pair_index))
+
+	s.block = repeated_block_id
+
+	append_instruction(s, .Branch, header_block_id, 0)
+
+	s.block = continuation_block_id
+
+	for loop_break in s.loop_breaks {
+		s.ir.functions[s.function].blocks[loop_break.block].instructions[loop_break.instruction] =
+			{
+				tag = .Branch,
+				a   = continuation_block_id,
+				b   = 0,
+			}
+
+	}
+
+	return true
+}
+
+analyze_break_stmt :: proc(s: ^Sema, position: Position) -> bool {
+	if s.loop_header == IR_INVALID {
+		sema_error(position, "break statemenet must be inside a loop")
+
+		return false
+	}
+
+	append(
+		&s.loop_breaks,
+		Ir_Instruction_Position {
+			block = s.block,
+			instruction = append_instruction(s, .Branch, 0, 0),
+		},
+	)
+
+	return true
+}
+
+analyze_continue_stmt :: proc(s: ^Sema, position: Position) -> bool {
+	if s.loop_header == IR_INVALID {
+		sema_error(position, "continue statemenet must be inside a loop")
+
+		return false
+	}
+
+	append_instruction(s, .Branch, s.loop_header, 0)
 
 	return true
 }
