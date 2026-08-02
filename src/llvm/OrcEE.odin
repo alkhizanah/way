@@ -25,10 +25,10 @@ package llvm
 foreign import lib "system:LLVM"
 _ :: lib
 
-MemoryManagerCreateContextCallback     :: proc "c" (CtxCtx: rawptr) -> rawptr
+MemoryManagerCreateContextCallback :: proc "c" (CtxCtx: rawptr) -> rawptr
 MemoryManagerNotifyTerminatingCallback :: proc "c" (CtxCtx: rawptr)
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Create a ObjectLinkingLayer instance using the standard JITLink
@@ -83,4 +83,3 @@ foreign lib {
 	*/
 	OrcRTDyldObjectLinkingLayerRegisterJITEventListener :: proc(RTDyldObjLinkingLayer: OrcObjectLayerRef, Listener: JITEventListenerRef) ---
 }
-

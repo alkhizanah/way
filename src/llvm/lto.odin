@@ -75,11 +75,11 @@ lto_codegen_model :: enum u32 {
 OpaqueLTOModule :: struct {}
 
 /** opaque reference to a loaded object module */
-lto_module_t           :: ^OpaqueLTOModule
+lto_module_t :: ^OpaqueLTOModule
 OpaqueLTOCodeGenerator :: struct {}
 
 /** opaque reference to a code generator */
-lto_code_gen_t             :: ^OpaqueLTOCodeGenerator
+lto_code_gen_t :: ^OpaqueLTOCodeGenerator
 OpaqueThinLTOCodeGenerator :: struct {}
 
 /** opaque reference to a thin code generator */
@@ -106,8 +106,12 @@ lto_codegen_diagnostic_severity_t :: enum u32 {
 *
 * \since LTO_API_VERSION=7
 */
-lto_diagnostic_handler_t :: proc "c" (severity: lto_codegen_diagnostic_severity_t, diag: cstring, ctxt: rawptr)
-OpaqueLTOInput           :: struct {}
+lto_diagnostic_handler_t :: proc "c" (
+	severity: lto_codegen_diagnostic_severity_t,
+	diag: cstring,
+	ctxt: rawptr,
+)
+OpaqueLTOInput :: struct {}
 
 /** Opaque reference to an LTO input file */
 lto_input_t :: ^OpaqueLTOInput
@@ -122,7 +126,7 @@ LTOObjectBuffer :: struct {
 	Size:   i32,
 }
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Returns a printable string.
@@ -337,7 +341,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=7
 	*/
-	lto_codegen_set_diagnostic_handler :: proc(lto_code_gen_t, lto_diagnostic_handler_t, rawptr) ---
+	lto_codegen_set_diagnostic_handler :: proc(_: lto_code_gen_t, _: lto_diagnostic_handler_t, _: rawptr) ---
 
 	/**
 	* Instantiates a code generator.
@@ -367,7 +371,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
-	lto_codegen_dispose :: proc(lto_code_gen_t) ---
+	lto_codegen_dispose :: proc(_: lto_code_gen_t) ---
 
 	/**
 	* Add an object module to the set of modules for which code will be generated.
@@ -840,4 +844,3 @@ foreign lib {
 	*/
 	thinlto_codegen_set_cache_size_files :: proc(cg: thinlto_code_gen_t, max_size_files: u32) ---
 }
-

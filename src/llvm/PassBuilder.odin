@@ -27,7 +27,7 @@ OpaquePassBuilderOptions :: struct {}
 */
 PassBuilderOptionsRef :: ^OpaquePassBuilderOptions
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Construct and run a set of passes over a module
@@ -73,21 +73,20 @@ foreign lib {
 	* instead of the default one. The string argument is not copied; the caller
 	* is responsible for ensuring it outlives the PassBuilderOptions instance.
 	*/
-	PassBuilderOptionsSetAAPipeline                   :: proc(Options: PassBuilderOptionsRef, AAPipeline: cstring) ---
-	PassBuilderOptionsSetLoopInterleaving             :: proc(Options: PassBuilderOptionsRef, LoopInterleaving: Bool) ---
-	PassBuilderOptionsSetLoopVectorization            :: proc(Options: PassBuilderOptionsRef, LoopVectorization: Bool) ---
-	PassBuilderOptionsSetSLPVectorization             :: proc(Options: PassBuilderOptionsRef, SLPVectorization: Bool) ---
-	PassBuilderOptionsSetLoopUnrolling                :: proc(Options: PassBuilderOptionsRef, LoopUnrolling: Bool) ---
-	PassBuilderOptionsSetForgetAllSCEVInLoopUnroll    :: proc(Options: PassBuilderOptionsRef, ForgetAllSCEVInLoopUnroll: Bool) ---
-	PassBuilderOptionsSetLicmMssaOptCap               :: proc(Options: PassBuilderOptionsRef, LicmMssaOptCap: u32) ---
+	PassBuilderOptionsSetAAPipeline :: proc(Options: PassBuilderOptionsRef, AAPipeline: cstring) ---
+	PassBuilderOptionsSetLoopInterleaving :: proc(Options: PassBuilderOptionsRef, LoopInterleaving: Bool) ---
+	PassBuilderOptionsSetLoopVectorization :: proc(Options: PassBuilderOptionsRef, LoopVectorization: Bool) ---
+	PassBuilderOptionsSetSLPVectorization :: proc(Options: PassBuilderOptionsRef, SLPVectorization: Bool) ---
+	PassBuilderOptionsSetLoopUnrolling :: proc(Options: PassBuilderOptionsRef, LoopUnrolling: Bool) ---
+	PassBuilderOptionsSetForgetAllSCEVInLoopUnroll :: proc(Options: PassBuilderOptionsRef, ForgetAllSCEVInLoopUnroll: Bool) ---
+	PassBuilderOptionsSetLicmMssaOptCap :: proc(Options: PassBuilderOptionsRef, LicmMssaOptCap: u32) ---
 	PassBuilderOptionsSetLicmMssaNoAccForPromotionCap :: proc(Options: PassBuilderOptionsRef, LicmMssaNoAccForPromotionCap: u32) ---
-	PassBuilderOptionsSetCallGraphProfile             :: proc(Options: PassBuilderOptionsRef, CallGraphProfile: Bool) ---
-	PassBuilderOptionsSetMergeFunctions               :: proc(Options: PassBuilderOptionsRef, MergeFunctions: Bool) ---
-	PassBuilderOptionsSetInlinerThreshold             :: proc(Options: PassBuilderOptionsRef, Threshold: i32) ---
+	PassBuilderOptionsSetCallGraphProfile :: proc(Options: PassBuilderOptionsRef, CallGraphProfile: Bool) ---
+	PassBuilderOptionsSetMergeFunctions :: proc(Options: PassBuilderOptionsRef, MergeFunctions: Bool) ---
+	PassBuilderOptionsSetInlinerThreshold :: proc(Options: PassBuilderOptionsRef, Threshold: i32) ---
 
 	/**
 	* Dispose of a heap-allocated PassBuilderOptions instance
 	*/
 	DisposePassBuilderOptions :: proc(Options: PassBuilderOptionsRef) ---
 }
-

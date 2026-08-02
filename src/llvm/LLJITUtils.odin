@@ -27,7 +27,7 @@ package llvm
 foreign import lib "system:LLVM"
 _ :: lib
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Install the plugin that submits debug objects to the executor. Executors must
@@ -35,4 +35,3 @@ foreign lib {
 	*/
 	OrcLLJITEnableDebugSupport :: proc(J: OrcLLJITRef) -> ErrorRef ---
 }
-

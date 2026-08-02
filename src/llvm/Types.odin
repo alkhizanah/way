@@ -20,7 +20,7 @@ _ :: lib
 *
 * @{
 */
-Bool               :: i32
+Bool :: i32
 OpaqueMemoryBuffer :: struct {}
 
 /**
@@ -29,12 +29,12 @@ OpaqueMemoryBuffer :: struct {}
 * @see llvm::MemoryBuffer
 */
 MemoryBufferRef :: ^OpaqueMemoryBuffer
-OpaqueContext   :: struct {}
+OpaqueContext :: struct {}
 
 /**
 * The top-level container for all LLVM global data. See the LLVMContext class.
 */
-ContextRef   :: ^OpaqueContext
+ContextRef :: ^OpaqueContext
 OpaqueModule :: struct {}
 
 /**
@@ -43,7 +43,7 @@ OpaqueModule :: struct {}
 *
 * @see llvm::Module
 */
-ModuleRef  :: ^OpaqueModule
+ModuleRef :: ^OpaqueModule
 OpaqueType :: struct {}
 
 /**
@@ -51,7 +51,7 @@ OpaqueType :: struct {}
 *
 * @see llvm::Type
 */
-TypeRef     :: ^OpaqueType
+TypeRef :: ^OpaqueType
 OpaqueValue :: struct {}
 
 /**
@@ -59,7 +59,7 @@ OpaqueValue :: struct {}
 *
 * This models llvm::Value.
 */
-ValueRef         :: ^OpaqueValue
+ValueRef :: ^OpaqueValue
 OpaqueBasicBlock :: struct {}
 
 /**
@@ -67,7 +67,7 @@ OpaqueBasicBlock :: struct {}
 *
 * This models llvm::BasicBlock.
 */
-BasicBlockRef  :: ^OpaqueBasicBlock
+BasicBlockRef :: ^OpaqueBasicBlock
 OpaqueMetadata :: struct {}
 
 /**
@@ -75,7 +75,7 @@ OpaqueMetadata :: struct {}
 *
 * This models llvm::Metadata.
 */
-MetadataRef       :: ^OpaqueMetadata
+MetadataRef :: ^OpaqueMetadata
 OpaqueNamedMDNode :: struct {}
 
 /**
@@ -83,7 +83,7 @@ OpaqueNamedMDNode :: struct {}
 *
 * This models llvm::NamedMDNode.
 */
-NamedMDNodeRef           :: ^OpaqueNamedMDNode
+NamedMDNodeRef :: ^OpaqueNamedMDNode
 OpaqueValueMetadataEntry :: struct {}
 
 /**
@@ -92,14 +92,14 @@ OpaqueValueMetadataEntry :: struct {}
 * This models std::pair<unsigned, MDNode *>
 */
 ValueMetadataEntry :: OpaqueValueMetadataEntry
-OpaqueBuilder      :: struct {}
+OpaqueBuilder :: struct {}
 
 /**
 * Represents an LLVM basic block builder.
 *
 * This models llvm::IRBuilder.
 */
-BuilderRef      :: ^OpaqueBuilder
+BuilderRef :: ^OpaqueBuilder
 OpaqueDIBuilder :: struct {}
 
 /**
@@ -107,7 +107,7 @@ OpaqueDIBuilder :: struct {}
 *
 * This models llvm::DIBuilder.
 */
-DIBuilderRef         :: ^OpaqueDIBuilder
+DIBuilderRef :: ^OpaqueDIBuilder
 OpaqueModuleProvider :: struct {}
 
 /**
@@ -120,19 +120,19 @@ OpaquePassManager :: struct {}
 
 /** @see llvm::PassManagerBase */
 PassManagerRef :: ^OpaquePassManager
-OpaqueUse      :: struct {}
+OpaqueUse :: struct {}
 
 /**
 * Used to get the users and usees of a Value.
 *
 * @see llvm::Use */
-UseRef              :: ^OpaqueUse
+UseRef :: ^OpaqueUse
 OpaqueOperandBundle :: struct {}
 
 /**
 * @see llvm::OperandBundleDef
 */
-OperandBundleRef   :: ^OpaqueOperandBundle
+OperandBundleRef :: ^OpaqueOperandBundle
 OpaqueAttributeRef :: struct {}
 
 /**
@@ -140,41 +140,40 @@ OpaqueAttributeRef :: struct {}
 *
 * @see llvm::Attribute
 */
-AttributeRef         :: ^OpaqueAttributeRef
+AttributeRef :: ^OpaqueAttributeRef
 OpaqueDiagnosticInfo :: struct {}
 
 /**
 * @see llvm::DiagnosticInfo
 */
 DiagnosticInfoRef :: ^OpaqueDiagnosticInfo
-Comdat            :: struct {}
+Comdat :: struct {}
 
 /**
 * @see llvm::Comdat
 */
-ComdatRef             :: ^Comdat
+ComdatRef :: ^Comdat
 OpaqueModuleFlagEntry :: struct {}
 
 /**
 * @see llvm::Module::ModuleFlagEntry
 */
-ModuleFlagEntry        :: OpaqueModuleFlagEntry
+ModuleFlagEntry :: OpaqueModuleFlagEntry
 OpaqueJITEventListener :: struct {}
 
 /**
 * @see llvm::JITEventListener
 */
 JITEventListenerRef :: ^OpaqueJITEventListener
-OpaqueBinary        :: struct {}
+OpaqueBinary :: struct {}
 
 /**
 * @see llvm::object::Binary
 */
-BinaryRef       :: ^OpaqueBinary
+BinaryRef :: ^OpaqueBinary
 OpaqueDbgRecord :: struct {}
 
 /**
 * @see llvm::DbgRecord
 */
 DbgRecordRef :: ^OpaqueDbgRecord
-

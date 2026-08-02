@@ -35,7 +35,7 @@ ErrorRef :: ^OpaqueError
 */
 ErrorTypeId :: rawptr
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Returns the type id for the given error instance, which must be a failure
@@ -82,4 +82,3 @@ foreign lib {
 	*/
 	CreateStringError :: proc(ErrMsg: cstring) -> ErrorRef ---
 }
-

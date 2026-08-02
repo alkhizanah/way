@@ -15,7 +15,7 @@ package llvm
 foreign import lib "system:LLVM"
 _ :: lib
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* This function permanently loads the dynamic library at the given path.
@@ -53,4 +53,3 @@ foreign lib {
 	*/
 	AddSymbol :: proc(symbolName: cstring, symbolValue: rawptr) ---
 }
-

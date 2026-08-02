@@ -144,44 +144,44 @@ DWARFEmissionKind :: enum u32 {
 	LineTablesOnly = 2,
 }
 
-MDStringMetadataKind                     :: 0
-ConstantAsMetadataMetadataKind           :: 1
-LocalAsMetadataMetadataKind              :: 2
+MDStringMetadataKind :: 0
+ConstantAsMetadataMetadataKind :: 1
+LocalAsMetadataMetadataKind :: 2
 DistinctMDOperandPlaceholderMetadataKind :: 3
-MDTupleMetadataKind                      :: 4
-DILocationMetadataKind                   :: 5
-DIExpressionMetadataKind                 :: 6
-DIGlobalVariableExpressionMetadataKind   :: 7
-GenericDINodeMetadataKind                :: 8
-DISubrangeMetadataKind                   :: 9
-DIEnumeratorMetadataKind                 :: 10
-DIBasicTypeMetadataKind                  :: 11
-DIDerivedTypeMetadataKind                :: 12
-DICompositeTypeMetadataKind              :: 13
-DISubroutineTypeMetadataKind             :: 14
-DIFileMetadataKind                       :: 15
-DICompileUnitMetadataKind                :: 16
-DISubprogramMetadataKind                 :: 17
-DILexicalBlockMetadataKind               :: 18
-DILexicalBlockFileMetadataKind           :: 19
-DINamespaceMetadataKind                  :: 20
-DIModuleMetadataKind                     :: 21
-DITemplateTypeParameterMetadataKind      :: 22
-DITemplateValueParameterMetadataKind     :: 23
-DIGlobalVariableMetadataKind             :: 24
-DILocalVariableMetadataKind              :: 25
-DILabelMetadataKind                      :: 26
-DIObjCPropertyMetadataKind               :: 27
-DIImportedEntityMetadataKind             :: 28
-DIMacroMetadataKind                      :: 29
-DIMacroFileMetadataKind                  :: 30
-DICommonBlockMetadataKind                :: 31
-DIStringTypeMetadataKind                 :: 32
-DIGenericSubrangeMetadataKind            :: 33
-DIArgListMetadataKind                    :: 34
-DIAssignIDMetadataKind                   :: 35
-DISubrangeTypeMetadataKind               :: 36
-DIFixedPointTypeMetadataKind             :: 37
+MDTupleMetadataKind :: 4
+DILocationMetadataKind :: 5
+DIExpressionMetadataKind :: 6
+DIGlobalVariableExpressionMetadataKind :: 7
+GenericDINodeMetadataKind :: 8
+DISubrangeMetadataKind :: 9
+DIEnumeratorMetadataKind :: 10
+DIBasicTypeMetadataKind :: 11
+DIDerivedTypeMetadataKind :: 12
+DICompositeTypeMetadataKind :: 13
+DISubroutineTypeMetadataKind :: 14
+DIFileMetadataKind :: 15
+DICompileUnitMetadataKind :: 16
+DISubprogramMetadataKind :: 17
+DILexicalBlockMetadataKind :: 18
+DILexicalBlockFileMetadataKind :: 19
+DINamespaceMetadataKind :: 20
+DIModuleMetadataKind :: 21
+DITemplateTypeParameterMetadataKind :: 22
+DITemplateValueParameterMetadataKind :: 23
+DIGlobalVariableMetadataKind :: 24
+DILocalVariableMetadataKind :: 25
+DILabelMetadataKind :: 26
+DIObjCPropertyMetadataKind :: 27
+DIImportedEntityMetadataKind :: 28
+DIMacroMetadataKind :: 29
+DIMacroFileMetadataKind :: 30
+DICommonBlockMetadataKind :: 31
+DIStringTypeMetadataKind :: 32
+DIGenericSubrangeMetadataKind :: 33
+DIArgListMetadataKind :: 34
+DIAssignIDMetadataKind :: 35
+DISubrangeTypeMetadataKind :: 36
+DIFixedPointTypeMetadataKind :: 37
 
 MetadataKind :: u32
 
@@ -223,7 +223,7 @@ DWARFMacinfoRecordType :: enum u32 {
 	VendorExt = 255,
 }
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* The current debug metadata version number.
@@ -1364,4 +1364,3 @@ foreign lib {
 	*/
 	GetMetadataKind :: proc(Metadata: MetadataRef) -> MetadataKind ---
 }
-

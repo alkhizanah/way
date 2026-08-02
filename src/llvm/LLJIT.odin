@@ -38,21 +38,25 @@ _ :: lib
 * LLJIT instance. The client is not responsible for managing their lifetimes
 * after the function returns.
 */
-OrcLLJITBuilderObjectLinkingLayerCreatorFunction :: proc "c" (Ctx: rawptr, ES: OrcExecutionSessionRef, Triple: cstring) -> OrcObjectLayerRef
-OrcOpaqueLLJITBuilder                            :: struct {}
+OrcLLJITBuilderObjectLinkingLayerCreatorFunction :: proc "c" (
+	Ctx: rawptr,
+	ES: OrcExecutionSessionRef,
+	Triple: cstring,
+) -> OrcObjectLayerRef
+OrcOpaqueLLJITBuilder :: struct {}
 
 /**
 * A reference to an orc::LLJITBuilder instance.
 */
 OrcLLJITBuilderRef :: ^OrcOpaqueLLJITBuilder
-OrcOpaqueLLJIT     :: struct {}
+OrcOpaqueLLJIT :: struct {}
 
 /**
 * A reference to an orc::LLJIT instance.
 */
 OrcLLJITRef :: ^OrcOpaqueLLJIT
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Create an LLVMOrcLLJITBuilder.
@@ -216,4 +220,3 @@ foreign lib {
 	*/
 	OrcLLJITGetDataLayoutStr :: proc(J: OrcLLJITRef) -> cstring ---
 }
-

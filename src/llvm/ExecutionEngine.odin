@@ -22,11 +22,11 @@ import "core:c"
 foreign import lib "system:LLVM"
 _ :: lib
 
-GenericValueRef          :: ^OpaqueGenericValue
-OpaqueGenericValue       :: struct {}
-OpaqueExecutionEngine    :: struct {}
-ExecutionEngineRef       :: ^OpaqueExecutionEngine
-MCJITMemoryManagerRef    :: ^OpaqueMCJITMemoryManager
+GenericValueRef :: ^OpaqueGenericValue
+OpaqueGenericValue :: struct {}
+OpaqueExecutionEngine :: struct {}
+ExecutionEngineRef :: ^OpaqueExecutionEngine
+MCJITMemoryManagerRef :: ^OpaqueMCJITMemoryManager
 OpaqueMCJITMemoryManager :: struct {}
 
 MCJITCompilerOptions :: struct {
@@ -38,12 +38,25 @@ MCJITCompilerOptions :: struct {
 }
 
 /*===-- Operations on memory managers -------------------------------------===*/
-MemoryManagerAllocateCodeSectionCallback :: proc "c" (Opaque: rawptr, Size: c.uintptr_t, Alignment: u32, SectionID: u32, SectionName: cstring) -> ^u8
-MemoryManagerAllocateDataSectionCallback :: proc "c" (Opaque: rawptr, Size: c.uintptr_t, Alignment: u32, SectionID: u32, SectionName: cstring, IsReadOnly: Bool) -> ^u8
-MemoryManagerFinalizeMemoryCallback      :: proc "c" (Opaque: rawptr, ErrMsg: ^cstring) -> Bool
-MemoryManagerDestroyCallback             :: proc "c" (Opaque: rawptr)
+MemoryManagerAllocateCodeSectionCallback :: proc "c" (
+	Opaque: rawptr,
+	Size: c.uintptr_t,
+	Alignment: u32,
+	SectionID: u32,
+	SectionName: cstring,
+) -> ^u8
+MemoryManagerAllocateDataSectionCallback :: proc "c" (
+	Opaque: rawptr,
+	Size: c.uintptr_t,
+	Alignment: u32,
+	SectionID: u32,
+	SectionName: cstring,
+	IsReadOnly: Bool,
+) -> ^u8
+MemoryManagerFinalizeMemoryCallback :: proc "c" (Opaque: rawptr, ErrMsg: ^cstring) -> Bool
+MemoryManagerDestroyCallback :: proc "c" (Opaque: rawptr)
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Empty function used to force the linker to link MCJIT.
@@ -58,19 +71,19 @@ foreign lib {
 	LinkInInterpreter :: proc() ---
 
 	/*===-- Operations on generic values --------------------------------------===*/
-	CreateGenericValueOfInt     :: proc(Ty: TypeRef, N: u64, IsSigned: Bool) -> GenericValueRef ---
+	CreateGenericValueOfInt :: proc(Ty: TypeRef, N: u64, IsSigned: Bool) -> GenericValueRef ---
 	CreateGenericValueOfPointer :: proc(P: rawptr) -> GenericValueRef ---
-	CreateGenericValueOfFloat   :: proc(Ty: TypeRef, N: f64) -> GenericValueRef ---
-	GenericValueIntWidth        :: proc(GenValRef: GenericValueRef) -> u32 ---
-	GenericValueToInt           :: proc(GenVal: GenericValueRef, IsSigned: Bool) -> u64 ---
-	GenericValueToPointer       :: proc(GenVal: GenericValueRef) -> rawptr ---
-	GenericValueToFloat         :: proc(TyRef: TypeRef, GenVal: GenericValueRef) -> f64 ---
-	DisposeGenericValue         :: proc(GenVal: GenericValueRef) ---
+	CreateGenericValueOfFloat :: proc(Ty: TypeRef, N: f64) -> GenericValueRef ---
+	GenericValueIntWidth :: proc(GenValRef: GenericValueRef) -> u32 ---
+	GenericValueToInt :: proc(GenVal: GenericValueRef, IsSigned: Bool) -> u64 ---
+	GenericValueToPointer :: proc(GenVal: GenericValueRef) -> rawptr ---
+	GenericValueToFloat :: proc(TyRef: TypeRef, GenVal: GenericValueRef) -> f64 ---
+	DisposeGenericValue :: proc(GenVal: GenericValueRef) ---
 
 	/*===-- Operations on execution engines -----------------------------------===*/
 	CreateExecutionEngineForModule :: proc(OutEE: ^ExecutionEngineRef, M: ModuleRef, OutError: ^cstring) -> Bool ---
-	CreateInterpreterForModule     :: proc(OutInterp: ^ExecutionEngineRef, M: ModuleRef, OutError: ^cstring) -> Bool ---
-	CreateJITCompilerForModule     :: proc(OutJIT: ^ExecutionEngineRef, M: ModuleRef, OptLevel: u32, OutError: ^cstring) -> Bool ---
+	CreateInterpreterForModule :: proc(OutInterp: ^ExecutionEngineRef, M: ModuleRef, OutError: ^cstring) -> Bool ---
+	CreateJITCompilerForModule :: proc(OutJIT: ^ExecutionEngineRef, M: ModuleRef, OptLevel: u32, OutError: ^cstring) -> Bool ---
 	InitializeMCJITCompilerOptions :: proc(Options: ^MCJITCompilerOptions, SizeOfOptions: i32) ---
 
 	/**
@@ -90,23 +103,23 @@ foreign lib {
 	*
 	* LLVMCreateMCJITCompilerForModule(&jit, mod, 0, 0, &error);
 	*/
-	CreateMCJITCompilerForModule    :: proc(OutJIT: ^ExecutionEngineRef, M: ModuleRef, Options: ^MCJITCompilerOptions, SizeOfOptions: i32, OutError: ^cstring) -> Bool ---
-	DisposeExecutionEngine          :: proc(EE: ExecutionEngineRef) ---
-	RunStaticConstructors           :: proc(EE: ExecutionEngineRef) ---
-	RunStaticDestructors            :: proc(EE: ExecutionEngineRef) ---
-	RunFunctionAsMain               :: proc(EE: ExecutionEngineRef, F: ValueRef, ArgC: u32, ArgV: ^cstring, EnvP: ^cstring) -> i32 ---
-	RunFunction                     :: proc(EE: ExecutionEngineRef, F: ValueRef, NumArgs: u32, Args: ^GenericValueRef) -> GenericValueRef ---
-	FreeMachineCodeForFunction      :: proc(EE: ExecutionEngineRef, F: ValueRef) ---
-	AddModule                       :: proc(EE: ExecutionEngineRef, M: ModuleRef) ---
-	RemoveModule                    :: proc(EE: ExecutionEngineRef, M: ModuleRef, OutMod: ^ModuleRef, OutError: ^cstring) -> Bool ---
-	FindFunction                    :: proc(EE: ExecutionEngineRef, Name: cstring, OutFn: ^ValueRef) -> Bool ---
-	RecompileAndRelinkFunction      :: proc(EE: ExecutionEngineRef, Fn: ValueRef) -> rawptr ---
-	GetExecutionEngineTargetData    :: proc(EE: ExecutionEngineRef) -> TargetDataRef ---
+	CreateMCJITCompilerForModule :: proc(OutJIT: ^ExecutionEngineRef, M: ModuleRef, Options: ^MCJITCompilerOptions, SizeOfOptions: i32, OutError: ^cstring) -> Bool ---
+	DisposeExecutionEngine :: proc(EE: ExecutionEngineRef) ---
+	RunStaticConstructors :: proc(EE: ExecutionEngineRef) ---
+	RunStaticDestructors :: proc(EE: ExecutionEngineRef) ---
+	RunFunctionAsMain :: proc(EE: ExecutionEngineRef, F: ValueRef, ArgC: u32, ArgV: ^cstring, EnvP: ^cstring) -> i32 ---
+	RunFunction :: proc(EE: ExecutionEngineRef, F: ValueRef, NumArgs: u32, Args: ^GenericValueRef) -> GenericValueRef ---
+	FreeMachineCodeForFunction :: proc(EE: ExecutionEngineRef, F: ValueRef) ---
+	AddModule :: proc(EE: ExecutionEngineRef, M: ModuleRef) ---
+	RemoveModule :: proc(EE: ExecutionEngineRef, M: ModuleRef, OutMod: ^ModuleRef, OutError: ^cstring) -> Bool ---
+	FindFunction :: proc(EE: ExecutionEngineRef, Name: cstring, OutFn: ^ValueRef) -> Bool ---
+	RecompileAndRelinkFunction :: proc(EE: ExecutionEngineRef, Fn: ValueRef) -> rawptr ---
+	GetExecutionEngineTargetData :: proc(EE: ExecutionEngineRef) -> TargetDataRef ---
 	GetExecutionEngineTargetMachine :: proc(EE: ExecutionEngineRef) -> TargetMachineRef ---
-	AddGlobalMapping                :: proc(EE: ExecutionEngineRef, Global: ValueRef, Addr: rawptr) ---
-	GetPointerToGlobal              :: proc(EE: ExecutionEngineRef, Global: ValueRef) -> rawptr ---
-	GetGlobalValueAddress           :: proc(EE: ExecutionEngineRef, Name: cstring) -> u64 ---
-	GetFunctionAddress              :: proc(EE: ExecutionEngineRef, Name: cstring) -> u64 ---
+	AddGlobalMapping :: proc(EE: ExecutionEngineRef, Global: ValueRef, Addr: rawptr) ---
+	GetPointerToGlobal :: proc(EE: ExecutionEngineRef, Global: ValueRef) -> rawptr ---
+	GetGlobalValueAddress :: proc(EE: ExecutionEngineRef, Name: cstring) -> u64 ---
+	GetFunctionAddress :: proc(EE: ExecutionEngineRef, Name: cstring) -> u64 ---
 
 	/// Returns true on error, false on success. If true is returned then the error
 	/// message is copied to OutStr and cleared in the ExecutionEngine instance.
@@ -124,12 +137,11 @@ foreign lib {
 	*   success, 1 on error.
 	*/
 	CreateSimpleMCJITMemoryManager :: proc(Opaque: rawptr, AllocateCodeSection: MemoryManagerAllocateCodeSectionCallback, AllocateDataSection: MemoryManagerAllocateDataSectionCallback, FinalizeMemory: MemoryManagerFinalizeMemoryCallback, Destroy: MemoryManagerDestroyCallback) -> MCJITMemoryManagerRef ---
-	DisposeMCJITMemoryManager      :: proc(MM: MCJITMemoryManagerRef) ---
+	DisposeMCJITMemoryManager :: proc(MM: MCJITMemoryManagerRef) ---
 
 	/*===-- JIT Event Listener functions -------------------------------------===*/
-	CreateGDBRegistrationListener  :: proc() -> JITEventListenerRef ---
-	CreateIntelJITEventListener    :: proc() -> JITEventListenerRef ---
+	CreateGDBRegistrationListener :: proc() -> JITEventListenerRef ---
+	CreateIntelJITEventListener :: proc() -> JITEventListenerRef ---
 	CreateOProfileJITEventListener :: proc() -> JITEventListenerRef ---
-	CreatePerfJITEventListener     :: proc() -> JITEventListenerRef ---
+	CreatePerfJITEventListener :: proc() -> JITEventListenerRef ---
 }
-

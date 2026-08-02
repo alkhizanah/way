@@ -80,13 +80,13 @@ OrcExecutionSessionRef :: ^OrcOpaqueExecutionSession
 /**
 * Error reporter function.
 */
-OrcErrorReporterFunction  :: proc "c" (Ctx: rawptr, Err: ErrorRef)
+OrcErrorReporterFunction :: proc "c" (Ctx: rawptr, Err: ErrorRef)
 OrcOpaqueSymbolStringPool :: struct {}
 
 /**
 * A reference to an orc::SymbolStringPool.
 */
-OrcSymbolStringPoolRef         :: ^OrcOpaqueSymbolStringPool
+OrcSymbolStringPoolRef :: ^OrcOpaqueSymbolStringPool
 OrcOpaqueSymbolStringPoolEntry :: struct {}
 
 /**
@@ -143,7 +143,7 @@ OrcCSymbolAliasMapPair :: struct {
 * pairs that can be used to construct a SymbolFlagsMap.
 */
 OrcCSymbolAliasMapPairs :: ^OrcCSymbolAliasMapPair
-OrcOpaqueJITDylib       :: struct {}
+OrcOpaqueJITDylib :: struct {}
 
 /**
 * A reference to an orc::JITDylib instance.
@@ -248,13 +248,13 @@ OrcCLookupSetElement :: struct {
 * course of its life. Clients receiving a copy from a callback are not
 * responsible for managing lifetime or retain counts.
 */
-OrcCLookupSet                :: ^OrcCLookupSetElement
+OrcCLookupSet :: ^OrcCLookupSetElement
 OrcOpaqueMaterializationUnit :: struct {}
 
 /**
 * A reference to a uniquely owned orc::MaterializationUnit instance.
 */
-OrcMaterializationUnitRef              :: ^OrcOpaqueMaterializationUnit
+OrcMaterializationUnitRef :: ^OrcOpaqueMaterializationUnit
 OrcOpaqueMaterializationResponsibility :: struct {}
 
 /**
@@ -274,7 +274,10 @@ OrcMaterializationResponsibilityRef :: ^OrcOpaqueMaterializationResponsibility
 * If this callback is called then the LLVMOrcMaterializationUnitDestroy
 * callback will NOT be called.
 */
-OrcMaterializationUnitMaterializeFunction :: proc "c" (Ctx: rawptr, MR: OrcMaterializationResponsibilityRef)
+OrcMaterializationUnitMaterializeFunction :: proc "c" (
+	Ctx: rawptr,
+	MR: OrcMaterializationResponsibilityRef,
+)
 
 /**
 * A MaterializationUnit discard callback.
@@ -282,7 +285,11 @@ OrcMaterializationUnitMaterializeFunction :: proc "c" (Ctx: rawptr, MR: OrcMater
 * Ownership of JD and Symbol remain with the caller: These arguments should
 * not be disposed of or released.
 */
-OrcMaterializationUnitDiscardFunction :: proc "c" (Ctx: rawptr, JD: OrcJITDylibRef, Symbol: OrcSymbolStringPoolEntryRef)
+OrcMaterializationUnitDiscardFunction :: proc "c" (
+	Ctx: rawptr,
+	JD: OrcJITDylibRef,
+	Symbol: OrcSymbolStringPoolEntryRef,
+)
 
 /**
 * A MaterializationUnit destruction callback.
@@ -292,19 +299,19 @@ OrcMaterializationUnitDiscardFunction :: proc "c" (Ctx: rawptr, JD: OrcJITDylibR
 * opportunity for the underlying program representation to be destroyed.
 */
 OrcMaterializationUnitDestroyFunction :: proc "c" (Ctx: rawptr)
-OrcOpaqueResourceTracker              :: struct {}
+OrcOpaqueResourceTracker :: struct {}
 
 /**
 * A reference to an orc::ResourceTracker instance.
 */
-OrcResourceTrackerRef        :: ^OrcOpaqueResourceTracker
+OrcResourceTrackerRef :: ^OrcOpaqueResourceTracker
 OrcOpaqueDefinitionGenerator :: struct {}
 
 /**
 * A reference to an orc::DefinitionGenerator.
 */
 OrcDefinitionGeneratorRef :: ^OrcOpaqueDefinitionGenerator
-OrcOpaqueLookupState      :: struct {}
+OrcOpaqueLookupState :: struct {}
 
 /**
 * An opaque lookup state object. Instances of this type can be captured to
@@ -353,7 +360,16 @@ OrcLookupStateRef :: ^OrcOpaqueLookupState
 * Finally, the LookupSet argument contains the set of symbols that could not
 * be found in JD already (the set of generation candidates).
 */
-OrcCAPIDefinitionGeneratorTryToGenerateFunction :: proc "c" (GeneratorObj: OrcDefinitionGeneratorRef, Ctx: rawptr, LookupState: ^OrcLookupStateRef, Kind: OrcLookupKind, JD: OrcJITDylibRef, JDLookupFlags: OrcJITDylibLookupFlags, LookupSet: OrcCLookupSet, LookupSetSize: i32) -> ErrorRef
+OrcCAPIDefinitionGeneratorTryToGenerateFunction :: proc "c" (
+	GeneratorObj: OrcDefinitionGeneratorRef,
+	Ctx: rawptr,
+	LookupState: ^OrcLookupStateRef,
+	Kind: OrcLookupKind,
+	JD: OrcJITDylibRef,
+	JDLookupFlags: OrcJITDylibLookupFlags,
+	LookupSet: OrcCLookupSet,
+	LookupSetSize: i32,
+) -> ErrorRef
 
 /**
 * Disposer for a custom generator.
@@ -366,13 +382,13 @@ OrcDisposeCAPIDefinitionGeneratorFunction :: proc "c" (Ctx: rawptr)
 /**
 * Predicate function for SymbolStringPoolEntries.
 */
-OrcSymbolPredicate         :: proc "c" (Ctx: rawptr, Sym: OrcSymbolStringPoolEntryRef) -> i32
+OrcSymbolPredicate :: proc "c" (Ctx: rawptr, Sym: OrcSymbolStringPoolEntryRef) -> i32
 OrcOpaqueThreadSafeContext :: struct {}
 
 /**
 * A reference to an orc::ThreadSafeContext instance.
 */
-OrcThreadSafeContextRef   :: ^OrcOpaqueThreadSafeContext
+OrcThreadSafeContextRef :: ^OrcOpaqueThreadSafeContext
 OrcOpaqueThreadSafeModule :: struct {}
 
 /**
@@ -385,24 +401,24 @@ OrcThreadSafeModuleRef :: ^OrcOpaqueThreadSafeModule
 * LLVMOrcThreadSafeModuleWithModuleDo.
 */
 OrcGenericIRModuleOperationFunction :: proc "c" (Ctx: rawptr, M: ModuleRef) -> ErrorRef
-OrcOpaqueJITTargetMachineBuilder    :: struct {}
+OrcOpaqueJITTargetMachineBuilder :: struct {}
 
 /**
 * A reference to an orc::JITTargetMachineBuilder instance.
 */
 OrcJITTargetMachineBuilderRef :: ^OrcOpaqueJITTargetMachineBuilder
-OrcOpaqueObjectLayer          :: struct {}
+OrcOpaqueObjectLayer :: struct {}
 
 /**
 * A reference to an orc::ObjectLayer instance.
 */
-OrcObjectLayerRef           :: ^OrcOpaqueObjectLayer
+OrcObjectLayerRef :: ^OrcOpaqueObjectLayer
 OrcOpaqueObjectLinkingLayer :: struct {}
 
 /**
 * A reference to an orc::ObjectLinkingLayer instance.
 */
-OrcObjectLinkingLayerRef  :: ^OrcOpaqueObjectLinkingLayer
+OrcObjectLinkingLayerRef :: ^OrcOpaqueObjectLinkingLayer
 OrcOpaqueIRTransformLayer :: struct {}
 
 /**
@@ -425,8 +441,12 @@ OrcIRTransformLayerRef :: ^OrcOpaqueIRTransformLayer
 * to set the function. This can be used to override the default transform
 * layer.
 */
-OrcIRTransformLayerTransformFunction :: proc "c" (Ctx: rawptr, ModInOut: ^OrcThreadSafeModuleRef, MR: OrcMaterializationResponsibilityRef) -> ErrorRef
-OrcOpaqueObjectTransformLayer        :: struct {}
+OrcIRTransformLayerTransformFunction :: proc "c" (
+	Ctx: rawptr,
+	ModInOut: ^OrcThreadSafeModuleRef,
+	MR: OrcMaterializationResponsibilityRef,
+) -> ErrorRef
+OrcOpaqueObjectTransformLayer :: struct {}
 
 /**
 * A reference to an orc::ObjectTransformLayer instance.
@@ -446,20 +466,23 @@ OrcObjectTransformLayerRef :: ^OrcOpaqueObjectTransformLayer
 * The transform is allowed to return an error, in which case the ObjInOut
 * buffer should be disposed of and set to null.
 */
-OrcObjectTransformLayerTransformFunction :: proc "c" (Ctx: rawptr, ObjInOut: ^MemoryBufferRef) -> ErrorRef
-OrcOpaqueIndirectStubsManager            :: struct {}
+OrcObjectTransformLayerTransformFunction :: proc "c" (
+	Ctx: rawptr,
+	ObjInOut: ^MemoryBufferRef,
+) -> ErrorRef
+OrcOpaqueIndirectStubsManager :: struct {}
 
 /**
 * A reference to an orc::IndirectStubsManager instance.
 */
-OrcIndirectStubsManagerRef      :: ^OrcOpaqueIndirectStubsManager
+OrcIndirectStubsManagerRef :: ^OrcOpaqueIndirectStubsManager
 OrcOpaqueLazyCallThroughManager :: struct {}
 
 /**
 * A reference to an orc::LazyCallThroughManager instance.
 */
 OrcLazyCallThroughManagerRef :: ^OrcOpaqueLazyCallThroughManager
-OrcOpaqueDumpObjects         :: struct {}
+OrcOpaqueDumpObjects :: struct {}
 
 /**
 * A reference to an orc::DumpObjects object.
@@ -483,9 +506,14 @@ OrcDumpObjectsRef :: ^OrcOpaqueDumpObjects
 * contained symbol names. Clients are responsible for retaining any symbol
 * names that they wish to hold after the function returns.
 */
-OrcExecutionSessionLookupHandleResultFunction :: proc "c" (Err: ErrorRef, Result: OrcCSymbolMapPairs, NumPairs: i32, Ctx: rawptr)
+OrcExecutionSessionLookupHandleResultFunction :: proc "c" (
+	Err: ErrorRef,
+	Result: OrcCSymbolMapPairs,
+	NumPairs: i32,
+	Ctx: rawptr,
+)
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Attach a custom error reporter function to the ExecutionSession.
@@ -1124,7 +1152,7 @@ foreign lib {
 	/**
 	* Dispose of an ObjectLayer.
 	*/
-	OrcDisposeObjectLayer   :: proc(ObjLayer: OrcObjectLayerRef) ---
+	OrcDisposeObjectLayer :: proc(ObjLayer: OrcObjectLayerRef) ---
 	OrcIRTransformLayerEmit :: proc(IRTransformLayer: OrcIRTransformLayerRef, MR: OrcMaterializationResponsibilityRef, TSM: OrcThreadSafeModuleRef) ---
 
 	/**
@@ -1149,7 +1177,7 @@ foreign lib {
 	/**
 	* Dispose of an IndirectStubsManager.
 	*/
-	OrcDisposeIndirectStubsManager       :: proc(ISM: OrcIndirectStubsManagerRef) ---
+	OrcDisposeIndirectStubsManager :: proc(ISM: OrcIndirectStubsManagerRef) ---
 	OrcCreateLocalLazyCallThroughManager :: proc(TargetTriple: cstring, ES: OrcExecutionSessionRef, ErrorHandlerAddr: OrcJITTargetAddress, LCTM: ^OrcLazyCallThroughManagerRef) -> ErrorRef ---
 
 	/**
@@ -1183,4 +1211,3 @@ foreign lib {
 	*/
 	OrcDumpObjects_CallOperator :: proc(DumpObjects: OrcDumpObjectsRef, ObjBuffer: ^MemoryBufferRef) -> ErrorRef ---
 }
-

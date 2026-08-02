@@ -28,10 +28,10 @@ OpaqueTargetMachineOptions :: struct {}
 * @{
 */
 TargetMachineOptionsRef :: ^OpaqueTargetMachineOptions
-OpaqueTargetMachine     :: struct {}
-TargetMachineRef        :: ^OpaqueTargetMachine
-Target                  :: struct {}
-TargetRef               :: ^Target
+OpaqueTargetMachine :: struct {}
+TargetMachineRef :: ^OpaqueTargetMachine
+Target :: struct {}
+TargetRef :: ^Target
 
 CodeGenOptLevel :: enum u32 {
 	None       = 0,
@@ -71,7 +71,7 @@ GlobalISelAbortMode :: enum u32 {
 	DisableWithDiag = 2,
 }
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/** Returns the first llvm::Target in the registered targets list. */
 	GetFirstTarget :: proc() -> TargetRef ---
@@ -118,18 +118,18 @@ foreign lib {
 	* Dispose of an LLVMTargetMachineOptionsRef instance.
 	*/
 	DisposeTargetMachineOptions :: proc(Options: TargetMachineOptionsRef) ---
-	TargetMachineOptionsSetCPU  :: proc(Options: TargetMachineOptionsRef, CPU: cstring) ---
+	TargetMachineOptionsSetCPU :: proc(Options: TargetMachineOptionsRef, CPU: cstring) ---
 
 	/**
 	* Set the list of features for the target machine.
 	*
 	* \param Features a comma-separated list of features.
 	*/
-	TargetMachineOptionsSetFeatures        :: proc(Options: TargetMachineOptionsRef, Features: cstring) ---
-	TargetMachineOptionsSetABI             :: proc(Options: TargetMachineOptionsRef, ABI: cstring) ---
+	TargetMachineOptionsSetFeatures :: proc(Options: TargetMachineOptionsRef, Features: cstring) ---
+	TargetMachineOptionsSetABI :: proc(Options: TargetMachineOptionsRef, ABI: cstring) ---
 	TargetMachineOptionsSetCodeGenOptLevel :: proc(Options: TargetMachineOptionsRef, Level: CodeGenOptLevel) ---
-	TargetMachineOptionsSetRelocMode       :: proc(Options: TargetMachineOptionsRef, Reloc: RelocMode) ---
-	TargetMachineOptionsSetCodeModel       :: proc(Options: TargetMachineOptionsRef, CodeModel: CodeModel) ---
+	TargetMachineOptionsSetRelocMode :: proc(Options: TargetMachineOptionsRef, Reloc: RelocMode) ---
+	TargetMachineOptionsSetCodeModel :: proc(Options: TargetMachineOptionsRef, CodeModel: CodeModel) ---
 
 	/**
 	* Create a new llvm::TargetMachine.
@@ -213,4 +213,3 @@ foreign lib {
 	/** Adds the target-specific analysis passes to the pass manager. */
 	AddAnalysisPasses :: proc(T: TargetMachineRef, PM: PassManagerRef) ---
 }
-

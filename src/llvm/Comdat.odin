@@ -33,7 +33,7 @@ ComdatSelectionKind :: enum u32 {
 	SameSizeComdatSelectionKind      = 4, ///< The data referenced by the COMDAT must be
 }
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Return the Comdat in the module with the specified name. It is created
@@ -71,4 +71,3 @@ foreign lib {
 	*/
 	SetComdatSelectionKind :: proc(C: ComdatRef, Kind: ComdatSelectionKind) ---
 }
-

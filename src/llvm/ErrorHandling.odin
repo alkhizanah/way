@@ -22,7 +22,7 @@ _ :: lib
 */
 FatalErrorHandler :: proc "c" (Reason: cstring)
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Install a fatal error handler. By default, if LLVM detects a fatal error, it
@@ -46,4 +46,3 @@ foreign lib {
 	*/
 	EnablePrettyStackTrace :: proc() ---
 }
-

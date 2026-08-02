@@ -23,23 +23,23 @@ _ :: lib
 OpaqueSectionIterator :: struct {}
 
 // Opaque type wrappers
-SectionIteratorRef       :: ^OpaqueSectionIterator
-OpaqueSymbolIterator     :: struct {}
-SymbolIteratorRef        :: ^OpaqueSymbolIterator
+SectionIteratorRef :: ^OpaqueSectionIterator
+OpaqueSymbolIterator :: struct {}
+SymbolIteratorRef :: ^OpaqueSymbolIterator
 OpaqueRelocationIterator :: struct {}
-RelocationIteratorRef    :: ^OpaqueRelocationIterator
+RelocationIteratorRef :: ^OpaqueRelocationIterator
 
 BinaryType :: enum u32 {
-	Archive              = 0,  /**< Archive file. */
-	MachOUniversalBinary = 1,  /**< Mach-O Universal Binary file. */
-	COFFImportFile       = 2,  /**< COFF Import file. */
-	IR                   = 3,  /**< LLVM IR. */
-	WinRes               = 4,  /**< Windows resource (.res) file. */
-	COFF                 = 5,  /**< COFF Object file. */
-	ELF32L               = 6,  /**< ELF 32-bit, little endian. */
-	ELF32B               = 7,  /**< ELF 32-bit, big endian. */
-	ELF64L               = 8,  /**< ELF 64-bit, little endian. */
-	ELF64B               = 9,  /**< ELF 64-bit, big endian. */
+	Archive              = 0, /**< Archive file. */
+	MachOUniversalBinary = 1, /**< Mach-O Universal Binary file. */
+	COFFImportFile       = 2, /**< COFF Import file. */
+	IR                   = 3, /**< LLVM IR. */
+	WinRes               = 4, /**< Windows resource (.res) file. */
+	COFF                 = 5, /**< COFF Object file. */
+	ELF32L               = 6, /**< ELF 32-bit, little endian. */
+	ELF32B               = 7, /**< ELF 32-bit, big endian. */
+	ELF64L               = 8, /**< ELF 64-bit, little endian. */
+	ELF64B               = 9, /**< ELF 64-bit, big endian. */
 	MachO32L             = 10, /**< MachO 32-bit, little endian. */
 	MachO32B             = 11, /**< MachO 32-bit, big endian. */
 	MachO64L             = 12, /**< MachO 64-bit, little endian. */
@@ -54,7 +54,7 @@ OpaqueObjectFile :: struct {}
 /** Deprecated: Use LLVMBinaryRef instead. */
 ObjectFileRef :: ^OpaqueObjectFile
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Create a binary file from the given memory buffer.
@@ -152,40 +152,40 @@ foreign lib {
 	* @see llvm::object::symbol_end
 	*/
 	ObjectFileIsSymbolIteratorAtEnd :: proc(BR: BinaryRef, SI: SymbolIteratorRef) -> Bool ---
-	DisposeSectionIterator          :: proc(SI: SectionIteratorRef) ---
-	MoveToNextSection               :: proc(SI: SectionIteratorRef) ---
-	MoveToContainingSection         :: proc(Sect: SectionIteratorRef, Sym: SymbolIteratorRef) ---
+	DisposeSectionIterator :: proc(SI: SectionIteratorRef) ---
+	MoveToNextSection :: proc(SI: SectionIteratorRef) ---
+	MoveToContainingSection :: proc(Sect: SectionIteratorRef, Sym: SymbolIteratorRef) ---
 
 	// ObjectFile Symbol iterators
 	DisposeSymbolIterator :: proc(SI: SymbolIteratorRef) ---
-	MoveToNextSymbol      :: proc(SI: SymbolIteratorRef) ---
+	MoveToNextSymbol :: proc(SI: SymbolIteratorRef) ---
 
 	// SectionRef accessors
-	GetSectionName           :: proc(SI: SectionIteratorRef) -> cstring ---
-	GetSectionSize           :: proc(SI: SectionIteratorRef) -> u64 ---
-	GetSectionContents       :: proc(SI: SectionIteratorRef) -> cstring ---
-	GetSectionAddress        :: proc(SI: SectionIteratorRef) -> u64 ---
+	GetSectionName :: proc(SI: SectionIteratorRef) -> cstring ---
+	GetSectionSize :: proc(SI: SectionIteratorRef) -> u64 ---
+	GetSectionContents :: proc(SI: SectionIteratorRef) -> cstring ---
+	GetSectionAddress :: proc(SI: SectionIteratorRef) -> u64 ---
 	GetSectionContainsSymbol :: proc(SI: SectionIteratorRef, Sym: SymbolIteratorRef) -> Bool ---
 
 	// Section Relocation iterators
-	GetRelocations            :: proc(Section: SectionIteratorRef) -> RelocationIteratorRef ---
+	GetRelocations :: proc(Section: SectionIteratorRef) -> RelocationIteratorRef ---
 	DisposeRelocationIterator :: proc(RI: RelocationIteratorRef) ---
 	IsRelocationIteratorAtEnd :: proc(Section: SectionIteratorRef, RI: RelocationIteratorRef) -> Bool ---
-	MoveToNextRelocation      :: proc(RI: RelocationIteratorRef) ---
+	MoveToNextRelocation :: proc(RI: RelocationIteratorRef) ---
 
 	// SymbolRef accessors
-	GetSymbolName    :: proc(SI: SymbolIteratorRef) -> cstring ---
+	GetSymbolName :: proc(SI: SymbolIteratorRef) -> cstring ---
 	GetSymbolAddress :: proc(SI: SymbolIteratorRef) -> u64 ---
-	GetSymbolSize    :: proc(SI: SymbolIteratorRef) -> u64 ---
+	GetSymbolSize :: proc(SI: SymbolIteratorRef) -> u64 ---
 
 	// RelocationRef accessors
 	GetRelocationOffset :: proc(RI: RelocationIteratorRef) -> u64 ---
 	GetRelocationSymbol :: proc(RI: RelocationIteratorRef) -> SymbolIteratorRef ---
-	GetRelocationType   :: proc(RI: RelocationIteratorRef) -> u64 ---
+	GetRelocationType :: proc(RI: RelocationIteratorRef) -> u64 ---
 
 	// NOTE: Caller takes ownership of returned string of the two
 	// following functions.
-	GetRelocationTypeName    :: proc(RI: RelocationIteratorRef) -> cstring ---
+	GetRelocationTypeName :: proc(RI: RelocationIteratorRef) -> cstring ---
 	GetRelocationValueString :: proc(RI: RelocationIteratorRef) -> cstring ---
 
 	/** Deprecated: Use LLVMCreateBinary instead. */
@@ -206,4 +206,3 @@ foreign lib {
 	/** Deprecated: Use LLVMObjectFileIsSymbolIteratorAtEnd instead. */
 	IsSymbolIteratorAtEnd :: proc(ObjectFile: ObjectFileRef, SI: SymbolIteratorRef) -> Bool ---
 }
-

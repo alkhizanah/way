@@ -44,12 +44,12 @@ ByteOrdering :: enum u32 {
 	LittleEndian = 1,
 }
 
-OpaqueTargetData             :: struct {}
-TargetDataRef                :: ^OpaqueTargetData
+OpaqueTargetData :: struct {}
+TargetDataRef :: ^OpaqueTargetData
 OpaqueTargetLibraryInfotData :: struct {}
-TargetLibraryInfoRef         :: ^OpaqueTargetLibraryInfotData
+TargetLibraryInfoRef :: ^OpaqueTargetLibraryInfotData
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Obtain the data layout for a module.
@@ -151,4 +151,3 @@ foreign lib {
 	See the method llvm::StructLayout::getElementContainingOffset. */
 	OffsetOfElement :: proc(TD: TargetDataRef, StructTy: TypeRef, Element: u32) -> u64 ---
 }
-

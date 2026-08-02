@@ -33,7 +33,15 @@ DisasmContextRef :: rawptr
 * value of TagType for that Triple.  If symbolic information is returned the
 * function * returns 1, otherwise it returns 0.
 */
-OpInfoCallback :: proc "c" (DisInfo: rawptr, PC: u64, Offset: u64, OpSize: u64, InstSize: u64, TagType: i32, TagBuf: rawptr) -> i32
+OpInfoCallback :: proc "c" (
+	DisInfo: rawptr,
+	PC: u64,
+	Offset: u64,
+	OpSize: u64,
+	InstSize: u64,
+	TagType: i32,
+	TagBuf: rawptr,
+) -> i32
 
 /**
 * The initial support in LLVM MC for the most general form of a relocatable
@@ -56,9 +64,9 @@ OpInfoCallback :: proc "c" (DisInfo: rawptr, PC: u64, Offset: u64, OpSize: u64, 
 * operands like "_foo@GOT", ":lower16:_foo", etc.
 */
 OpInfoSymbol1 :: struct {
-	Present: u64,     /* 1 if this symbol is present */
+	Present: u64, /* 1 if this symbol is present */
 	Name:    cstring, /* symbol name if not NULL */
-	Value:   u64,     /* symbol value if name is NULL */
+	Value:   u64, /* symbol value if name is NULL */
 }
 
 OpInfo1 :: struct {
@@ -82,12 +90,12 @@ Disassembler_VariantKind_ARM_LO16 :: 2 /* :lower16: */
 /**
 * The ARM64 target VariantKinds.
 */
-Disassembler_VariantKind_ARM64_PAGE       :: 1 /* @page */
-Disassembler_VariantKind_ARM64_PAGEOFF    :: 2 /* @pageoff */
-Disassembler_VariantKind_ARM64_GOTPAGE    :: 3 /* @gotpage */
+Disassembler_VariantKind_ARM64_PAGE :: 1 /* @page */
+Disassembler_VariantKind_ARM64_PAGEOFF :: 2 /* @pageoff */
+Disassembler_VariantKind_ARM64_GOTPAGE :: 3 /* @gotpage */
 Disassembler_VariantKind_ARM64_GOTPAGEOFF :: 4 /* @gotpageoff */
-Disassembler_VariantKind_ARM64_TLVP       :: 5 /* @tvlppage */
-Disassembler_VariantKind_ARM64_TLVOFF     :: 6 /* @tvlppageoff */
+Disassembler_VariantKind_ARM64_TLVP :: 5 /* @tvlppage */
+Disassembler_VariantKind_ARM64_TLVOFF :: 6 /* @tvlppageoff */
 
 /**
 * The type for the symbol lookup function.  This may be called by the
@@ -101,7 +109,13 @@ Disassembler_VariantKind_ARM64_TLVOFF     :: 6 /* @tvlppageoff */
 * indirectly in ReferenceType along with ReferenceName if any, or that is set
 * to NULL.
 */
-SymbolLookupCallback :: proc "c" (DisInfo: rawptr, ReferenceValue: u64, ReferenceType: ^u64, ReferencePC: u64, ReferenceName: ^cstring) -> cstring
+SymbolLookupCallback :: proc "c" (
+	DisInfo: rawptr,
+	ReferenceValue: u64,
+	ReferenceType: ^u64,
+	ReferencePC: u64,
+	ReferenceName: ^cstring,
+) -> cstring
 
 /**
 * The reference types on input and output.
@@ -156,4 +170,3 @@ Disassembler_ReferenceType_Out_Objc_Class_Ref :: 8
 
 /* The output reference is to a C++ symbol name. */
 Disassembler_ReferenceType_DeMangled_Name :: 9
-

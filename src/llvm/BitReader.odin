@@ -20,7 +20,7 @@ package llvm
 foreign import lib "system:LLVM"
 _ :: lib
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/* Builds a module from the bitcode in the specified memory buffer, returning a
 	reference to the module via the OutModule parameter. Returns 0 on success.
@@ -34,7 +34,7 @@ foreign lib {
 	ParseBitcode2 :: proc(MemBuf: MemoryBufferRef, OutModule: ^ModuleRef) -> Bool ---
 
 	/* This is deprecated. Use LLVMParseBitcodeInContext2. */
-	ParseBitcodeInContext  :: proc(ContextRef: ContextRef, MemBuf: MemoryBufferRef, OutModule: ^ModuleRef, OutMessage: ^cstring) -> Bool ---
+	ParseBitcodeInContext :: proc(ContextRef: ContextRef, MemBuf: MemoryBufferRef, OutModule: ^ModuleRef, OutMessage: ^cstring) -> Bool ---
 	ParseBitcodeInContext2 :: proc(ContextRef: ContextRef, MemBuf: MemoryBufferRef, OutModule: ^ModuleRef) -> Bool ---
 
 	/** Reads a module from the specified path, returning via the OutMP parameter
@@ -53,7 +53,6 @@ foreign lib {
 	GetBitcodeModuleInContext2 :: proc(ContextRef: ContextRef, MemBuf: MemoryBufferRef, OutM: ^ModuleRef) -> Bool ---
 
 	/* This is deprecated. Use LLVMGetBitcodeModule2. */
-	GetBitcodeModule  :: proc(MemBuf: MemoryBufferRef, OutM: ^ModuleRef, OutMessage: ^cstring) -> Bool ---
+	GetBitcodeModule :: proc(MemBuf: MemoryBufferRef, OutM: ^ModuleRef, OutMessage: ^cstring) -> Bool ---
 	GetBitcodeModule2 :: proc(MemBuf: MemoryBufferRef, OutM: ^ModuleRef) -> Bool ---
 }
-

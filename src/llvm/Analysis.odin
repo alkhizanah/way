@@ -32,7 +32,7 @@ VerifierFailureAction :: enum u32 {
 	ReturnStatusAction = 2, /* verifier will just return 1 */
 }
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/* Verifies that a module is valid, taking the specified action if not.
 	Optionally returns a human-readable description of any invalid constructs.
@@ -45,7 +45,6 @@ foreign lib {
 
 	/* Open up a ghostview window that displays the CFG of the current function.
 	Useful for debugging. */
-	ViewFunctionCFG     :: proc(Fn: ValueRef) ---
+	ViewFunctionCFG :: proc(Fn: ValueRef) ---
 	ViewFunctionCFGOnly :: proc(Fn: ValueRef) ---
 }
-

@@ -14,4 +14,3 @@ package llvm
 
 foreign import lib "system:LLVM"
 _ :: lib
-

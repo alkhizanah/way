@@ -22,7 +22,7 @@ LinkerMode :: enum u32 {
                                           should not be used. */
 }
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/* Links the source module into the destination module. The source module is
 	* destroyed.
@@ -31,4 +31,3 @@ foreign lib {
 	*/
 	LinkModules2 :: proc(Dest: ModuleRef, Src: ModuleRef) -> Bool ---
 }
-

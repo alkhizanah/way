@@ -34,7 +34,7 @@ Disassembler_Option_PrintLatency :: 16
 /* The option to print in color */
 Disassembler_Option_Color :: 32
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Create a disassembler for the TripleName.  Symbolic disassembly is supported
@@ -88,4 +88,3 @@ foreign lib {
 	*/
 	DisasmInstruction :: proc(DC: DisasmContextRef, Bytes: ^u8, BytesSize: u64, PC: u64, OutString: cstring, OutStringSize: i32) -> i32 ---
 }
-

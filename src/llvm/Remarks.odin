@@ -45,7 +45,7 @@ RemarkType :: enum u32 {
 *
 * \since REMARKS_API_VERSION=0
 */
-RemarkStringRef    :: ^RemarkOpaqueString
+RemarkStringRef :: ^RemarkOpaqueString
 RemarkOpaqueString :: struct {}
 
 /**
@@ -53,7 +53,7 @@ RemarkOpaqueString :: struct {}
 *
 * \since REMARKS_API_VERSION=0
 */
-RemarkDebugLocRef    :: ^RemarkOpaqueDebugLoc
+RemarkDebugLocRef :: ^RemarkOpaqueDebugLoc
 RemarkOpaqueDebugLoc :: struct {}
 
 /**
@@ -63,8 +63,8 @@ RemarkOpaqueDebugLoc :: struct {}
 *
 * \since REMARKS_API_VERSION=0
 */
-RemarkArgRef      :: ^RemarkOpaqueArg
-RemarkOpaqueArg   :: struct {}
+RemarkArgRef :: ^RemarkOpaqueArg
+RemarkOpaqueArg :: struct {}
 RemarkOpaqueEntry :: struct {}
 
 /**
@@ -72,11 +72,11 @@ RemarkOpaqueEntry :: struct {}
 *
 * \since REMARKS_API_VERSION=0
 */
-RemarkEntryRef     :: ^RemarkOpaqueEntry
-RemarkParserRef    :: ^RemarkOpaqueParser
+RemarkEntryRef :: ^RemarkOpaqueEntry
+RemarkParserRef :: ^RemarkOpaqueParser
 RemarkOpaqueParser :: struct {}
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Returns the buffer holding the string.
@@ -324,4 +324,3 @@ foreign lib {
 	*/
 	RemarkVersion :: proc() -> u32 ---
 }
-

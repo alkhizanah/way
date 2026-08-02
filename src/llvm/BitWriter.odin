@@ -20,7 +20,7 @@ package llvm
 foreign import lib "system:LLVM"
 _ :: lib
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/** Writes a module to the specified path. Returns 0 on success. */
 	WriteBitcodeToFile :: proc(M: ModuleRef, Path: cstring) -> i32 ---
@@ -35,4 +35,3 @@ foreign lib {
 	/** Writes a module to a new memory buffer and returns it. */
 	WriteBitcodeToMemoryBuffer :: proc(M: ModuleRef) -> MemoryBufferRef ---
 }
-

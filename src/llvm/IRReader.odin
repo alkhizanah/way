@@ -15,7 +15,7 @@ package llvm
 foreign import lib "system:LLVM"
 _ :: lib
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/**
 	* Read LLVM IR from a memory buffer and convert it into an in-memory Module
@@ -43,4 +43,3 @@ foreign lib {
 	*/
 	ParseIRInContext2 :: proc(ContextRef: ContextRef, MemBuf: MemoryBufferRef, OutM: ^ModuleRef, OutMessage: ^cstring) -> Bool ---
 }
-

@@ -109,16 +109,16 @@ Opcode :: enum u32 {
 }
 
 TypeKind :: enum u32 {
-	VoidTypeKind           = 0,  /**< type with no size */
-	HalfTypeKind           = 1,  /**< 16 bit floating point type */
-	FloatTypeKind          = 2,  /**< 32 bit floating point type */
-	DoubleTypeKind         = 3,  /**< 64 bit floating point type */
-	X86_FP80TypeKind       = 4,  /**< 80 bit floating point type (X87) */
-	FP128TypeKind          = 5,  /**< 128 bit floating point type (112-bit mantissa)*/
-	PPC_FP128TypeKind      = 6,  /**< 128 bit floating point type (two 64-bits) */
-	LabelTypeKind          = 7,  /**< Labels */
-	IntegerTypeKind        = 8,  /**< Arbitrary bit width integers */
-	FunctionTypeKind       = 9,  /**< Functions */
+	VoidTypeKind           = 0, /**< type with no size */
+	HalfTypeKind           = 1, /**< 16 bit floating point type */
+	FloatTypeKind          = 2, /**< 32 bit floating point type */
+	DoubleTypeKind         = 3, /**< 64 bit floating point type */
+	X86_FP80TypeKind       = 4, /**< 80 bit floating point type (X87) */
+	FP128TypeKind          = 5, /**< 128 bit floating point type (112-bit mantissa)*/
+	PPC_FP128TypeKind      = 6, /**< 128 bit floating point type (two 64-bits) */
+	LabelTypeKind          = 7, /**< Labels */
+	IntegerTypeKind        = 8, /**< Arbitrary bit width integers */
+	FunctionTypeKind       = 9, /**< Functions */
 	StructTypeKind         = 10, /**< Structures */
 	ArrayTypeKind          = 11, /**< Arrays */
 	PointerTypeKind        = 12, /**< Pointers */
@@ -134,19 +134,19 @@ TypeKind :: enum u32 {
 }
 
 Linkage :: enum u32 {
-	ExternalLinkage            = 0,  /**< Externally visible function */
+	ExternalLinkage            = 0, /**< Externally visible function */
 	AvailableExternallyLinkage = 1,
-	LinkOnceAnyLinkage         = 2,  /**< Keep one copy of function when linking (inline)*/
-	LinkOnceODRLinkage         = 3,  /**< Same, but only replaced by something
+	LinkOnceAnyLinkage         = 2, /**< Keep one copy of function when linking (inline)*/
+	LinkOnceODRLinkage         = 3, /**< Same, but only replaced by something
                             equivalent. */
-	LinkOnceODRAutoHideLinkage = 4,  /**< Obsolete */
-	WeakAnyLinkage             = 5,  /**< Keep one copy of function when linking (weak) */
-	WeakODRLinkage             = 6,  /**< Same, but only replaced by something
+	LinkOnceODRAutoHideLinkage = 4, /**< Obsolete */
+	WeakAnyLinkage             = 5, /**< Keep one copy of function when linking (weak) */
+	WeakODRLinkage             = 6, /**< Same, but only replaced by something
                             equivalent. */
-	AppendingLinkage           = 7,  /**< Special purpose, only applies to global arrays */
-	InternalLinkage            = 8,  /**< Rename collisions when linking (static
+	AppendingLinkage           = 7, /**< Special purpose, only applies to global arrays */
+	InternalLinkage            = 8, /**< Rename collisions when linking (static
                                functions) */
-	PrivateLinkage             = 9,  /**< Like Internal, but omit from symbol table */
+	PrivateLinkage             = 9, /**< Like Internal, but omit from symbol table */
 	DLLImportLinkage           = 10, /**< Obsolete */
 	DLLExportLinkage           = 11, /**< Obsolete */
 	ExternalWeakLinkage        = 12, /**< ExternalWeak linkage description */
@@ -263,16 +263,16 @@ IntPredicate :: enum u32 {
 }
 
 RealPredicate :: enum u32 {
-	PredicateFalse = 0,  /**< Always false (always folded) */
-	OEQ            = 1,  /**< True if ordered and equal */
-	OGT            = 2,  /**< True if ordered and greater than */
-	OGE            = 3,  /**< True if ordered and greater than or equal */
-	OLT            = 4,  /**< True if ordered and less than */
-	OLE            = 5,  /**< True if ordered and less than or equal */
-	ONE            = 6,  /**< True if ordered and operands are unequal */
-	ORD            = 7,  /**< True if ordered (no nans) */
-	UNO            = 8,  /**< True if unordered: isnan(X) | isnan(Y) */
-	UEQ            = 9,  /**< True if unordered or equal */
+	PredicateFalse = 0, /**< Always false (always folded) */
+	OEQ            = 1, /**< True if ordered and equal */
+	OGT            = 2, /**< True if ordered and greater than */
+	OGE            = 3, /**< True if ordered and greater than or equal */
+	OLT            = 4, /**< True if ordered and less than */
+	OLE            = 5, /**< True if ordered and less than or equal */
+	ONE            = 6, /**< True if ordered and operands are unequal */
+	ORD            = 7, /**< True if ordered (no nans) */
+	UNO            = 8, /**< True if unordered: isnan(X) | isnan(Y) */
+	UEQ            = 9, /**< True if unordered or equal */
 	UGT            = 10, /**< True if unordered or greater than */
 	UGE            = 11, /**< True if unordered, greater than, or equal */
 	ULT            = 12, /**< True if unordered or less than */
@@ -317,20 +317,20 @@ AtomicOrdering :: enum u32 {
 }
 
 AtomicRMWBinOp :: enum u32 {
-	Xchg     = 0,  /**< Set the new value and return the one old */
-	Add      = 1,  /**< Add a value and return the old one */
-	Sub      = 2,  /**< Subtract a value and return the old one */
-	And      = 3,  /**< And a value and return the old one */
-	Nand     = 4,  /**< Not-And a value and return the old one */
-	Or       = 5,  /**< OR a value and return the old one */
-	Xor      = 6,  /**< Xor a value and return the old one */
-	Max      = 7,  /**< Sets the value if it's greater than the
+	Xchg     = 0, /**< Set the new value and return the one old */
+	Add      = 1, /**< Add a value and return the old one */
+	Sub      = 2, /**< Subtract a value and return the old one */
+	And      = 3, /**< And a value and return the old one */
+	Nand     = 4, /**< Not-And a value and return the old one */
+	Or       = 5, /**< OR a value and return the old one */
+	Xor      = 6, /**< Xor a value and return the old one */
+	Max      = 7, /**< Sets the value if it's greater than the
                             original using a signed comparison and return
                             the old one */
-	Min      = 8,  /**< Sets the value if it's Smaller than the
+	Min      = 8, /**< Sets the value if it's Smaller than the
                             original using a signed comparison and return
                             the old one */
-	UMax     = 9,  /**< Sets the value if it's greater than the
+	UMax     = 9, /**< Sets the value if it's greater than the
                            original using an unsigned comparison and return
                            the old one */
 	UMin     = 10, /**< Sets the value if it's greater than the
@@ -429,7 +429,7 @@ ModuleFlagBehavior :: enum u32 {
 	AppendUnique = 5,
 }
 
-AttributeReturnIndex   :: 0
+AttributeReturnIndex :: 0
 AttributeFunctionIndex :: -1
 
 AttributeIndex :: u32
@@ -448,15 +448,15 @@ TailCallKind :: enum u32 {
 	NoTail   = 3,
 }
 
-FastMathAllowReassoc    :: 1
-FastMathNoNaNs          :: 2
-FastMathNoInfs          :: 4
-FastMathNoSignedZeros   :: 8
+FastMathAllowReassoc :: 1
+FastMathNoNaNs :: 2
+FastMathNoInfs :: 4
+FastMathNoSignedZeros :: 8
 FastMathAllowReciprocal :: 16
-FastMathAllowContract   :: 32
-FastMathApproxFunc      :: 64
-FastMathNone            :: 0
-FastMathAll             :: 127
+FastMathAllowContract :: 32
+FastMathApproxFunc :: 64
+FastMathNone :: 0
+FastMathAll :: 127
 
 /**
 * Flags to indicate what fast-math-style optimizations are allowed
@@ -467,8 +467,8 @@ FastMathAll             :: 127
 FastMathFlags :: u32
 
 GEPFlagInBounds :: 1
-GEPFlagNUSW     :: 2
-GEPFlagNUW      :: 4
+GEPFlagNUSW :: 2
+GEPFlagNUW :: 4
 
 /**
 * Flags that constrain the allowed wrap semantics of a getelementptr
@@ -496,10 +496,10 @@ DbgRecordKind :: enum u32 {
 *
 * @{
 */
-DiagnosticHandler :: proc "c" (DiagnosticInfoRef, rawptr)
-YieldCallback     :: proc "c" (ContextRef, rawptr)
+DiagnosticHandler :: proc "c" (_: DiagnosticInfoRef, _: rawptr)
+YieldCallback :: proc "c" (_: ContextRef, _: rawptr)
 
-@(default_calling_convention="c", link_prefix="LLVM")
+@(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
 	/** Deallocate and destroy all ManagedStatic variables.
 	@see llvm::llvm_shutdown
@@ -515,7 +515,7 @@ foreign lib {
 	GetVersion :: proc(Major: ^u32, Minor: ^u32, Patch: ^u32) ---
 
 	/*===-- Error handling ----------------------------------------------------===*/
-	CreateMessage  :: proc(Message: cstring) -> cstring ---
+	CreateMessage :: proc(Message: cstring) -> cstring ---
 	DisposeMessage :: proc(Message: cstring) ---
 
 	/**
@@ -591,9 +591,9 @@ foreign lib {
 	*
 	* @see DiagnosticInfo::getSeverity()
 	*/
-	GetDiagInfoSeverity  :: proc(DI: DiagnosticInfoRef) -> DiagnosticSeverity ---
+	GetDiagInfoSeverity :: proc(DI: DiagnosticInfoRef) -> DiagnosticSeverity ---
 	GetMDKindIDInContext :: proc(C: ContextRef, Name: cstring, SLen: u32) -> u32 ---
-	GetMDKindID          :: proc(Name: cstring, SLen: u32) -> u32 ---
+	GetMDKindID :: proc(Name: cstring, SLen: u32) -> u32 ---
 
 	/**
 	* Maps a synchronization scope name to a ID unique within this context.
@@ -612,7 +612,7 @@ foreign lib {
 	* going through the C API deprecation cycle.
 	*/
 	GetEnumAttributeKindForName :: proc(Name: cstring, SLen: i32) -> u32 ---
-	GetLastEnumAttributeKind    :: proc() -> u32 ---
+	GetLastEnumAttributeKind :: proc() -> u32 ---
 
 	/**
 	* Create an enum attribute.
@@ -666,9 +666,9 @@ foreign lib {
 	/**
 	* Check for the different types of attributes.
 	*/
-	IsEnumAttribute   :: proc(A: AttributeRef) -> Bool ---
+	IsEnumAttribute :: proc(A: AttributeRef) -> Bool ---
 	IsStringAttribute :: proc(A: AttributeRef) -> Bool ---
-	IsTypeAttribute   :: proc(A: AttributeRef) -> Bool ---
+	IsTypeAttribute :: proc(A: AttributeRef) -> Bool ---
 
 	/**
 	* Obtain a Type from a context by its registered name.
@@ -776,7 +776,7 @@ foreign lib {
 	* of LLVMGetDataLayoutStr, which is not ambiguous.
 	*/
 	GetDataLayoutStr :: proc(M: ModuleRef) -> cstring ---
-	GetDataLayout    :: proc(M: ModuleRef) -> cstring ---
+	GetDataLayout :: proc(M: ModuleRef) -> cstring ---
 
 	/**
 	* Set the data layout for a module.
@@ -1187,25 +1187,25 @@ foreign lib {
 	/**
 	* Obtain an integer type from a context with specified bit width.
 	*/
-	Int1TypeInContext   :: proc(C: ContextRef) -> TypeRef ---
-	Int8TypeInContext   :: proc(C: ContextRef) -> TypeRef ---
-	Int16TypeInContext  :: proc(C: ContextRef) -> TypeRef ---
-	Int32TypeInContext  :: proc(C: ContextRef) -> TypeRef ---
-	Int64TypeInContext  :: proc(C: ContextRef) -> TypeRef ---
+	Int1TypeInContext :: proc(C: ContextRef) -> TypeRef ---
+	Int8TypeInContext :: proc(C: ContextRef) -> TypeRef ---
+	Int16TypeInContext :: proc(C: ContextRef) -> TypeRef ---
+	Int32TypeInContext :: proc(C: ContextRef) -> TypeRef ---
+	Int64TypeInContext :: proc(C: ContextRef) -> TypeRef ---
 	Int128TypeInContext :: proc(C: ContextRef) -> TypeRef ---
-	IntTypeInContext    :: proc(C: ContextRef, NumBits: u32) -> TypeRef ---
+	IntTypeInContext :: proc(C: ContextRef, NumBits: u32) -> TypeRef ---
 
 	/**
 	* Obtain an integer type from the global context with a specified bit
 	* width.
 	*/
-	Int1Type        :: proc() -> TypeRef ---
-	Int8Type        :: proc() -> TypeRef ---
-	Int16Type       :: proc() -> TypeRef ---
-	Int32Type       :: proc() -> TypeRef ---
-	Int64Type       :: proc() -> TypeRef ---
-	Int128Type      :: proc() -> TypeRef ---
-	IntType         :: proc(NumBits: u32) -> TypeRef ---
+	Int1Type :: proc() -> TypeRef ---
+	Int8Type :: proc() -> TypeRef ---
+	Int16Type :: proc() -> TypeRef ---
+	Int32Type :: proc() -> TypeRef ---
+	Int64Type :: proc() -> TypeRef ---
+	Int128Type :: proc() -> TypeRef ---
+	IntType :: proc(NumBits: u32) -> TypeRef ---
 	GetIntTypeWidth :: proc(IntegerTy: TypeRef) -> u32 ---
 
 	/**
@@ -1249,12 +1249,12 @@ foreign lib {
 	*
 	* These map to the functions in this group of the same name.
 	*/
-	HalfType     :: proc() -> TypeRef ---
-	BFloatType   :: proc() -> TypeRef ---
-	FloatType    :: proc() -> TypeRef ---
-	DoubleType   :: proc() -> TypeRef ---
-	X86FP80Type  :: proc() -> TypeRef ---
-	FP128Type    :: proc() -> TypeRef ---
+	HalfType :: proc() -> TypeRef ---
+	BFloatType :: proc() -> TypeRef ---
+	FloatType :: proc() -> TypeRef ---
+	DoubleType :: proc() -> TypeRef ---
+	X86FP80Type :: proc() -> TypeRef ---
+	FP128Type :: proc() -> TypeRef ---
 	PPCFP128Type :: proc() -> TypeRef ---
 
 	/**
@@ -1565,8 +1565,8 @@ foreign lib {
 	* These are similar to the above functions except they operate on the
 	* global context.
 	*/
-	VoidType   :: proc() -> TypeRef ---
-	LabelType  :: proc() -> TypeRef ---
+	VoidType :: proc() -> TypeRef ---
+	LabelType :: proc() -> TypeRef ---
 	X86AMXType :: proc() -> TypeRef ---
 
 	/**
@@ -1687,99 +1687,99 @@ foreign lib {
 	/**
 	* Determine whether a value instance is poisonous.
 	*/
-	IsPoison                  :: proc(Val: ValueRef) -> Bool ---
-	IsAArgument               :: proc(Val: ValueRef) -> ValueRef ---
-	IsABasicBlock             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAInlineAsm              :: proc(Val: ValueRef) -> ValueRef ---
-	IsAUser                   :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstant               :: proc(Val: ValueRef) -> ValueRef ---
-	IsABlockAddress           :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantAggregateZero  :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantArray          :: proc(Val: ValueRef) -> ValueRef ---
+	IsPoison :: proc(Val: ValueRef) -> Bool ---
+	IsAArgument :: proc(Val: ValueRef) -> ValueRef ---
+	IsABasicBlock :: proc(Val: ValueRef) -> ValueRef ---
+	IsAInlineAsm :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUser :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstant :: proc(Val: ValueRef) -> ValueRef ---
+	IsABlockAddress :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantAggregateZero :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantArray :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantDataSequential :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantDataArray      :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantDataVector     :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantExpr           :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantFP             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantInt            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantPointerNull    :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantStruct         :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantTokenNone      :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantVector         :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantPtrAuth        :: proc(Val: ValueRef) -> ValueRef ---
-	IsAGlobalValue            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAGlobalAlias            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAGlobalObject           :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFunction               :: proc(Val: ValueRef) -> ValueRef ---
-	IsAGlobalVariable         :: proc(Val: ValueRef) -> ValueRef ---
-	IsAGlobalIFunc            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAUndefValue             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAPoisonValue            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAInstruction            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAUnaryOperator          :: proc(Val: ValueRef) -> ValueRef ---
-	IsABinaryOperator         :: proc(Val: ValueRef) -> ValueRef ---
-	IsACallInst               :: proc(Val: ValueRef) -> ValueRef ---
-	IsAIntrinsicInst          :: proc(Val: ValueRef) -> ValueRef ---
-	IsADbgInfoIntrinsic       :: proc(Val: ValueRef) -> ValueRef ---
-	IsADbgVariableIntrinsic   :: proc(Val: ValueRef) -> ValueRef ---
-	IsADbgDeclareInst         :: proc(Val: ValueRef) -> ValueRef ---
-	IsADbgLabelInst           :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMemIntrinsic           :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMemCpyInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMemMoveInst            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMemSetInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsACmpInst                :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFCmpInst               :: proc(Val: ValueRef) -> ValueRef ---
-	IsAICmpInst               :: proc(Val: ValueRef) -> ValueRef ---
-	IsAExtractElementInst     :: proc(Val: ValueRef) -> ValueRef ---
-	IsAGetElementPtrInst      :: proc(Val: ValueRef) -> ValueRef ---
-	IsAInsertElementInst      :: proc(Val: ValueRef) -> ValueRef ---
-	IsAInsertValueInst        :: proc(Val: ValueRef) -> ValueRef ---
-	IsALandingPadInst         :: proc(Val: ValueRef) -> ValueRef ---
-	IsAPHINode                :: proc(Val: ValueRef) -> ValueRef ---
-	IsASelectInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAShuffleVectorInst      :: proc(Val: ValueRef) -> ValueRef ---
-	IsAStoreInst              :: proc(Val: ValueRef) -> ValueRef ---
-	IsABranchInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAIndirectBrInst         :: proc(Val: ValueRef) -> ValueRef ---
-	IsAInvokeInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAReturnInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsASwitchInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAUnreachableInst        :: proc(Val: ValueRef) -> ValueRef ---
-	IsAResumeInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsACleanupReturnInst      :: proc(Val: ValueRef) -> ValueRef ---
-	IsACatchReturnInst        :: proc(Val: ValueRef) -> ValueRef ---
-	IsACatchSwitchInst        :: proc(Val: ValueRef) -> ValueRef ---
-	IsACallBrInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFuncletPadInst         :: proc(Val: ValueRef) -> ValueRef ---
-	IsACatchPadInst           :: proc(Val: ValueRef) -> ValueRef ---
-	IsACleanupPadInst         :: proc(Val: ValueRef) -> ValueRef ---
-	IsAUnaryInstruction       :: proc(Val: ValueRef) -> ValueRef ---
-	IsAAllocaInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsACastInst               :: proc(Val: ValueRef) -> ValueRef ---
-	IsAAddrSpaceCastInst      :: proc(Val: ValueRef) -> ValueRef ---
-	IsABitCastInst            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFPExtInst              :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFPToSIInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFPToUIInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFPTruncInst            :: proc(Val: ValueRef) -> ValueRef ---
-	IsAIntToPtrInst           :: proc(Val: ValueRef) -> ValueRef ---
-	IsAPtrToIntInst           :: proc(Val: ValueRef) -> ValueRef ---
-	IsASExtInst               :: proc(Val: ValueRef) -> ValueRef ---
-	IsASIToFPInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsATruncInst              :: proc(Val: ValueRef) -> ValueRef ---
-	IsAUIToFPInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAZExtInst               :: proc(Val: ValueRef) -> ValueRef ---
-	IsAExtractValueInst       :: proc(Val: ValueRef) -> ValueRef ---
-	IsALoadInst               :: proc(Val: ValueRef) -> ValueRef ---
-	IsAVAArgInst              :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFreezeInst             :: proc(Val: ValueRef) -> ValueRef ---
-	IsAAtomicCmpXchgInst      :: proc(Val: ValueRef) -> ValueRef ---
-	IsAAtomicRMWInst          :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFenceInst              :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMDNode                 :: proc(Val: ValueRef) -> ValueRef ---
-	IsAValueAsMetadata        :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMDString               :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantDataArray :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantDataVector :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantExpr :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantFP :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantInt :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantPointerNull :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantStruct :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantTokenNone :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantVector :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantPtrAuth :: proc(Val: ValueRef) -> ValueRef ---
+	IsAGlobalValue :: proc(Val: ValueRef) -> ValueRef ---
+	IsAGlobalAlias :: proc(Val: ValueRef) -> ValueRef ---
+	IsAGlobalObject :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFunction :: proc(Val: ValueRef) -> ValueRef ---
+	IsAGlobalVariable :: proc(Val: ValueRef) -> ValueRef ---
+	IsAGlobalIFunc :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUndefValue :: proc(Val: ValueRef) -> ValueRef ---
+	IsAPoisonValue :: proc(Val: ValueRef) -> ValueRef ---
+	IsAInstruction :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUnaryOperator :: proc(Val: ValueRef) -> ValueRef ---
+	IsABinaryOperator :: proc(Val: ValueRef) -> ValueRef ---
+	IsACallInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAIntrinsicInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsADbgInfoIntrinsic :: proc(Val: ValueRef) -> ValueRef ---
+	IsADbgVariableIntrinsic :: proc(Val: ValueRef) -> ValueRef ---
+	IsADbgDeclareInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsADbgLabelInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMemIntrinsic :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMemCpyInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMemMoveInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMemSetInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACmpInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFCmpInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAICmpInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAExtractElementInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAGetElementPtrInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAInsertElementInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAInsertValueInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsALandingPadInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAPHINode :: proc(Val: ValueRef) -> ValueRef ---
+	IsASelectInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAShuffleVectorInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAStoreInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsABranchInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAIndirectBrInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAInvokeInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAReturnInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsASwitchInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUnreachableInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAResumeInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACleanupReturnInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACatchReturnInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACatchSwitchInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACallBrInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFuncletPadInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACatchPadInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACleanupPadInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUnaryInstruction :: proc(Val: ValueRef) -> ValueRef ---
+	IsAAllocaInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACastInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAAddrSpaceCastInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsABitCastInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFPExtInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFPToSIInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFPToUIInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFPTruncInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAIntToPtrInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAPtrToIntInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsASExtInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsASIToFPInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsATruncInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUIToFPInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAZExtInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAExtractValueInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsALoadInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAVAArgInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFreezeInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAAtomicCmpXchgInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAAtomicRMWInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFenceInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMDNode :: proc(Val: ValueRef) -> ValueRef ---
+	IsAValueAsMetadata :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMDString :: proc(Val: ValueRef) -> ValueRef ---
 
 	/** Deprecated: Use LLVMGetValueName2 instead. */
 	GetValueName :: proc(Val: ValueRef) -> cstring ---
@@ -1856,7 +1856,7 @@ foreign lib {
 	*
 	* @see llvm::Constant::getNullValue()
 	*/
-	ConstNull :: proc(Ty: TypeRef /* all zeroes */) -> ValueRef --- /* all zeroes */
+	ConstNull :: proc(Ty: TypeRef, /* all zeroes */) -> ValueRef --- /* all zeroes */
 
 	/**
 	* Obtain a constant value referring to the instance of a type
@@ -2123,21 +2123,21 @@ foreign lib {
 	*
 	* @{
 	*/
-	GetConstOpcode    :: proc(ConstantVal: ValueRef) -> Opcode ---
-	AlignOf           :: proc(Ty: TypeRef) -> ValueRef ---
-	SizeOf            :: proc(Ty: TypeRef) -> ValueRef ---
-	ConstNeg          :: proc(ConstantVal: ValueRef) -> ValueRef ---
-	ConstNSWNeg       :: proc(ConstantVal: ValueRef) -> ValueRef ---
-	ConstNUWNeg       :: proc(ConstantVal: ValueRef) -> ValueRef ---
-	ConstNot          :: proc(ConstantVal: ValueRef) -> ValueRef ---
-	ConstAdd          :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
-	ConstNSWAdd       :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
-	ConstNUWAdd       :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
-	ConstSub          :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
-	ConstNSWSub       :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
-	ConstNUWSub       :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
-	ConstXor          :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
-	ConstGEP2         :: proc(Ty: TypeRef, ConstantVal: ValueRef, ConstantIndices: ^ValueRef, NumIndices: u32) -> ValueRef ---
+	GetConstOpcode :: proc(ConstantVal: ValueRef) -> Opcode ---
+	AlignOf :: proc(Ty: TypeRef) -> ValueRef ---
+	SizeOf :: proc(Ty: TypeRef) -> ValueRef ---
+	ConstNeg :: proc(ConstantVal: ValueRef) -> ValueRef ---
+	ConstNSWNeg :: proc(ConstantVal: ValueRef) -> ValueRef ---
+	ConstNUWNeg :: proc(ConstantVal: ValueRef) -> ValueRef ---
+	ConstNot :: proc(ConstantVal: ValueRef) -> ValueRef ---
+	ConstAdd :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
+	ConstNSWAdd :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
+	ConstNUWAdd :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
+	ConstSub :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
+	ConstNSWSub :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
+	ConstNUWSub :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
+	ConstXor :: proc(LHSConstant: ValueRef, RHSConstant: ValueRef) -> ValueRef ---
+	ConstGEP2 :: proc(Ty: TypeRef, ConstantVal: ValueRef, ConstantIndices: ^ValueRef, NumIndices: u32) -> ValueRef ---
 	ConstInBoundsGEP2 :: proc(Ty: TypeRef, ConstantVal: ValueRef, ConstantIndices: ^ValueRef, NumIndices: u32) -> ValueRef ---
 
 	/**
@@ -2147,17 +2147,17 @@ foreign lib {
 	* @see llvm::ConstantExpr::getGetElementPtr()
 	*/
 	ConstGEPWithNoWrapFlags :: proc(Ty: TypeRef, ConstantVal: ValueRef, ConstantIndices: ^ValueRef, NumIndices: u32, NoWrapFlags: GEPNoWrapFlags) -> ValueRef ---
-	ConstTrunc              :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
-	ConstPtrToInt           :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
-	ConstIntToPtr           :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
-	ConstBitCast            :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
-	ConstAddrSpaceCast      :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
-	ConstTruncOrBitCast     :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
-	ConstPointerCast        :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
-	ConstExtractElement     :: proc(VectorConstant: ValueRef, IndexConstant: ValueRef) -> ValueRef ---
-	ConstInsertElement      :: proc(VectorConstant: ValueRef, ElementValueConstant: ValueRef, IndexConstant: ValueRef) -> ValueRef ---
-	ConstShuffleVector      :: proc(VectorAConstant: ValueRef, VectorBConstant: ValueRef, MaskConstant: ValueRef) -> ValueRef ---
-	BlockAddress            :: proc(F: ValueRef, BB: BasicBlockRef) -> ValueRef ---
+	ConstTrunc :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
+	ConstPtrToInt :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
+	ConstIntToPtr :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
+	ConstBitCast :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
+	ConstAddrSpaceCast :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
+	ConstTruncOrBitCast :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
+	ConstPointerCast :: proc(ConstantVal: ValueRef, ToType: TypeRef) -> ValueRef ---
+	ConstExtractElement :: proc(VectorConstant: ValueRef, IndexConstant: ValueRef) -> ValueRef ---
+	ConstInsertElement :: proc(VectorConstant: ValueRef, ElementValueConstant: ValueRef, IndexConstant: ValueRef) -> ValueRef ---
+	ConstShuffleVector :: proc(VectorAConstant: ValueRef, VectorBConstant: ValueRef, MaskConstant: ValueRef) -> ValueRef ---
+	BlockAddress :: proc(F: ValueRef, BB: BasicBlockRef) -> ValueRef ---
 
 	/**
 	* Gets the function associated with a given BlockAddress constant value.
@@ -2182,18 +2182,18 @@ foreign lib {
 	*
 	* @{
 	*/
-	GetGlobalParent    :: proc(Global: ValueRef) -> ModuleRef ---
-	IsDeclaration      :: proc(Global: ValueRef) -> Bool ---
-	GetLinkage         :: proc(Global: ValueRef) -> Linkage ---
-	SetLinkage         :: proc(Global: ValueRef, Linkage: Linkage) ---
-	GetSection         :: proc(Global: ValueRef) -> cstring ---
-	SetSection         :: proc(Global: ValueRef, Section: cstring) ---
-	GetVisibility      :: proc(Global: ValueRef) -> Visibility ---
-	SetVisibility      :: proc(Global: ValueRef, Viz: Visibility) ---
+	GetGlobalParent :: proc(Global: ValueRef) -> ModuleRef ---
+	IsDeclaration :: proc(Global: ValueRef) -> Bool ---
+	GetLinkage :: proc(Global: ValueRef) -> Linkage ---
+	SetLinkage :: proc(Global: ValueRef, Linkage: Linkage) ---
+	GetSection :: proc(Global: ValueRef) -> cstring ---
+	SetSection :: proc(Global: ValueRef, Section: cstring) ---
+	GetVisibility :: proc(Global: ValueRef) -> Visibility ---
+	SetVisibility :: proc(Global: ValueRef, Viz: Visibility) ---
 	GetDLLStorageClass :: proc(Global: ValueRef) -> DLLStorageClass ---
 	SetDLLStorageClass :: proc(Global: ValueRef, Class: DLLStorageClass) ---
-	GetUnnamedAddress  :: proc(Global: ValueRef) -> UnnamedAddr ---
-	SetUnnamedAddress  :: proc(Global: ValueRef, UnnamedAddr: UnnamedAddr) ---
+	GetUnnamedAddress :: proc(Global: ValueRef) -> UnnamedAddr ---
+	SetUnnamedAddress :: proc(Global: ValueRef, UnnamedAddr: UnnamedAddr) ---
 
 	/**
 	* Returns the "value type" of a global value.  This differs from the formal
@@ -2302,24 +2302,24 @@ foreign lib {
 	*
 	* @{
 	*/
-	AddGlobal                :: proc(M: ModuleRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
-	AddGlobalInAddressSpace  :: proc(M: ModuleRef, Ty: TypeRef, Name: cstring, AddressSpace: u32) -> ValueRef ---
-	GetNamedGlobal           :: proc(M: ModuleRef, Name: cstring) -> ValueRef ---
+	AddGlobal :: proc(M: ModuleRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
+	AddGlobalInAddressSpace :: proc(M: ModuleRef, Ty: TypeRef, Name: cstring, AddressSpace: u32) -> ValueRef ---
+	GetNamedGlobal :: proc(M: ModuleRef, Name: cstring) -> ValueRef ---
 	GetNamedGlobalWithLength :: proc(M: ModuleRef, Name: cstring, Length: i32) -> ValueRef ---
-	GetFirstGlobal           :: proc(M: ModuleRef) -> ValueRef ---
-	GetLastGlobal            :: proc(M: ModuleRef) -> ValueRef ---
-	GetNextGlobal            :: proc(GlobalVar: ValueRef) -> ValueRef ---
-	GetPreviousGlobal        :: proc(GlobalVar: ValueRef) -> ValueRef ---
-	DeleteGlobal             :: proc(GlobalVar: ValueRef) ---
-	GetInitializer           :: proc(GlobalVar: ValueRef) -> ValueRef ---
-	SetInitializer           :: proc(GlobalVar: ValueRef, ConstantVal: ValueRef) ---
-	IsThreadLocal            :: proc(GlobalVar: ValueRef) -> Bool ---
-	SetThreadLocal           :: proc(GlobalVar: ValueRef, IsThreadLocal: Bool) ---
-	IsGlobalConstant         :: proc(GlobalVar: ValueRef) -> Bool ---
-	SetGlobalConstant        :: proc(GlobalVar: ValueRef, IsConstant: Bool) ---
-	GetThreadLocalMode       :: proc(GlobalVar: ValueRef) -> ThreadLocalMode ---
-	SetThreadLocalMode       :: proc(GlobalVar: ValueRef, Mode: ThreadLocalMode) ---
-	IsExternallyInitialized  :: proc(GlobalVar: ValueRef) -> Bool ---
+	GetFirstGlobal :: proc(M: ModuleRef) -> ValueRef ---
+	GetLastGlobal :: proc(M: ModuleRef) -> ValueRef ---
+	GetNextGlobal :: proc(GlobalVar: ValueRef) -> ValueRef ---
+	GetPreviousGlobal :: proc(GlobalVar: ValueRef) -> ValueRef ---
+	DeleteGlobal :: proc(GlobalVar: ValueRef) ---
+	GetInitializer :: proc(GlobalVar: ValueRef) -> ValueRef ---
+	SetInitializer :: proc(GlobalVar: ValueRef, ConstantVal: ValueRef) ---
+	IsThreadLocal :: proc(GlobalVar: ValueRef) -> Bool ---
+	SetThreadLocal :: proc(GlobalVar: ValueRef, IsThreadLocal: Bool) ---
+	IsGlobalConstant :: proc(GlobalVar: ValueRef) -> Bool ---
+	SetGlobalConstant :: proc(GlobalVar: ValueRef, IsConstant: Bool) ---
+	GetThreadLocalMode :: proc(GlobalVar: ValueRef) -> ThreadLocalMode ---
+	SetThreadLocalMode :: proc(GlobalVar: ValueRef, Mode: ThreadLocalMode) ---
+	IsExternallyInitialized :: proc(GlobalVar: ValueRef) -> Bool ---
 	SetExternallyInitialized :: proc(GlobalVar: ValueRef, IsExtInit: Bool) ---
 
 	/**
@@ -2543,12 +2543,12 @@ foreign lib {
 	*
 	* @see llvm::Function::addAttribute()
 	*/
-	AddAttributeAtIndex          :: proc(F: ValueRef, Idx: AttributeIndex, A: AttributeRef) ---
-	GetAttributeCountAtIndex     :: proc(F: ValueRef, Idx: AttributeIndex) -> u32 ---
-	GetAttributesAtIndex         :: proc(F: ValueRef, Idx: AttributeIndex, Attrs: ^AttributeRef) ---
-	GetEnumAttributeAtIndex      :: proc(F: ValueRef, Idx: AttributeIndex, KindID: u32) -> AttributeRef ---
-	GetStringAttributeAtIndex    :: proc(F: ValueRef, Idx: AttributeIndex, K: cstring, KLen: u32) -> AttributeRef ---
-	RemoveEnumAttributeAtIndex   :: proc(F: ValueRef, Idx: AttributeIndex, KindID: u32) ---
+	AddAttributeAtIndex :: proc(F: ValueRef, Idx: AttributeIndex, A: AttributeRef) ---
+	GetAttributeCountAtIndex :: proc(F: ValueRef, Idx: AttributeIndex) -> u32 ---
+	GetAttributesAtIndex :: proc(F: ValueRef, Idx: AttributeIndex, Attrs: ^AttributeRef) ---
+	GetEnumAttributeAtIndex :: proc(F: ValueRef, Idx: AttributeIndex, KindID: u32) -> AttributeRef ---
+	GetStringAttributeAtIndex :: proc(F: ValueRef, Idx: AttributeIndex, K: cstring, KLen: u32) -> AttributeRef ---
+	RemoveEnumAttributeAtIndex :: proc(F: ValueRef, Idx: AttributeIndex, KindID: u32) ---
 	RemoveStringAttributeAtIndex :: proc(F: ValueRef, Idx: AttributeIndex, K: cstring, KLen: u32) ---
 
 	/**
@@ -3215,7 +3215,7 @@ foreign lib {
 	* @see llvm::DbgRecord::getDebugLoc()
 	*/
 	DbgRecordGetDebugLoc :: proc(Rec: DbgRecordRef) -> MetadataRef ---
-	DbgRecordGetKind     :: proc(Rec: DbgRecordRef) -> DbgRecordKind ---
+	DbgRecordGetKind :: proc(Rec: DbgRecordRef) -> DbgRecordKind ---
 
 	/**
 	* Get the value of the DbgVariableRecord.
@@ -3269,14 +3269,14 @@ foreign lib {
 	*
 	* @see LLVMSetInstructionCallConv()
 	*/
-	GetInstructionCallConv        :: proc(Instr: ValueRef) -> u32 ---
-	SetInstrParamAlignment        :: proc(Instr: ValueRef, Idx: AttributeIndex, Align: u32) ---
-	AddCallSiteAttribute          :: proc(C: ValueRef, Idx: AttributeIndex, A: AttributeRef) ---
-	GetCallSiteAttributeCount     :: proc(C: ValueRef, Idx: AttributeIndex) -> u32 ---
-	GetCallSiteAttributes         :: proc(C: ValueRef, Idx: AttributeIndex, Attrs: ^AttributeRef) ---
-	GetCallSiteEnumAttribute      :: proc(C: ValueRef, Idx: AttributeIndex, KindID: u32) -> AttributeRef ---
-	GetCallSiteStringAttribute    :: proc(C: ValueRef, Idx: AttributeIndex, K: cstring, KLen: u32) -> AttributeRef ---
-	RemoveCallSiteEnumAttribute   :: proc(C: ValueRef, Idx: AttributeIndex, KindID: u32) ---
+	GetInstructionCallConv :: proc(Instr: ValueRef) -> u32 ---
+	SetInstrParamAlignment :: proc(Instr: ValueRef, Idx: AttributeIndex, Align: u32) ---
+	AddCallSiteAttribute :: proc(C: ValueRef, Idx: AttributeIndex, A: AttributeRef) ---
+	GetCallSiteAttributeCount :: proc(C: ValueRef, Idx: AttributeIndex) -> u32 ---
+	GetCallSiteAttributes :: proc(C: ValueRef, Idx: AttributeIndex, Attrs: ^AttributeRef) ---
+	GetCallSiteEnumAttribute :: proc(C: ValueRef, Idx: AttributeIndex, KindID: u32) -> AttributeRef ---
+	GetCallSiteStringAttribute :: proc(C: ValueRef, Idx: AttributeIndex, K: cstring, KLen: u32) -> AttributeRef ---
+	RemoveCallSiteEnumAttribute :: proc(C: ValueRef, Idx: AttributeIndex, KindID: u32) ---
 	RemoveCallSiteStringAttribute :: proc(C: ValueRef, Idx: AttributeIndex, K: cstring, KLen: u32) ---
 
 	/**
@@ -3563,7 +3563,7 @@ foreign lib {
 	* @{
 	*/
 	CreateBuilderInContext :: proc(C: ContextRef) -> BuilderRef ---
-	CreateBuilder          :: proc() -> BuilderRef ---
+	CreateBuilder :: proc() -> BuilderRef ---
 
 	/**
 	* Set the builder position before Instr but after any attached debug records,
@@ -3586,12 +3586,12 @@ foreign lib {
 	* Set the builder position before Instr and any attached debug records.
 	*/
 	PositionBuilderBeforeInstrAndDbgRecords :: proc(Builder: BuilderRef, Instr: ValueRef) ---
-	PositionBuilderAtEnd                    :: proc(Builder: BuilderRef, Block: BasicBlockRef) ---
-	GetInsertBlock                          :: proc(Builder: BuilderRef) -> BasicBlockRef ---
-	ClearInsertionPosition                  :: proc(Builder: BuilderRef) ---
-	InsertIntoBuilder                       :: proc(Builder: BuilderRef, Instr: ValueRef) ---
-	InsertIntoBuilderWithName               :: proc(Builder: BuilderRef, Instr: ValueRef, Name: cstring) ---
-	DisposeBuilder                          :: proc(Builder: BuilderRef) ---
+	PositionBuilderAtEnd :: proc(Builder: BuilderRef, Block: BasicBlockRef) ---
+	GetInsertBlock :: proc(Builder: BuilderRef) -> BasicBlockRef ---
+	ClearInsertionPosition :: proc(Builder: BuilderRef) ---
+	InsertIntoBuilder :: proc(Builder: BuilderRef, Instr: ValueRef) ---
+	InsertIntoBuilderWithName :: proc(Builder: BuilderRef, Instr: ValueRef, Name: cstring) ---
+	DisposeBuilder :: proc(Builder: BuilderRef) ---
 
 	/**
 	* Get location information used by debugging information.
@@ -3664,25 +3664,25 @@ foreign lib {
 	GetCurrentDebugLocation :: proc(Builder: BuilderRef) -> ValueRef ---
 
 	/* Terminators */
-	BuildRetVoid                  :: proc(BuilderRef) -> ValueRef ---
-	BuildRet                      :: proc(_: BuilderRef, V: ValueRef) -> ValueRef ---
-	BuildAggregateRet             :: proc(_: BuilderRef, RetVals: ^ValueRef, N: u32) -> ValueRef ---
-	BuildBr                       :: proc(_: BuilderRef, Dest: BasicBlockRef) -> ValueRef ---
-	BuildCondBr                   :: proc(_: BuilderRef, If: ValueRef, Then: BasicBlockRef, Else: BasicBlockRef) -> ValueRef ---
-	BuildSwitch                   :: proc(_: BuilderRef, V: ValueRef, Else: BasicBlockRef, NumCases: u32) -> ValueRef ---
-	BuildIndirectBr               :: proc(B: BuilderRef, Addr: ValueRef, NumDests: u32) -> ValueRef ---
-	BuildCallBr                   :: proc(B: BuilderRef, Ty: TypeRef, Fn: ValueRef, DefaultDest: BasicBlockRef, IndirectDests: ^BasicBlockRef, NumIndirectDests: u32, Args: ^ValueRef, NumArgs: u32, Bundles: ^OperandBundleRef, NumBundles: u32, Name: cstring) -> ValueRef ---
-	BuildInvoke2                  :: proc(_: BuilderRef, Ty: TypeRef, Fn: ValueRef, Args: ^ValueRef, NumArgs: u32, Then: BasicBlockRef, Catch: BasicBlockRef, Name: cstring) -> ValueRef ---
+	BuildRetVoid :: proc(_: BuilderRef) -> ValueRef ---
+	BuildRet :: proc(_: BuilderRef, V: ValueRef) -> ValueRef ---
+	BuildAggregateRet :: proc(_: BuilderRef, RetVals: ^ValueRef, N: u32) -> ValueRef ---
+	BuildBr :: proc(_: BuilderRef, Dest: BasicBlockRef) -> ValueRef ---
+	BuildCondBr :: proc(_: BuilderRef, If: ValueRef, Then: BasicBlockRef, Else: BasicBlockRef) -> ValueRef ---
+	BuildSwitch :: proc(_: BuilderRef, V: ValueRef, Else: BasicBlockRef, NumCases: u32) -> ValueRef ---
+	BuildIndirectBr :: proc(B: BuilderRef, Addr: ValueRef, NumDests: u32) -> ValueRef ---
+	BuildCallBr :: proc(B: BuilderRef, Ty: TypeRef, Fn: ValueRef, DefaultDest: BasicBlockRef, IndirectDests: ^BasicBlockRef, NumIndirectDests: u32, Args: ^ValueRef, NumArgs: u32, Bundles: ^OperandBundleRef, NumBundles: u32, Name: cstring) -> ValueRef ---
+	BuildInvoke2 :: proc(_: BuilderRef, Ty: TypeRef, Fn: ValueRef, Args: ^ValueRef, NumArgs: u32, Then: BasicBlockRef, Catch: BasicBlockRef, Name: cstring) -> ValueRef ---
 	BuildInvokeWithOperandBundles :: proc(_: BuilderRef, Ty: TypeRef, Fn: ValueRef, Args: ^ValueRef, NumArgs: u32, Then: BasicBlockRef, Catch: BasicBlockRef, Bundles: ^OperandBundleRef, NumBundles: u32, Name: cstring) -> ValueRef ---
-	BuildUnreachable              :: proc(BuilderRef) -> ValueRef ---
+	BuildUnreachable :: proc(_: BuilderRef) -> ValueRef ---
 
 	/* Exception Handling */
-	BuildResume      :: proc(B: BuilderRef, Exn: ValueRef) -> ValueRef ---
-	BuildLandingPad  :: proc(B: BuilderRef, Ty: TypeRef, PersFn: ValueRef, NumClauses: u32, Name: cstring) -> ValueRef ---
-	BuildCleanupRet  :: proc(B: BuilderRef, CatchPad: ValueRef, BB: BasicBlockRef) -> ValueRef ---
-	BuildCatchRet    :: proc(B: BuilderRef, CatchPad: ValueRef, BB: BasicBlockRef) -> ValueRef ---
-	BuildCatchPad    :: proc(B: BuilderRef, ParentPad: ValueRef, Args: ^ValueRef, NumArgs: u32, Name: cstring) -> ValueRef ---
-	BuildCleanupPad  :: proc(B: BuilderRef, ParentPad: ValueRef, Args: ^ValueRef, NumArgs: u32, Name: cstring) -> ValueRef ---
+	BuildResume :: proc(B: BuilderRef, Exn: ValueRef) -> ValueRef ---
+	BuildLandingPad :: proc(B: BuilderRef, Ty: TypeRef, PersFn: ValueRef, NumClauses: u32, Name: cstring) -> ValueRef ---
+	BuildCleanupRet :: proc(B: BuilderRef, CatchPad: ValueRef, BB: BasicBlockRef) -> ValueRef ---
+	BuildCatchRet :: proc(B: BuilderRef, CatchPad: ValueRef, BB: BasicBlockRef) -> ValueRef ---
+	BuildCatchPad :: proc(B: BuilderRef, ParentPad: ValueRef, Args: ^ValueRef, NumArgs: u32, Name: cstring) -> ValueRef ---
+	BuildCleanupPad :: proc(B: BuilderRef, ParentPad: ValueRef, Args: ^ValueRef, NumArgs: u32, Name: cstring) -> ValueRef ---
 	BuildCatchSwitch :: proc(B: BuilderRef, ParentPad: ValueRef, UnwindBB: BasicBlockRef, NumHandlers: u32, Name: cstring) -> ValueRef ---
 
 	/* Add a case to the switch instruction */
@@ -3750,44 +3750,44 @@ foreign lib {
 	SetParentCatchSwitch :: proc(CatchPad: ValueRef, CatchSwitch: ValueRef) ---
 
 	/* Arithmetic */
-	BuildAdd       :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNSWAdd    :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNUWAdd    :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFAdd      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildSub       :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNSWSub    :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNUWSub    :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFSub      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildMul       :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNSWMul    :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNUWMul    :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFMul      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildUDiv      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildAdd :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNSWAdd :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNUWAdd :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildFAdd :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildSub :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNSWSub :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNUWSub :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildFSub :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildMul :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNSWMul :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNUWMul :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildFMul :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildUDiv :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
 	BuildExactUDiv :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildSDiv      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildSDiv :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
 	BuildExactSDiv :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFDiv      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildURem      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildSRem      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFRem      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildShl       :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildLShr      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildAShr      :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildAnd       :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildOr        :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildXor       :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildBinOp     :: proc(B: BuilderRef, Op: Opcode, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNeg       :: proc(_: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNSWNeg    :: proc(B: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNUWNeg    :: proc(B: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFNeg      :: proc(_: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
-	BuildNot       :: proc(_: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
-	GetNUW         :: proc(ArithInst: ValueRef) -> Bool ---
-	SetNUW         :: proc(ArithInst: ValueRef, HasNUW: Bool) ---
-	GetNSW         :: proc(ArithInst: ValueRef) -> Bool ---
-	SetNSW         :: proc(ArithInst: ValueRef, HasNSW: Bool) ---
-	GetExact       :: proc(DivOrShrInst: ValueRef) -> Bool ---
-	SetExact       :: proc(DivOrShrInst: ValueRef, IsExact: Bool) ---
+	BuildFDiv :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildURem :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildSRem :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildFRem :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildShl :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildLShr :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildAShr :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildAnd :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildOr :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildXor :: proc(_: BuilderRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildBinOp :: proc(B: BuilderRef, Op: Opcode, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNeg :: proc(_: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNSWNeg :: proc(B: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNUWNeg :: proc(B: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
+	BuildFNeg :: proc(_: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
+	BuildNot :: proc(_: BuilderRef, V: ValueRef, Name: cstring) -> ValueRef ---
+	GetNUW :: proc(ArithInst: ValueRef) -> Bool ---
+	SetNUW :: proc(ArithInst: ValueRef, HasNUW: Bool) ---
+	GetNSW :: proc(ArithInst: ValueRef) -> Bool ---
+	SetNSW :: proc(ArithInst: ValueRef, HasNSW: Bool) ---
+	GetExact :: proc(DivOrShrInst: ValueRef) -> Bool ---
+	SetExact :: proc(DivOrShrInst: ValueRef, IsExact: Bool) ---
 
 	/**
 	* Gets if the instruction has the non-negative flag set.
@@ -3841,7 +3841,7 @@ foreign lib {
 	SetIsDisjoint :: proc(Inst: ValueRef, IsDisjoint: Bool) ---
 
 	/* Memory */
-	BuildMalloc      :: proc(_: BuilderRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
+	BuildMalloc :: proc(_: BuilderRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
 	BuildArrayMalloc :: proc(_: BuilderRef, Ty: TypeRef, Val: ValueRef, Name: cstring) -> ValueRef ---
 
 	/**
@@ -3864,13 +3864,13 @@ foreign lib {
 	*
 	* @see llvm::IRRBuilder::CreateMemMove()
 	*/
-	BuildMemMove      :: proc(B: BuilderRef, Dst: ValueRef, DstAlign: u32, Src: ValueRef, SrcAlign: u32, Size: ValueRef) -> ValueRef ---
-	BuildAlloca       :: proc(_: BuilderRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
-	BuildArrayAlloca  :: proc(_: BuilderRef, Ty: TypeRef, Val: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFree         :: proc(_: BuilderRef, PointerVal: ValueRef) -> ValueRef ---
-	BuildLoad2        :: proc(_: BuilderRef, Ty: TypeRef, PointerVal: ValueRef, Name: cstring) -> ValueRef ---
-	BuildStore        :: proc(_: BuilderRef, Val: ValueRef, Ptr: ValueRef) -> ValueRef ---
-	BuildGEP2         :: proc(B: BuilderRef, Ty: TypeRef, Pointer: ValueRef, Indices: ^ValueRef, NumIndices: u32, Name: cstring) -> ValueRef ---
+	BuildMemMove :: proc(B: BuilderRef, Dst: ValueRef, DstAlign: u32, Src: ValueRef, SrcAlign: u32, Size: ValueRef) -> ValueRef ---
+	BuildAlloca :: proc(_: BuilderRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
+	BuildArrayAlloca :: proc(_: BuilderRef, Ty: TypeRef, Val: ValueRef, Name: cstring) -> ValueRef ---
+	BuildFree :: proc(_: BuilderRef, PointerVal: ValueRef) -> ValueRef ---
+	BuildLoad2 :: proc(_: BuilderRef, Ty: TypeRef, PointerVal: ValueRef, Name: cstring) -> ValueRef ---
+	BuildStore :: proc(_: BuilderRef, Val: ValueRef, Ptr: ValueRef) -> ValueRef ---
+	BuildGEP2 :: proc(B: BuilderRef, Ty: TypeRef, Pointer: ValueRef, Indices: ^ValueRef, NumIndices: u32, Name: cstring) -> ValueRef ---
 	BuildInBoundsGEP2 :: proc(B: BuilderRef, Ty: TypeRef, Pointer: ValueRef, Indices: ^ValueRef, NumIndices: u32, Name: cstring) -> ValueRef ---
 
 	/**
@@ -3880,46 +3880,46 @@ foreign lib {
 	* @see llvm::IRBuilder::CreateGEP()
 	*/
 	BuildGEPWithNoWrapFlags :: proc(B: BuilderRef, Ty: TypeRef, Pointer: ValueRef, Indices: ^ValueRef, NumIndices: u32, Name: cstring, NoWrapFlags: GEPNoWrapFlags) -> ValueRef ---
-	BuildStructGEP2         :: proc(B: BuilderRef, Ty: TypeRef, Pointer: ValueRef, Idx: u32, Name: cstring) -> ValueRef ---
-	BuildGlobalString       :: proc(B: BuilderRef, Str: cstring, Name: cstring) -> ValueRef ---
+	BuildStructGEP2 :: proc(B: BuilderRef, Ty: TypeRef, Pointer: ValueRef, Idx: u32, Name: cstring) -> ValueRef ---
+	BuildGlobalString :: proc(B: BuilderRef, Str: cstring, Name: cstring) -> ValueRef ---
 
 	/**
 	* Deprecated: Use LLVMBuildGlobalString instead, which has identical behavior.
 	*/
 	BuildGlobalStringPtr :: proc(B: BuilderRef, Str: cstring, Name: cstring) -> ValueRef ---
-	GetVolatile          :: proc(Inst: ValueRef) -> Bool ---
-	SetVolatile          :: proc(MemoryAccessInst: ValueRef, IsVolatile: Bool) ---
-	GetWeak              :: proc(CmpXchgInst: ValueRef) -> Bool ---
-	SetWeak              :: proc(CmpXchgInst: ValueRef, IsWeak: Bool) ---
-	GetOrdering          :: proc(MemoryAccessInst: ValueRef) -> AtomicOrdering ---
-	SetOrdering          :: proc(MemoryAccessInst: ValueRef, Ordering: AtomicOrdering) ---
-	GetAtomicRMWBinOp    :: proc(AtomicRMWInst: ValueRef) -> AtomicRMWBinOp ---
-	SetAtomicRMWBinOp    :: proc(AtomicRMWInst: ValueRef, BinOp: AtomicRMWBinOp) ---
+	GetVolatile :: proc(Inst: ValueRef) -> Bool ---
+	SetVolatile :: proc(MemoryAccessInst: ValueRef, IsVolatile: Bool) ---
+	GetWeak :: proc(CmpXchgInst: ValueRef) -> Bool ---
+	SetWeak :: proc(CmpXchgInst: ValueRef, IsWeak: Bool) ---
+	GetOrdering :: proc(MemoryAccessInst: ValueRef) -> AtomicOrdering ---
+	SetOrdering :: proc(MemoryAccessInst: ValueRef, Ordering: AtomicOrdering) ---
+	GetAtomicRMWBinOp :: proc(AtomicRMWInst: ValueRef) -> AtomicRMWBinOp ---
+	SetAtomicRMWBinOp :: proc(AtomicRMWInst: ValueRef, BinOp: AtomicRMWBinOp) ---
 
 	/* Casts */
-	BuildTrunc          :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildZExt           :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildSExt           :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildFPToUI         :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildFPToSI         :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildUIToFP         :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildSIToFP         :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildFPTrunc        :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildFPExt          :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildPtrToInt       :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildIntToPtr       :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildBitCast        :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildAddrSpaceCast  :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildZExtOrBitCast  :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildSExtOrBitCast  :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildTrunc :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildZExt :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildSExt :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildFPToUI :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildFPToSI :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildUIToFP :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildSIToFP :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildFPTrunc :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildFPExt :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildPtrToInt :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildIntToPtr :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildBitCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildAddrSpaceCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildZExtOrBitCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildSExtOrBitCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
 	BuildTruncOrBitCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildCast           :: proc(B: BuilderRef, Op: Opcode, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildPointerCast    :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
-	BuildIntCast2       :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, IsSigned: Bool, Name: cstring) -> ValueRef ---
-	BuildFPCast         :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildCast :: proc(B: BuilderRef, Op: Opcode, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildPointerCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildIntCast2 :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, IsSigned: Bool, Name: cstring) -> ValueRef ---
+	BuildFPCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
 
 	/** Deprecated: This cast is always signed. Use LLVMBuildIntCast2 instead. */
-	BuildIntCast  :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
+	BuildIntCast :: proc(_: BuilderRef, Val: ValueRef, DestTy: TypeRef, Name: cstring) -> ValueRef ---
 	GetCastOpcode :: proc(Src: ValueRef, SrcIsSigned: Bool, DestTy: TypeRef, DestIsSigned: Bool) -> Opcode ---
 
 	/* Comparisons */
@@ -3927,25 +3927,25 @@ foreign lib {
 	BuildFCmp :: proc(_: BuilderRef, Op: RealPredicate, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
 
 	/* Miscellaneous instructions */
-	BuildPhi                    :: proc(_: BuilderRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
-	BuildCall2                  :: proc(_: BuilderRef, _: TypeRef, Fn: ValueRef, Args: ^ValueRef, NumArgs: u32, Name: cstring) -> ValueRef ---
+	BuildPhi :: proc(_: BuilderRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
+	BuildCall2 :: proc(_: BuilderRef, _: TypeRef, Fn: ValueRef, Args: ^ValueRef, NumArgs: u32, Name: cstring) -> ValueRef ---
 	BuildCallWithOperandBundles :: proc(_: BuilderRef, _: TypeRef, Fn: ValueRef, Args: ^ValueRef, NumArgs: u32, Bundles: ^OperandBundleRef, NumBundles: u32, Name: cstring) -> ValueRef ---
-	BuildSelect                 :: proc(_: BuilderRef, If: ValueRef, Then: ValueRef, Else: ValueRef, Name: cstring) -> ValueRef ---
-	BuildVAArg                  :: proc(_: BuilderRef, List: ValueRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
-	BuildExtractElement         :: proc(_: BuilderRef, VecVal: ValueRef, Index: ValueRef, Name: cstring) -> ValueRef ---
-	BuildInsertElement          :: proc(_: BuilderRef, VecVal: ValueRef, EltVal: ValueRef, Index: ValueRef, Name: cstring) -> ValueRef ---
-	BuildShuffleVector          :: proc(_: BuilderRef, V1: ValueRef, V2: ValueRef, Mask: ValueRef, Name: cstring) -> ValueRef ---
-	BuildExtractValue           :: proc(_: BuilderRef, AggVal: ValueRef, Index: u32, Name: cstring) -> ValueRef ---
-	BuildInsertValue            :: proc(_: BuilderRef, AggVal: ValueRef, EltVal: ValueRef, Index: u32, Name: cstring) -> ValueRef ---
-	BuildFreeze                 :: proc(_: BuilderRef, Val: ValueRef, Name: cstring) -> ValueRef ---
-	BuildIsNull                 :: proc(_: BuilderRef, Val: ValueRef, Name: cstring) -> ValueRef ---
-	BuildIsNotNull              :: proc(_: BuilderRef, Val: ValueRef, Name: cstring) -> ValueRef ---
-	BuildPtrDiff2               :: proc(_: BuilderRef, ElemTy: TypeRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
-	BuildFence                  :: proc(B: BuilderRef, ordering: AtomicOrdering, singleThread: Bool, Name: cstring) -> ValueRef ---
-	BuildFenceSyncScope         :: proc(B: BuilderRef, ordering: AtomicOrdering, SSID: u32, Name: cstring) -> ValueRef ---
-	BuildAtomicRMW              :: proc(B: BuilderRef, op: AtomicRMWBinOp, PTR: ValueRef, Val: ValueRef, ordering: AtomicOrdering, singleThread: Bool) -> ValueRef ---
-	BuildAtomicRMWSyncScope     :: proc(B: BuilderRef, op: AtomicRMWBinOp, PTR: ValueRef, Val: ValueRef, ordering: AtomicOrdering, SSID: u32) -> ValueRef ---
-	BuildAtomicCmpXchg          :: proc(B: BuilderRef, Ptr: ValueRef, Cmp: ValueRef, New: ValueRef, SuccessOrdering: AtomicOrdering, FailureOrdering: AtomicOrdering, SingleThread: Bool) -> ValueRef ---
+	BuildSelect :: proc(_: BuilderRef, If: ValueRef, Then: ValueRef, Else: ValueRef, Name: cstring) -> ValueRef ---
+	BuildVAArg :: proc(_: BuilderRef, List: ValueRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
+	BuildExtractElement :: proc(_: BuilderRef, VecVal: ValueRef, Index: ValueRef, Name: cstring) -> ValueRef ---
+	BuildInsertElement :: proc(_: BuilderRef, VecVal: ValueRef, EltVal: ValueRef, Index: ValueRef, Name: cstring) -> ValueRef ---
+	BuildShuffleVector :: proc(_: BuilderRef, V1: ValueRef, V2: ValueRef, Mask: ValueRef, Name: cstring) -> ValueRef ---
+	BuildExtractValue :: proc(_: BuilderRef, AggVal: ValueRef, Index: u32, Name: cstring) -> ValueRef ---
+	BuildInsertValue :: proc(_: BuilderRef, AggVal: ValueRef, EltVal: ValueRef, Index: u32, Name: cstring) -> ValueRef ---
+	BuildFreeze :: proc(_: BuilderRef, Val: ValueRef, Name: cstring) -> ValueRef ---
+	BuildIsNull :: proc(_: BuilderRef, Val: ValueRef, Name: cstring) -> ValueRef ---
+	BuildIsNotNull :: proc(_: BuilderRef, Val: ValueRef, Name: cstring) -> ValueRef ---
+	BuildPtrDiff2 :: proc(_: BuilderRef, ElemTy: TypeRef, LHS: ValueRef, RHS: ValueRef, Name: cstring) -> ValueRef ---
+	BuildFence :: proc(B: BuilderRef, ordering: AtomicOrdering, singleThread: Bool, Name: cstring) -> ValueRef ---
+	BuildFenceSyncScope :: proc(B: BuilderRef, ordering: AtomicOrdering, SSID: u32, Name: cstring) -> ValueRef ---
+	BuildAtomicRMW :: proc(B: BuilderRef, op: AtomicRMWBinOp, PTR: ValueRef, Val: ValueRef, ordering: AtomicOrdering, singleThread: Bool) -> ValueRef ---
+	BuildAtomicRMWSyncScope :: proc(B: BuilderRef, op: AtomicRMWBinOp, PTR: ValueRef, Val: ValueRef, ordering: AtomicOrdering, SSID: u32) -> ValueRef ---
+	BuildAtomicCmpXchg :: proc(B: BuilderRef, Ptr: ValueRef, Cmp: ValueRef, New: ValueRef, SuccessOrdering: AtomicOrdering, FailureOrdering: AtomicOrdering, SingleThread: Bool) -> ValueRef ---
 	BuildAtomicCmpXchgSyncScope :: proc(B: BuilderRef, Ptr: ValueRef, Cmp: ValueRef, New: ValueRef, SuccessOrdering: AtomicOrdering, FailureOrdering: AtomicOrdering, SSID: u32) -> ValueRef ---
 
 	/**
@@ -3966,8 +3966,8 @@ foreign lib {
 	* \Returns the result of \c LLVMGetUndefMaskElem() if the mask value is
 	* poison at that position.
 	*/
-	GetMaskValue          :: proc(ShuffleVectorInst: ValueRef, Elt: u32) -> i32 ---
-	IsAtomicSingleThread  :: proc(AtomicInst: ValueRef) -> Bool ---
+	GetMaskValue :: proc(ShuffleVectorInst: ValueRef, Elt: u32) -> i32 ---
+	IsAtomicSingleThread :: proc(AtomicInst: ValueRef) -> Bool ---
 	SetAtomicSingleThread :: proc(AtomicInst: ValueRef, SingleThread: Bool) ---
 
 	/**
@@ -3984,7 +3984,7 @@ foreign lib {
 	/**
 	* Sets the synchronization scope ID of an atomic instruction.
 	*/
-	SetAtomicSyncScopeID      :: proc(AtomicInst: ValueRef, SSID: u32) ---
+	SetAtomicSyncScopeID :: proc(AtomicInst: ValueRef, SSID: u32) ---
 	GetCmpXchgSuccessOrdering :: proc(CmpXchgInst: ValueRef) -> AtomicOrdering ---
 	SetCmpXchgSuccessOrdering :: proc(CmpXchgInst: ValueRef, Ordering: AtomicOrdering) ---
 	GetCmpXchgFailureOrdering :: proc(CmpXchgInst: ValueRef) -> AtomicOrdering ---
@@ -4006,13 +4006,13 @@ foreign lib {
 	*
 	* @{
 	*/
-	CreateMemoryBufferWithContentsOfFile  :: proc(Path: cstring, OutMemBuf: ^MemoryBufferRef, OutMessage: ^cstring) -> Bool ---
-	CreateMemoryBufferWithSTDIN           :: proc(OutMemBuf: ^MemoryBufferRef, OutMessage: ^cstring) -> Bool ---
-	CreateMemoryBufferWithMemoryRange     :: proc(InputData: cstring, InputDataLength: i32, BufferName: cstring, RequiresNullTerminator: Bool) -> MemoryBufferRef ---
+	CreateMemoryBufferWithContentsOfFile :: proc(Path: cstring, OutMemBuf: ^MemoryBufferRef, OutMessage: ^cstring) -> Bool ---
+	CreateMemoryBufferWithSTDIN :: proc(OutMemBuf: ^MemoryBufferRef, OutMessage: ^cstring) -> Bool ---
+	CreateMemoryBufferWithMemoryRange :: proc(InputData: cstring, InputDataLength: i32, BufferName: cstring, RequiresNullTerminator: Bool) -> MemoryBufferRef ---
 	CreateMemoryBufferWithMemoryRangeCopy :: proc(InputData: cstring, InputDataLength: i32, BufferName: cstring) -> MemoryBufferRef ---
-	GetBufferStart                        :: proc(MemBuf: MemoryBufferRef) -> cstring ---
-	GetBufferSize                         :: proc(MemBuf: MemoryBufferRef) -> i32 ---
-	DisposeMemoryBuffer                   :: proc(MemBuf: MemoryBufferRef) ---
+	GetBufferStart :: proc(MemBuf: MemoryBufferRef) -> cstring ---
+	GetBufferSize :: proc(MemBuf: MemoryBufferRef) -> i32 ---
+	DisposeMemoryBuffer :: proc(MemBuf: MemoryBufferRef) ---
 
 	/** Constructs a new whole-module pass pipeline. This type of pipeline is
 	suitable for link-time optimization and whole-module transformations.
@@ -4068,4 +4068,3 @@ foreign lib {
 	@see llvm::llvm_is_multithreaded */
 	IsMultithreaded :: proc() -> Bool ---
 }
-
