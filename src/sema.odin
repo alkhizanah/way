@@ -67,7 +67,7 @@ Sema :: struct {
 	block:       Ir_Index,
 	scope:       Scope,
 	loop_breaks: [dynamic]Ir_Instruction_Position,
-	loop_header: Ir_Index,
+	loop_repeat: Ir_Index,
 }
 
 sema_init :: proc(s: ^Sema, ast: ^Ast) {
@@ -1702,7 +1702,6 @@ analyze_subscript :: proc(
 
 	index_value_id := analyze_expr(s, IR_INVALID, node.b)
 	if index_value_id == IR_INVALID do return IR_INVALID
-
 	index_value := s.ir.values[index_value_id]
 	index_value_type_id := index_value.type
 	index_value_type := s.ir.types[index_value_type_id]
@@ -1899,7 +1898,7 @@ analyze_function :: proc(
 	old_function := s.function
 	old_scope := s.scope
 	old_block := s.block
-	old_loop_header := s.loop_header
+	old_loop_repeat := s.loop_repeat
 	old_loop_breaks := s.loop_breaks
 
 	function_id := Ir_Index(len(s.ir.functions))
@@ -1907,7 +1906,7 @@ analyze_function :: proc(
 	s.function = function_id
 	s.scope = make_scope(nil)
 	s.block = IR_INVALID
-	s.loop_header = IR_INVALID
+	s.loop_repeat = IR_INVALID
 	s.loop_breaks = make([dynamic]Ir_Instruction_Position)
 
 	append(&s.ir.functions, Ir_Function{type = function_type_id, name = name})
@@ -1975,7 +1974,7 @@ analyze_function :: proc(
 	s.block = old_block
 	s.scope = old_scope
 	s.loop_breaks = old_loop_breaks
-	s.loop_header = old_loop_header
+	s.loop_repeat = old_loop_repeat
 
 	return function_value
 }
@@ -2072,9 +2071,7 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 		return analyze_continue_stmt(s, position)
 
 	case .For:
-		sema_error(position, "unhandled statement: %v", node.tag)
-
-		return false
+		return analyze_for_loop(s, node, position)
 
 	case:
 		value := analyze_expr(s, IR_INVALID, node_id)
@@ -2333,20 +2330,22 @@ analyze_if_condition :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bo
 
 analyze_while_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 	old_loop_breaks := s.loop_breaks
-	old_loop_header := s.loop_header
+	old_loop_repeat := s.loop_repeat
 
 	defer s.loop_breaks = old_loop_breaks
-	defer s.loop_header = old_loop_header
+	defer s.loop_repeat = old_loop_repeat
 
 	header_block_id := new_block(s)
 
-	s.loop_header = header_block_id
+	s.loop_repeat = header_block_id
 
 	s.block = IR_INVALID
 
 	assert(s.ast.nodes[node.b].tag == .Block)
 
 	analyze_block(s, s.ast.nodes[node.b], position) or_return
+
+	append_instruction(s, .Branch, s.loop_repeat, 0)
 
 	repeated_block_id := s.block
 
@@ -2369,7 +2368,90 @@ analyze_while_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool
 
 	s.block = repeated_block_id
 
-	append_instruction(s, .Branch, header_block_id, 0)
+
+	s.block = continuation_block_id
+
+	for loop_break in s.loop_breaks {
+		s.ir.functions[s.function].blocks[loop_break.block].instructions[loop_break.instruction] =
+			{
+				tag = .Branch,
+				a   = continuation_block_id,
+				b   = 0,
+			}
+
+	}
+
+	return true
+}
+
+analyze_for_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
+	old_loop_breaks := s.loop_breaks
+	old_loop_repeat := s.loop_repeat
+	old_scope := s.scope
+
+	s.scope = make_scope(&old_scope)
+
+
+	defer s.loop_breaks = old_loop_breaks
+	defer s.loop_repeat = old_loop_repeat
+
+	defer {
+		delete(s.scope.locals)
+
+		s.scope = old_scope
+	}
+
+	start_stmt := s.ast.extra[node.a]
+	condition_expr := s.ast.extra[node.a + 1]
+	repeat_stmt := s.ast.extra[node.a + 2]
+
+	if start_stmt != AST_INVALID {
+		analyze_stmt(s, start_stmt) or_return
+	}
+
+	header_block_id := new_block(s)
+
+	if repeat_stmt != AST_INVALID {
+		s.block = IR_INVALID
+
+		s.loop_repeat = new_block(s)
+
+		analyze_stmt(s, repeat_stmt) or_return
+
+		append_instruction(s, .Branch, header_block_id, 0)
+	} else {
+		s.loop_repeat = header_block_id
+	}
+
+	s.block = IR_INVALID
+
+	assert(s.ast.nodes[node.b].tag == .Block)
+
+	analyze_block(s, s.ast.nodes[node.b], position) or_return
+
+	append_instruction(s, .Branch, s.loop_repeat, 0)
+
+	repeated_block_id := s.block
+
+	s.block = IR_INVALID
+
+	continuation_block_id := new_block(s)
+
+	s.block = header_block_id
+
+	bool_type := intern_type(s, .Bool, 0, 0)
+
+	condition :=
+		condition_expr == AST_INVALID ? append_value(s, bool_type, .Bool, 1, 0) : analyze_expr(s, bool_type, condition_expr)
+
+	if condition == IR_INVALID do return false
+
+	pair_index := len(s.ir.extra)
+
+	append(&s.ir.extra, repeated_block_id)
+	append(&s.ir.extra, continuation_block_id)
+
+	append_instruction(s, .Conditional_Branch, condition, Ir_Index(pair_index))
 
 	s.block = continuation_block_id
 
@@ -2387,7 +2469,7 @@ analyze_while_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool
 }
 
 analyze_break_stmt :: proc(s: ^Sema, position: Position) -> bool {
-	if s.loop_header == IR_INVALID {
+	if s.loop_repeat == IR_INVALID {
 		sema_error(position, "break statemenet must be inside a loop")
 
 		return false
@@ -2405,13 +2487,13 @@ analyze_break_stmt :: proc(s: ^Sema, position: Position) -> bool {
 }
 
 analyze_continue_stmt :: proc(s: ^Sema, position: Position) -> bool {
-	if s.loop_header == IR_INVALID {
+	if s.loop_repeat == IR_INVALID {
 		sema_error(position, "continue statemenet must be inside a loop")
 
 		return false
 	}
 
-	append_instruction(s, .Branch, s.loop_header, 0)
+	append_instruction(s, .Branch, s.loop_repeat, 0)
 
 	return true
 }
