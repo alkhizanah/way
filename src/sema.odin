@@ -2050,10 +2050,10 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 		return analyze_return(s, node, position)
 
 	case .Variable:
-		return analyze_local_binding(s, node, position, false)
+		return analyze_local_binding(s, node, position, constant = false)
 
 	case .Constant:
-		return analyze_local_binding(s, node, position, true)
+		return analyze_local_binding(s, node, position, constant = true)
 
 	case .Assign:
 		return analyze_assign(s, node, position)
@@ -2117,10 +2117,6 @@ analyze_local_binding :: proc(
 		initializer = analyze_expr(s, explicit_type, initializer_node_id, name_for_initializer)
 
 		if initializer == IR_INVALID do return false
-
-		if !constant {
-
-		}
 	} else {
 		assert(explicit_type != IR_INVALID)
 
