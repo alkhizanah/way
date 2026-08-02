@@ -157,7 +157,7 @@ main :: fn () {
 Pointers are specified by adding a `*` prefix to the type, and dereferenced by `.*` suffix, for example:
 
 ```
-swap :: fn (a: *u8, b: *u8) -> u8 {
+swap :: fn (a: *u8, b: *u8) {
     t := a.*;
     a.* = b.*;
     b.* = t;
