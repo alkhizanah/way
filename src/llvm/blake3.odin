@@ -15,15 +15,17 @@
 \*===----------------------------------------------------------------------===*/
 package llvm
 
-foreign import lib "system:LLVM"
-_ :: lib
+import "core:c"
 
-_BLAKE3_VERSION_STRING :: "1.8.2"
-_BLAKE3_KEY_LEN :: 32
-_BLAKE3_OUT_LEN :: 32
-_BLAKE3_BLOCK_LEN :: 64
-_BLAKE3_CHUNK_LEN :: 1024
-_BLAKE3_MAX_DEPTH :: 54
+foreign import lib "system:LLVM"
+
+
+BLAKE3_VERSION_STRING :: "1.8.2"
+BLAKE3_KEY_LEN :: 32
+BLAKE3_OUT_LEN :: 32
+BLAKE3_BLOCK_LEN :: 64
+BLAKE3_CHUNK_LEN :: 1024
+BLAKE3_MAX_DEPTH :: 54
 
 // This struct is a private implementation detail. It has to be here because
 // it's part of llvm_blake3_hasher below.
@@ -51,13 +53,22 @@ llvm_blake3_hasher :: struct {
 
 @(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
+	@(link_name = "llvm_blake3_version")
 	llvm_blake3_version :: proc() -> cstring ---
+	@(link_name = "llvm_blake3_hasher_init")
 	llvm_blake3_hasher_init :: proc(self: ^llvm_blake3_hasher) ---
+	@(link_name = "llvm_blake3_hasher_init_keyed")
 	llvm_blake3_hasher_init_keyed :: proc(self: ^llvm_blake3_hasher, key: ^[32]u8) ---
+	@(link_name = "llvm_blake3_hasher_init_derive_key")
 	llvm_blake3_hasher_init_derive_key :: proc(self: ^llvm_blake3_hasher, _context: cstring) ---
-	llvm_blake3_hasher_init_derive_key_raw :: proc(self: ^llvm_blake3_hasher, _context: rawptr, context_len: i32) ---
-	llvm_blake3_hasher_update :: proc(self: ^llvm_blake3_hasher, input: rawptr, input_len: i32) ---
-	llvm_blake3_hasher_finalize :: proc(self: ^llvm_blake3_hasher, out: ^u8, out_len: i32) ---
-	llvm_blake3_hasher_finalize_seek :: proc(self: ^llvm_blake3_hasher, seek: u64, out: ^u8, out_len: i32) ---
+	@(link_name = "llvm_blake3_hasher_init_derive_key_raw")
+	llvm_blake3_hasher_init_derive_key_raw :: proc(self: ^llvm_blake3_hasher, _context: rawptr, context_len: c.size_t) ---
+	@(link_name = "llvm_blake3_hasher_update")
+	llvm_blake3_hasher_update :: proc(self: ^llvm_blake3_hasher, input: rawptr, input_len: c.size_t) ---
+	@(link_name = "llvm_blake3_hasher_finalize")
+	llvm_blake3_hasher_finalize :: proc(self: ^llvm_blake3_hasher, out: ^u8, out_len: c.size_t) ---
+	@(link_name = "llvm_blake3_hasher_finalize_seek")
+	llvm_blake3_hasher_finalize_seek :: proc(self: ^llvm_blake3_hasher, seek: u64, out: ^u8, out_len: c.size_t) ---
+	@(link_name = "llvm_blake3_hasher_reset")
 	llvm_blake3_hasher_reset :: proc(self: ^llvm_blake3_hasher) ---
 }

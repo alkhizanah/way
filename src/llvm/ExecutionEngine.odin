@@ -20,7 +20,7 @@ package llvm
 import "core:c"
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 GenericValueRef :: ^OpaqueGenericValue
 OpaqueGenericValue :: struct {}
@@ -84,7 +84,7 @@ foreign lib {
 	CreateExecutionEngineForModule :: proc(OutEE: ^ExecutionEngineRef, M: ModuleRef, OutError: ^cstring) -> Bool ---
 	CreateInterpreterForModule :: proc(OutInterp: ^ExecutionEngineRef, M: ModuleRef, OutError: ^cstring) -> Bool ---
 	CreateJITCompilerForModule :: proc(OutJIT: ^ExecutionEngineRef, M: ModuleRef, OptLevel: u32, OutError: ^cstring) -> Bool ---
-	InitializeMCJITCompilerOptions :: proc(Options: ^MCJITCompilerOptions, SizeOfOptions: i32) ---
+	InitializeMCJITCompilerOptions :: proc(Options: ^MCJITCompilerOptions, SizeOfOptions: c.size_t) ---
 
 	/**
 	* Create an MCJIT execution engine for a module, with the given options. It is
@@ -103,7 +103,7 @@ foreign lib {
 	*
 	* LLVMCreateMCJITCompilerForModule(&jit, mod, 0, 0, &error);
 	*/
-	CreateMCJITCompilerForModule :: proc(OutJIT: ^ExecutionEngineRef, M: ModuleRef, Options: ^MCJITCompilerOptions, SizeOfOptions: i32, OutError: ^cstring) -> Bool ---
+	CreateMCJITCompilerForModule :: proc(OutJIT: ^ExecutionEngineRef, M: ModuleRef, Options: ^MCJITCompilerOptions, SizeOfOptions: c.size_t, OutError: ^cstring) -> Bool ---
 	DisposeExecutionEngine :: proc(EE: ExecutionEngineRef) ---
 	RunStaticConstructors :: proc(EE: ExecutionEngineRef) ---
 	RunStaticDestructors :: proc(EE: ExecutionEngineRef) ---

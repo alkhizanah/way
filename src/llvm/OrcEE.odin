@@ -23,7 +23,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 MemoryManagerCreateContextCallback :: proc "c" (CtxCtx: rawptr) -> rawptr
 MemoryManagerNotifyTerminatingCallback :: proc "c" (CtxCtx: rawptr)

@@ -14,10 +14,11 @@
 \*===----------------------------------------------------------------------===*/
 package llvm
 
+import "core:c"
 import "core:sys/posix"
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 lto_bool_t :: i32
 
@@ -111,10 +112,10 @@ lto_diagnostic_handler_t :: proc "c" (
 	diag: cstring,
 	ctxt: rawptr,
 )
-OpaqueLTOInput :: struct {}
 
 /** Opaque reference to an LTO input file */
 lto_input_t :: ^OpaqueLTOInput
+OpaqueLTOInput :: struct {}
 
 /**
 * Type to wrap a single object returned by ThinLTO.
@@ -123,7 +124,7 @@ lto_input_t :: ^OpaqueLTOInput
 */
 LTOObjectBuffer :: struct {
 	Buffer: cstring,
-	Size:   i32,
+	Size:   c.size_t,
 }
 
 @(default_calling_convention = "c", link_prefix = "LLVM")
@@ -133,6 +134,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_get_version")
 	lto_get_version :: proc() -> cstring ---
 
 	/**
@@ -140,6 +142,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_get_error_message")
 	lto_get_error_message :: proc() -> cstring ---
 
 	/**
@@ -147,6 +150,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_is_object_file")
 	lto_module_is_object_file :: proc(path: cstring) -> lto_bool_t ---
 
 	/**
@@ -154,6 +158,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_is_object_file_for_target")
 	lto_module_is_object_file_for_target :: proc(path: cstring, target_triple_prefix: cstring) -> lto_bool_t ---
 
 	/**
@@ -162,21 +167,24 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=20
 	*/
-	lto_module_has_objc_category :: proc(mem: rawptr, length: i32) -> lto_bool_t ---
+	@(link_name = "lto_module_has_objc_category")
+	lto_module_has_objc_category :: proc(mem: rawptr, length: c.size_t) -> lto_bool_t ---
 
 	/**
 	* Checks if a buffer is a loadable object file.
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
-	lto_module_is_object_file_in_memory :: proc(mem: rawptr, length: i32) -> lto_bool_t ---
+	@(link_name = "lto_module_is_object_file_in_memory")
+	lto_module_is_object_file_in_memory :: proc(mem: rawptr, length: c.size_t) -> lto_bool_t ---
 
 	/**
 	* Checks if a buffer is a loadable object compiled for requested target.
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
-	lto_module_is_object_file_in_memory_for_target :: proc(mem: rawptr, length: i32, target_triple_prefix: cstring) -> lto_bool_t ---
+	@(link_name = "lto_module_is_object_file_in_memory_for_target")
+	lto_module_is_object_file_in_memory_for_target :: proc(mem: rawptr, length: c.size_t, target_triple_prefix: cstring) -> lto_bool_t ---
 
 	/**
 	* Loads an object file from disk.
@@ -184,6 +192,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_create")
 	lto_module_create :: proc(path: cstring) -> lto_module_t ---
 
 	/**
@@ -192,7 +201,8 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
-	lto_module_create_from_memory :: proc(mem: rawptr, length: i32) -> lto_module_t ---
+	@(link_name = "lto_module_create_from_memory")
+	lto_module_create_from_memory :: proc(mem: rawptr, length: c.size_t) -> lto_module_t ---
 
 	/**
 	* Loads an object file from memory with an extra path argument.
@@ -200,7 +210,8 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=9
 	*/
-	lto_module_create_from_memory_with_path :: proc(mem: rawptr, length: i32, path: cstring) -> lto_module_t ---
+	@(link_name = "lto_module_create_from_memory_with_path")
+	lto_module_create_from_memory_with_path :: proc(mem: rawptr, length: c.size_t, path: cstring) -> lto_module_t ---
 
 	/**
 	* Loads an object file in its own context.
@@ -213,7 +224,8 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=11
 	*/
-	lto_module_create_in_local_context :: proc(mem: rawptr, length: i32, path: cstring) -> lto_module_t ---
+	@(link_name = "lto_module_create_in_local_context")
+	lto_module_create_in_local_context :: proc(mem: rawptr, length: c.size_t, path: cstring) -> lto_module_t ---
 
 	/**
 	* Loads an object file in the codegen context.
@@ -225,7 +237,8 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=11
 	*/
-	lto_module_create_in_codegen_context :: proc(mem: rawptr, length: i32, path: cstring, cg: lto_code_gen_t) -> lto_module_t ---
+	@(link_name = "lto_module_create_in_codegen_context")
+	lto_module_create_in_codegen_context :: proc(mem: rawptr, length: c.size_t, path: cstring, cg: lto_code_gen_t) -> lto_module_t ---
 
 	/**
 	* Loads an object file from disk. The seek point of fd is not preserved.
@@ -233,7 +246,8 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=5
 	*/
-	lto_module_create_from_fd :: proc(fd: i32, path: cstring, file_size: i32) -> lto_module_t ---
+	@(link_name = "lto_module_create_from_fd")
+	lto_module_create_from_fd :: proc(fd: i32, path: cstring, file_size: c.size_t) -> lto_module_t ---
 
 	/**
 	* Loads an object file from disk. The seek point of fd is not preserved.
@@ -241,7 +255,8 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=5
 	*/
-	lto_module_create_from_fd_at_offset :: proc(fd: i32, path: cstring, file_size: i32, map_size: i32, offset: posix.off_t) -> lto_module_t ---
+	@(link_name = "lto_module_create_from_fd_at_offset")
+	lto_module_create_from_fd_at_offset :: proc(fd: i32, path: cstring, file_size: c.size_t, map_size: c.size_t, offset: posix.off_t) -> lto_module_t ---
 
 	/**
 	* Frees all memory internally allocated by the module.
@@ -249,6 +264,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_dispose")
 	lto_module_dispose :: proc(mod: lto_module_t) ---
 
 	/**
@@ -256,6 +272,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_get_target_triple")
 	lto_module_get_target_triple :: proc(mod: lto_module_t) -> cstring ---
 
 	/**
@@ -263,6 +280,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=4
 	*/
+	@(link_name = "lto_module_set_target_triple")
 	lto_module_set_target_triple :: proc(mod: lto_module_t, triple: cstring) ---
 
 	/**
@@ -270,6 +288,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_get_num_symbols")
 	lto_module_get_num_symbols :: proc(mod: lto_module_t) -> u32 ---
 
 	/**
@@ -277,6 +296,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_get_symbol_name")
 	lto_module_get_symbol_name :: proc(mod: lto_module_t, index: u32) -> cstring ---
 
 	/**
@@ -284,6 +304,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_module_get_symbol_attribute")
 	lto_module_get_symbol_attribute :: proc(mod: lto_module_t, index: u32) -> lto_symbol_attributes ---
 
 	/**
@@ -291,6 +312,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=30
 	*/
+	@(link_name = "lto_module_get_num_asm_undef_symbols")
 	lto_module_get_num_asm_undef_symbols :: proc(mod: lto_module_t) -> u32 ---
 
 	/**
@@ -298,6 +320,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=30
 	*/
+	@(link_name = "lto_module_get_asm_undef_symbol_name")
 	lto_module_get_asm_undef_symbol_name :: proc(mod: lto_module_t, index: u32) -> cstring ---
 
 	/**
@@ -308,6 +331,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=16
 	*/
+	@(link_name = "lto_module_get_linkeropts")
 	lto_module_get_linkeropts :: proc(mod: lto_module_t) -> cstring ---
 
 	/**
@@ -321,6 +345,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=27
 	*/
+	@(link_name = "lto_module_get_macho_cputype")
 	lto_module_get_macho_cputype :: proc(mod: lto_module_t, out_cputype: ^u32, out_cpusubtype: ^u32) -> lto_bool_t ---
 
 	/**
@@ -332,6 +357,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=29
 	*/
+	@(link_name = "lto_module_has_ctor_dtor")
 	lto_module_has_ctor_dtor :: proc(mod: lto_module_t) -> lto_bool_t ---
 
 	/**
@@ -341,6 +367,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=7
 	*/
+	@(link_name = "lto_codegen_set_diagnostic_handler")
 	lto_codegen_set_diagnostic_handler :: proc(_: lto_code_gen_t, _: lto_diagnostic_handler_t, _: rawptr) ---
 
 	/**
@@ -352,6 +379,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_create")
 	lto_codegen_create :: proc() -> lto_code_gen_t ---
 
 	/**
@@ -363,6 +391,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=11
 	*/
+	@(link_name = "lto_codegen_create_in_local_context")
 	lto_codegen_create_in_local_context :: proc() -> lto_code_gen_t ---
 
 	/**
@@ -371,6 +400,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_dispose")
 	lto_codegen_dispose :: proc(_: lto_code_gen_t) ---
 
 	/**
@@ -383,6 +413,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_add_module")
 	lto_codegen_add_module :: proc(cg: lto_code_gen_t, mod: lto_module_t) -> lto_bool_t ---
 
 	/**
@@ -393,6 +424,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=13
 	*/
+	@(link_name = "lto_codegen_set_module")
 	lto_codegen_set_module :: proc(cg: lto_code_gen_t, mod: lto_module_t) ---
 
 	/**
@@ -401,6 +433,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_set_debug_model")
 	lto_codegen_set_debug_model :: proc(cg: lto_code_gen_t, _: lto_debug_model) -> lto_bool_t ---
 
 	/**
@@ -409,6 +442,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_set_pic_model")
 	lto_codegen_set_pic_model :: proc(cg: lto_code_gen_t, _: lto_codegen_model) -> lto_bool_t ---
 
 	/**
@@ -416,6 +450,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=4
 	*/
+	@(link_name = "lto_codegen_set_cpu")
 	lto_codegen_set_cpu :: proc(cg: lto_code_gen_t, cpu: cstring) ---
 
 	/**
@@ -424,6 +459,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_set_assembler_path")
 	lto_codegen_set_assembler_path :: proc(cg: lto_code_gen_t, path: cstring) ---
 
 	/**
@@ -431,6 +467,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=4
 	*/
+	@(link_name = "lto_codegen_set_assembler_args")
 	lto_codegen_set_assembler_args :: proc(cg: lto_code_gen_t, args: ^cstring, nargs: i32) ---
 
 	/**
@@ -440,6 +477,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_add_must_preserve_symbol")
 	lto_codegen_add_must_preserve_symbol :: proc(cg: lto_code_gen_t, symbol: cstring) ---
 
 	/**
@@ -449,6 +487,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=5
 	*/
+	@(link_name = "lto_codegen_write_merged_modules")
 	lto_codegen_write_merged_modules :: proc(cg: lto_code_gen_t, path: cstring) -> lto_bool_t ---
 
 	/**
@@ -463,7 +502,8 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
-	lto_codegen_compile :: proc(cg: lto_code_gen_t, length: ^i32) -> rawptr ---
+	@(link_name = "lto_codegen_compile")
+	lto_codegen_compile :: proc(cg: lto_code_gen_t, length: ^c.size_t) -> rawptr ---
 
 	/**
 	* Generates code for all added modules into one native object file.
@@ -474,6 +514,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=5
 	*/
+	@(link_name = "lto_codegen_compile_to_file")
 	lto_codegen_compile_to_file :: proc(cg: lto_code_gen_t, name: ^cstring) -> lto_bool_t ---
 
 	/**
@@ -481,6 +522,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=12
 	*/
+	@(link_name = "lto_codegen_optimize")
 	lto_codegen_optimize :: proc(cg: lto_code_gen_t) -> lto_bool_t ---
 
 	/**
@@ -495,13 +537,15 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=12
 	*/
-	lto_codegen_compile_optimized :: proc(cg: lto_code_gen_t, length: ^i32) -> rawptr ---
+	@(link_name = "lto_codegen_compile_optimized")
+	lto_codegen_compile_optimized :: proc(cg: lto_code_gen_t, length: ^c.size_t) -> rawptr ---
 
 	/**
 	* Returns the runtime API version.
 	*
 	* \since LTO_API_VERSION=12
 	*/
+	@(link_name = "lto_api_version")
 	lto_api_version :: proc() -> u32 ---
 
 	/**
@@ -516,6 +560,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=28
 	*/
+	@(link_name = "lto_set_debug_options")
 	lto_set_debug_options :: proc(options: ^cstring, number: i32) ---
 
 	/**
@@ -529,6 +574,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=3
 	*/
+	@(link_name = "lto_codegen_debug_options")
 	lto_codegen_debug_options :: proc(cg: lto_code_gen_t, _: cstring) ---
 
 	/**
@@ -537,6 +583,7 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=26
 	*/
+	@(link_name = "lto_codegen_debug_options_array")
 	lto_codegen_debug_options_array :: proc(cg: lto_code_gen_t, _: ^cstring, number: i32) ---
 
 	/**
@@ -545,6 +592,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=5
 	*/
+	@(link_name = "lto_initialize_disassembler")
 	lto_initialize_disassembler :: proc() ---
 
 	/**
@@ -553,6 +601,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=14
 	*/
+	@(link_name = "lto_codegen_set_should_internalize")
 	lto_codegen_set_should_internalize :: proc(cg: lto_code_gen_t, ShouldInternalize: lto_bool_t) ---
 
 	/**
@@ -563,6 +612,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=15
 	*/
+	@(link_name = "lto_codegen_set_should_embed_uselists")
 	lto_codegen_set_should_embed_uselists :: proc(cg: lto_code_gen_t, ShouldEmbedUselists: lto_bool_t) ---
 
 	/**
@@ -573,7 +623,8 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=24
 	*/
-	lto_input_create :: proc(buffer: rawptr, buffer_size: i32, path: cstring) -> lto_input_t ---
+	@(link_name = "lto_input_create")
+	lto_input_create :: proc(buffer: rawptr, buffer_size: c.size_t, path: cstring) -> lto_input_t ---
 
 	/**
 	* Frees all memory internally allocated by the LTO input file.
@@ -581,6 +632,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=24
 	*/
+	@(link_name = "lto_input_dispose")
 	lto_input_dispose :: proc(input: lto_input_t) ---
 
 	/**
@@ -589,6 +641,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=24
 	*/
+	@(link_name = "lto_input_get_num_dependent_libraries")
 	lto_input_get_num_dependent_libraries :: proc(input: lto_input_t) -> u32 ---
 
 	/**
@@ -598,7 +651,8 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=24
 	*/
-	lto_input_get_dependent_library :: proc(input: lto_input_t, index: i32, size: ^i32) -> cstring ---
+	@(link_name = "lto_input_get_dependent_library")
+	lto_input_get_dependent_library :: proc(input: lto_input_t, index: c.size_t, size: ^c.size_t) -> cstring ---
 
 	/**
 	* Returns the list of libcall symbols that can be generated by LTO
@@ -606,7 +660,8 @@ foreign lib {
 	*
 	* \since prior to LTO_API_VERSION=25
 	*/
-	lto_runtime_lib_symbols_list :: proc(size: ^i32) -> ^cstring ---
+	@(link_name = "lto_runtime_lib_symbols_list")
+	lto_runtime_lib_symbols_list :: proc(size: ^c.size_t) -> ^cstring ---
 
 	/**
 	* Instantiates a ThinLTO code generator.
@@ -620,6 +675,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_create_codegen")
 	thinlto_create_codegen :: proc() -> thinlto_code_gen_t ---
 
 	/**
@@ -628,6 +684,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_dispose")
 	thinlto_codegen_dispose :: proc(cg: thinlto_code_gen_t) ---
 
 	/**
@@ -641,6 +698,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_add_module")
 	thinlto_codegen_add_module :: proc(cg: thinlto_code_gen_t, identifier: cstring, data: cstring, length: i32) ---
 
 	/**
@@ -649,6 +707,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_process")
 	thinlto_codegen_process :: proc(cg: thinlto_code_gen_t) ---
 
 	/**
@@ -660,6 +719,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_module_get_num_objects")
 	thinlto_module_get_num_objects :: proc(cg: thinlto_code_gen_t) -> u32 ---
 
 	/**
@@ -671,6 +731,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_module_get_object")
 	thinlto_module_get_object :: proc(cg: thinlto_code_gen_t, index: u32) -> LTOObjectBuffer ---
 
 	/**
@@ -682,6 +743,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=21
 	*/
+	@(link_name = "thinlto_module_get_num_object_files")
 	thinlto_module_get_num_object_files :: proc(cg: thinlto_code_gen_t) -> u32 ---
 
 	/**
@@ -693,6 +755,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=21
 	*/
+	@(link_name = "thinlto_module_get_object_file")
 	thinlto_module_get_object_file :: proc(cg: thinlto_code_gen_t, index: u32) -> cstring ---
 
 	/**
@@ -701,6 +764,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_set_pic_model")
 	thinlto_codegen_set_pic_model :: proc(cg: thinlto_code_gen_t, _: lto_codegen_model) -> lto_bool_t ---
 
 	/**
@@ -710,6 +774,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_set_savetemps_dir")
 	thinlto_codegen_set_savetemps_dir :: proc(cg: thinlto_code_gen_t, save_temps_dir: cstring) ---
 
 	/**
@@ -720,6 +785,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=21
 	*/
+	@(link_name = "thinlto_set_generated_objects_dir")
 	thinlto_set_generated_objects_dir :: proc(cg: thinlto_code_gen_t, save_temps_dir: cstring) ---
 
 	/**
@@ -727,6 +793,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_set_cpu")
 	thinlto_codegen_set_cpu :: proc(cg: thinlto_code_gen_t, cpu: cstring) ---
 
 	/**
@@ -735,6 +802,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=19
 	*/
+	@(link_name = "thinlto_codegen_disable_codegen")
 	thinlto_codegen_disable_codegen :: proc(cg: thinlto_code_gen_t, disable: lto_bool_t) ---
 
 	/**
@@ -742,6 +810,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=19
 	*/
+	@(link_name = "thinlto_codegen_set_codegen_only")
 	thinlto_codegen_set_codegen_only :: proc(cg: thinlto_code_gen_t, codegen_only: lto_bool_t) ---
 
 	/**
@@ -749,6 +818,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_debug_options")
 	thinlto_debug_options :: proc(options: ^cstring, number: i32) ---
 
 	/**
@@ -756,6 +826,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "lto_module_is_thinlto")
 	lto_module_is_thinlto :: proc(mod: lto_module_t) -> lto_bool_t ---
 
 	/**
@@ -766,6 +837,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_add_must_preserve_symbol")
 	thinlto_codegen_add_must_preserve_symbol :: proc(cg: thinlto_code_gen_t, name: cstring, length: i32) ---
 
 	/**
@@ -776,6 +848,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_add_cross_referenced_symbol")
 	thinlto_codegen_add_cross_referenced_symbol :: proc(cg: thinlto_code_gen_t, name: cstring, length: i32) ---
 
 	/**
@@ -784,6 +857,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_set_cache_dir")
 	thinlto_codegen_set_cache_dir :: proc(cg: thinlto_code_gen_t, cache_dir: cstring) ---
 
 	/**
@@ -793,6 +867,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_set_cache_pruning_interval")
 	thinlto_codegen_set_cache_pruning_interval :: proc(cg: thinlto_code_gen_t, interval: i32) ---
 
 	/**
@@ -808,6 +883,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_set_final_cache_size_relative_to_available_space")
 	thinlto_codegen_set_final_cache_size_relative_to_available_space :: proc(cg: thinlto_code_gen_t, percentage: u32) ---
 
 	/**
@@ -816,6 +892,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=18
 	*/
+	@(link_name = "thinlto_codegen_set_cache_entry_expiration")
 	thinlto_codegen_set_cache_entry_expiration :: proc(cg: thinlto_code_gen_t, expiration: u32) ---
 
 	/**
@@ -826,6 +903,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=22
 	*/
+	@(link_name = "thinlto_codegen_set_cache_size_bytes")
 	thinlto_codegen_set_cache_size_bytes :: proc(cg: thinlto_code_gen_t, max_size_bytes: u32) ---
 
 	/**
@@ -834,6 +912,7 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=23
 	*/
+	@(link_name = "thinlto_codegen_set_cache_size_megabytes")
 	thinlto_codegen_set_cache_size_megabytes :: proc(cg: thinlto_code_gen_t, max_size_megabytes: u32) ---
 
 	/**
@@ -842,5 +921,6 @@ foreign lib {
 	*
 	* \since LTO_API_VERSION=22
 	*/
+	@(link_name = "thinlto_codegen_set_cache_size_files")
 	thinlto_codegen_set_cache_size_files :: proc(cg: thinlto_code_gen_t, max_size_files: u32) ---
 }

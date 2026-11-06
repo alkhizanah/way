@@ -14,7 +14,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * @defgroup LLVMCREMARKS Remarks
@@ -47,6 +47,7 @@ RemarkType :: enum u32 {
 */
 RemarkStringRef :: ^RemarkOpaqueString
 RemarkOpaqueString :: struct {}
+RemarkOpaqueDebugLoc :: struct {}
 
 /**
 * DebugLoc containing File, Line and Column.
@@ -54,7 +55,6 @@ RemarkOpaqueString :: struct {}
 * \since REMARKS_API_VERSION=0
 */
 RemarkDebugLocRef :: ^RemarkOpaqueDebugLoc
-RemarkOpaqueDebugLoc :: struct {}
 
 /**
 * Element of the "Args" list. The key might give more information about what
@@ -65,7 +65,6 @@ RemarkOpaqueDebugLoc :: struct {}
 */
 RemarkArgRef :: ^RemarkOpaqueArg
 RemarkOpaqueArg :: struct {}
-RemarkOpaqueEntry :: struct {}
 
 /**
 * A remark emitted by the compiler.
@@ -73,6 +72,7 @@ RemarkOpaqueEntry :: struct {}
 * \since REMARKS_API_VERSION=0
 */
 RemarkEntryRef :: ^RemarkOpaqueEntry
+RemarkOpaqueEntry :: struct {}
 RemarkParserRef :: ^RemarkOpaqueParser
 RemarkOpaqueParser :: struct {}
 

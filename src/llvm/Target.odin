@@ -18,7 +18,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * @defgroup LLVMCTarget Target information
@@ -44,8 +44,8 @@ ByteOrdering :: enum u32 {
 	LittleEndian = 1,
 }
 
-OpaqueTargetData :: struct {}
 TargetDataRef :: ^OpaqueTargetData
+OpaqueTargetData :: struct {}
 OpaqueTargetLibraryInfotData :: struct {}
 TargetLibraryInfoRef :: ^OpaqueTargetLibraryInfotData
 
@@ -150,4 +150,370 @@ foreign lib {
 	/** Computes the byte offset of the indexed struct element for a target.
 	See the method llvm::StructLayout::getElementContainingOffset. */
 	OffsetOfElement :: proc(TD: TargetDataRef, StructTy: TypeRef, Element: u32) -> u64 ---
+}
+
+InitializeAllTargetInfos :: proc() {
+	InitializeAArch64TargetInfo()
+	InitializeAMDGPUTargetInfo()
+	InitializeARMTargetInfo()
+	InitializeAVRTargetInfo()
+	InitializeBPFTargetInfo()
+	InitializeHexagonTargetInfo()
+	InitializeLanaiTargetInfo()
+	InitializeLoongArchTargetInfo()
+	InitializeMipsTargetInfo()
+	InitializeMSP430TargetInfo()
+	InitializeNVPTXTargetInfo()
+	InitializePowerPCTargetInfo()
+	InitializeRISCVTargetInfo()
+	InitializeSparcTargetInfo()
+	InitializeSPIRVTargetInfo()
+	InitializeSystemZTargetInfo()
+	InitializeVETargetInfo()
+	InitializeWebAssemblyTargetInfo()
+	InitializeX86TargetInfo()
+	InitializeXCoreTargetInfo()
+}
+
+InitializeAllTargets :: proc() {
+	InitializeAArch64Target()
+	InitializeAMDGPUTarget()
+	InitializeARMTarget()
+	InitializeAVRTarget()
+	InitializeBPFTarget()
+	InitializeHexagonTarget()
+	InitializeLanaiTarget()
+	InitializeLoongArchTarget()
+	InitializeMipsTarget()
+	InitializeMSP430Target()
+	InitializeNVPTXTarget()
+	InitializePowerPCTarget()
+	InitializeRISCVTarget()
+	InitializeSparcTarget()
+	InitializeSPIRVTarget()
+	InitializeSystemZTarget()
+	InitializeVETarget()
+	InitializeWebAssemblyTarget()
+	InitializeX86Target()
+	InitializeXCoreTarget()
+}
+
+InitializeAllTargetMCs :: proc() {
+	InitializeAArch64TargetMC()
+	InitializeAMDGPUTargetMC()
+	InitializeARMTargetMC()
+	InitializeAVRTargetMC()
+	InitializeBPFTargetMC()
+	InitializeHexagonTargetMC()
+	InitializeLanaiTargetMC()
+	InitializeLoongArchTargetMC()
+	InitializeMipsTargetMC()
+	InitializeMSP430TargetMC()
+	InitializeNVPTXTargetMC()
+	InitializePowerPCTargetMC()
+	InitializeRISCVTargetMC()
+	InitializeSparcTargetMC()
+	InitializeSPIRVTargetMC()
+	InitializeSystemZTargetMC()
+	InitializeVETargetMC()
+	InitializeWebAssemblyTargetMC()
+	InitializeX86TargetMC()
+	InitializeXCoreTargetMC()
+}
+
+InitializeAllAsmPrinters :: proc() {
+	InitializeAArch64AsmPrinter()
+	InitializeAMDGPUAsmPrinter()
+	InitializeARMAsmPrinter()
+	InitializeAVRAsmPrinter()
+	InitializeBPFAsmPrinter()
+	InitializeHexagonAsmPrinter()
+	InitializeLanaiAsmPrinter()
+	InitializeLoongArchAsmPrinter()
+	InitializeMipsAsmPrinter()
+	InitializeMSP430AsmPrinter()
+	InitializeNVPTXAsmPrinter()
+	InitializePowerPCAsmPrinter()
+	InitializeRISCVAsmPrinter()
+	InitializeSparcAsmPrinter()
+	InitializeSPIRVAsmPrinter()
+	InitializeSystemZAsmPrinter()
+	InitializeVEAsmPrinter()
+	InitializeWebAssemblyAsmPrinter()
+	InitializeX86AsmPrinter()
+	InitializeXCoreAsmPrinter()
+}
+
+InitializeAllAsmParsers :: proc() {
+	InitializeAArch64AsmParser()
+	InitializeAMDGPUAsmParser()
+	InitializeARMAsmParser()
+	InitializeAVRAsmParser()
+	InitializeBPFAsmParser()
+	InitializeHexagonAsmParser()
+	InitializeLanaiAsmParser()
+	InitializeLoongArchAsmParser()
+	InitializeMipsAsmParser()
+	InitializeMSP430AsmParser()
+	InitializePowerPCAsmParser()
+	InitializeRISCVAsmParser()
+	InitializeSparcAsmParser()
+	InitializeSystemZAsmParser()
+	InitializeVEAsmParser()
+	InitializeWebAssemblyAsmParser()
+	InitializeX86AsmParser()
+}
+
+InitializeAllDisassemblers :: proc() {
+	InitializeAArch64Disassembler()
+	InitializeAMDGPUDisassembler()
+	InitializeARMDisassembler()
+	InitializeAVRDisassembler()
+	InitializeBPFDisassembler()
+	InitializeHexagonDisassembler()
+	InitializeLanaiDisassembler()
+	InitializeLoongArchDisassembler()
+	InitializeMipsDisassembler()
+	InitializeMSP430Disassembler()
+	InitializePowerPCDisassembler()
+	InitializeRISCVDisassembler()
+	InitializeSparcDisassembler()
+	InitializeSystemZDisassembler()
+	InitializeVEDisassembler()
+	InitializeWebAssemblyDisassembler()
+	InitializeX86Disassembler()
+	InitializeXCoreDisassembler()
+}
+
+@(default_calling_convention = "c", link_prefix = "LLVM")
+foreign lib {
+	InitializeAArch64TargetInfo :: proc() ---
+	InitializeAMDGPUTargetInfo :: proc() ---
+	InitializeARMTargetInfo :: proc() ---
+	InitializeAVRTargetInfo :: proc() ---
+	InitializeBPFTargetInfo :: proc() ---
+	InitializeHexagonTargetInfo :: proc() ---
+	InitializeLanaiTargetInfo :: proc() ---
+	InitializeLoongArchTargetInfo :: proc() ---
+	InitializeMipsTargetInfo :: proc() ---
+	InitializeMSP430TargetInfo :: proc() ---
+	InitializeNVPTXTargetInfo :: proc() ---
+	InitializePowerPCTargetInfo :: proc() ---
+	InitializeRISCVTargetInfo :: proc() ---
+	InitializeSparcTargetInfo :: proc() ---
+	InitializeSPIRVTargetInfo :: proc() ---
+	InitializeSystemZTargetInfo :: proc() ---
+	InitializeVETargetInfo :: proc() ---
+	InitializeWebAssemblyTargetInfo :: proc() ---
+	InitializeX86TargetInfo :: proc() ---
+	InitializeXCoreTargetInfo :: proc() ---
+	InitializeAArch64Target :: proc() ---
+	InitializeAMDGPUTarget :: proc() ---
+	InitializeARMTarget :: proc() ---
+	InitializeAVRTarget :: proc() ---
+	InitializeBPFTarget :: proc() ---
+	InitializeHexagonTarget :: proc() ---
+	InitializeLanaiTarget :: proc() ---
+	InitializeLoongArchTarget :: proc() ---
+	InitializeMipsTarget :: proc() ---
+	InitializeMSP430Target :: proc() ---
+	InitializeNVPTXTarget :: proc() ---
+	InitializePowerPCTarget :: proc() ---
+	InitializeRISCVTarget :: proc() ---
+	InitializeSparcTarget :: proc() ---
+	InitializeSPIRVTarget :: proc() ---
+	InitializeSystemZTarget :: proc() ---
+	InitializeVETarget :: proc() ---
+	InitializeWebAssemblyTarget :: proc() ---
+	InitializeX86Target :: proc() ---
+	InitializeXCoreTarget :: proc() ---
+	InitializeAArch64TargetMC :: proc() ---
+	InitializeAMDGPUTargetMC :: proc() ---
+	InitializeARMTargetMC :: proc() ---
+	InitializeAVRTargetMC :: proc() ---
+	InitializeBPFTargetMC :: proc() ---
+	InitializeHexagonTargetMC :: proc() ---
+	InitializeLanaiTargetMC :: proc() ---
+	InitializeLoongArchTargetMC :: proc() ---
+	InitializeMipsTargetMC :: proc() ---
+	InitializeMSP430TargetMC :: proc() ---
+	InitializeNVPTXTargetMC :: proc() ---
+	InitializePowerPCTargetMC :: proc() ---
+	InitializeRISCVTargetMC :: proc() ---
+	InitializeSparcTargetMC :: proc() ---
+	InitializeSPIRVTargetMC :: proc() ---
+	InitializeSystemZTargetMC :: proc() ---
+	InitializeVETargetMC :: proc() ---
+	InitializeWebAssemblyTargetMC :: proc() ---
+	InitializeX86TargetMC :: proc() ---
+	InitializeXCoreTargetMC :: proc() ---
+	InitializeAArch64AsmPrinter :: proc() ---
+	InitializeAMDGPUAsmPrinter :: proc() ---
+	InitializeARMAsmPrinter :: proc() ---
+	InitializeAVRAsmPrinter :: proc() ---
+	InitializeBPFAsmPrinter :: proc() ---
+	InitializeHexagonAsmPrinter :: proc() ---
+	InitializeLanaiAsmPrinter :: proc() ---
+	InitializeLoongArchAsmPrinter :: proc() ---
+	InitializeMipsAsmPrinter :: proc() ---
+	InitializeMSP430AsmPrinter :: proc() ---
+	InitializeNVPTXAsmPrinter :: proc() ---
+	InitializePowerPCAsmPrinter :: proc() ---
+	InitializeRISCVAsmPrinter :: proc() ---
+	InitializeSparcAsmPrinter :: proc() ---
+	InitializeSPIRVAsmPrinter :: proc() ---
+	InitializeSystemZAsmPrinter :: proc() ---
+	InitializeVEAsmPrinter :: proc() ---
+	InitializeWebAssemblyAsmPrinter :: proc() ---
+	InitializeX86AsmPrinter :: proc() ---
+	InitializeXCoreAsmPrinter :: proc() ---
+	InitializeAArch64AsmParser :: proc() ---
+	InitializeAMDGPUAsmParser :: proc() ---
+	InitializeARMAsmParser :: proc() ---
+	InitializeAVRAsmParser :: proc() ---
+	InitializeBPFAsmParser :: proc() ---
+	InitializeHexagonAsmParser :: proc() ---
+	InitializeLanaiAsmParser :: proc() ---
+	InitializeLoongArchAsmParser :: proc() ---
+	InitializeMipsAsmParser :: proc() ---
+	InitializeMSP430AsmParser :: proc() ---
+	InitializePowerPCAsmParser :: proc() ---
+	InitializeRISCVAsmParser :: proc() ---
+	InitializeSparcAsmParser :: proc() ---
+	InitializeSystemZAsmParser :: proc() ---
+	InitializeVEAsmParser :: proc() ---
+	InitializeWebAssemblyAsmParser :: proc() ---
+	InitializeX86AsmParser :: proc() ---
+	InitializeAArch64Disassembler :: proc() ---
+	InitializeAMDGPUDisassembler :: proc() ---
+	InitializeARMDisassembler :: proc() ---
+	InitializeAVRDisassembler :: proc() ---
+	InitializeBPFDisassembler :: proc() ---
+	InitializeHexagonDisassembler :: proc() ---
+	InitializeLanaiDisassembler :: proc() ---
+	InitializeLoongArchDisassembler :: proc() ---
+	InitializeMipsDisassembler :: proc() ---
+	InitializeMSP430Disassembler :: proc() ---
+	InitializePowerPCDisassembler :: proc() ---
+	InitializeRISCVDisassembler :: proc() ---
+	InitializeSparcDisassembler :: proc() ---
+	InitializeSystemZDisassembler :: proc() ---
+	InitializeVEDisassembler :: proc() ---
+	InitializeWebAssemblyDisassembler :: proc() ---
+	InitializeX86Disassembler :: proc() ---
+	InitializeXCoreDisassembler :: proc() ---
+}
+
+InitializeNativeTarget :: proc() -> Bool {
+	when false {} else when ODIN_ARCH == .amd64 {
+		InitializeX86TargetInfo()
+		InitializeX86Target()
+		InitializeX86TargetMC()
+		return 0
+	} else when ODIN_ARCH == .i386 {
+		InitializeX86TargetInfo()
+		InitializeX86Target()
+		InitializeX86TargetMC()
+		return 0
+	} else when ODIN_ARCH == .arm64 {
+		InitializeAArch64TargetInfo()
+		InitializeAArch64Target()
+		InitializeAArch64TargetMC()
+		return 0
+	} else when ODIN_ARCH == .arm32 {
+		InitializeARMTargetInfo()
+		InitializeARMTarget()
+		InitializeARMTargetMC()
+		return 0
+	} else when ODIN_ARCH == .riscv64 {
+		InitializeRISCVTargetInfo()
+		InitializeRISCVTarget()
+		InitializeRISCVTargetMC()
+		return 0
+	} else when ODIN_ARCH == .wasm32 {
+		InitializeWebAssemblyTargetInfo()
+		InitializeWebAssemblyTarget()
+		InitializeWebAssemblyTargetMC()
+		return 0
+	} else when ODIN_ARCH == .wasm64p32 {
+		InitializeWebAssemblyTargetInfo()
+		InitializeWebAssemblyTarget()
+		InitializeWebAssemblyTargetMC()
+		return 0
+	} else {return 1}
+}
+
+InitializeNativeAsmParser :: proc() -> Bool {
+	when false {} else when ODIN_ARCH == .amd64 {
+		InitializeX86AsmParser()
+		return 0
+	} else when ODIN_ARCH == .i386 {
+		InitializeX86AsmParser()
+		return 0
+	} else when ODIN_ARCH == .arm64 {
+		InitializeAArch64AsmParser()
+		return 0
+	} else when ODIN_ARCH == .arm32 {
+		InitializeARMAsmParser()
+		return 0
+	} else when ODIN_ARCH == .riscv64 {
+		InitializeRISCVAsmParser()
+		return 0
+	} else when ODIN_ARCH == .wasm32 {
+		InitializeWebAssemblyAsmParser()
+		return 0
+	} else when ODIN_ARCH == .wasm64p32 {
+		InitializeWebAssemblyAsmParser()
+		return 0
+	} else {return 1}
+}
+
+InitializeNativeAsmPrinter :: proc() -> Bool {
+	when false {} else when ODIN_ARCH == .amd64 {
+		InitializeX86AsmPrinter()
+		return 0
+	} else when ODIN_ARCH == .i386 {
+		InitializeX86AsmPrinter()
+		return 0
+	} else when ODIN_ARCH == .arm64 {
+		InitializeAArch64AsmPrinter()
+		return 0
+	} else when ODIN_ARCH == .arm32 {
+		InitializeARMAsmPrinter()
+		return 0
+	} else when ODIN_ARCH == .riscv64 {
+		InitializeRISCVAsmPrinter()
+		return 0
+	} else when ODIN_ARCH == .wasm32 {
+		InitializeWebAssemblyAsmPrinter()
+		return 0
+	} else when ODIN_ARCH == .wasm64p32 {
+		InitializeWebAssemblyAsmPrinter()
+		return 0
+	} else {return 1}
+}
+
+InitializeNativeDisassembler :: proc() -> Bool {
+	when false {} else when ODIN_ARCH == .amd64 {
+		InitializeX86Disassembler()
+		return 0
+	} else when ODIN_ARCH == .i386 {
+		InitializeX86Disassembler()
+		return 0
+	} else when ODIN_ARCH == .arm64 {
+		InitializeAArch64Disassembler()
+		return 0
+	} else when ODIN_ARCH == .arm32 {
+		InitializeARMDisassembler()
+		return 0
+	} else when ODIN_ARCH == .riscv64 {
+		InitializeRISCVDisassembler()
+		return 0
+	} else when ODIN_ARCH == .wasm32 {
+		InitializeWebAssemblyDisassembler()
+		return 0
+	} else when ODIN_ARCH == .wasm64p32 {
+		InitializeWebAssemblyDisassembler()
+		return 0
+	} else {return 1}
 }

@@ -9,7 +9,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * An opaque reference to a disassembler context.
@@ -79,23 +79,23 @@ OpInfo1 :: struct {
 /**
 * The operand VariantKinds for symbolic disassembly.
 */
-Disassembler_VariantKind_None :: 0 /* all targets */
+LLVMDisassembler_VariantKind_None :: 0 /* all targets */
 
 /**
 * The ARM target VariantKinds.
 */
-Disassembler_VariantKind_ARM_HI16 :: 1 /* :upper16: */
-Disassembler_VariantKind_ARM_LO16 :: 2 /* :lower16: */
+LLVMDisassembler_VariantKind_ARM_HI16 :: 1 /* :upper16: */
+LLVMDisassembler_VariantKind_ARM_LO16 :: 2 /* :lower16: */
 
 /**
 * The ARM64 target VariantKinds.
 */
-Disassembler_VariantKind_ARM64_PAGE :: 1 /* @page */
-Disassembler_VariantKind_ARM64_PAGEOFF :: 2 /* @pageoff */
-Disassembler_VariantKind_ARM64_GOTPAGE :: 3 /* @gotpage */
-Disassembler_VariantKind_ARM64_GOTPAGEOFF :: 4 /* @gotpageoff */
-Disassembler_VariantKind_ARM64_TLVP :: 5 /* @tvlppage */
-Disassembler_VariantKind_ARM64_TLVOFF :: 6 /* @tvlppageoff */
+LLVMDisassembler_VariantKind_ARM64_PAGE :: 1 /* @page */
+LLVMDisassembler_VariantKind_ARM64_PAGEOFF :: 2 /* @pageoff */
+LLVMDisassembler_VariantKind_ARM64_GOTPAGE :: 3 /* @gotpage */
+LLVMDisassembler_VariantKind_ARM64_GOTPAGEOFF :: 4 /* @gotpageoff */
+LLVMDisassembler_VariantKind_ARM64_TLVP :: 5 /* @tvlppage */
+LLVMDisassembler_VariantKind_ARM64_TLVOFF :: 6 /* @tvlppageoff */
 
 /**
 * The type for the symbol lookup function.  This may be called by the
@@ -121,52 +121,52 @@ SymbolLookupCallback :: proc "c" (
 * The reference types on input and output.
 */
 /* No input reference type or no output reference type. */
-Disassembler_ReferenceType_InOut_None :: 0
+LLVMDisassembler_ReferenceType_InOut_None :: 0
 
 /* The input reference is from a branch instruction. */
-Disassembler_ReferenceType_In_Branch :: 1
+LLVMDisassembler_ReferenceType_In_Branch :: 1
 
 /* The input reference is from a PC relative load instruction. */
-Disassembler_ReferenceType_In_PCrel_Load :: 2
+LLVMDisassembler_ReferenceType_In_PCrel_Load :: 2
 
 /* The input reference is from an ARM64::ADRP instruction. */
-Disassembler_ReferenceType_In_ARM64_ADRP :: 0x100000001
+LLVMDisassembler_ReferenceType_In_ARM64_ADRP :: 0x100000001
 
 /* The input reference is from an ARM64::ADDXri instruction. */
-Disassembler_ReferenceType_In_ARM64_ADDXri :: 0x100000002
+LLVMDisassembler_ReferenceType_In_ARM64_ADDXri :: 0x100000002
 
 /* The input reference is from an ARM64::LDRXui instruction. */
-Disassembler_ReferenceType_In_ARM64_LDRXui :: 0x100000003
+LLVMDisassembler_ReferenceType_In_ARM64_LDRXui :: 0x100000003
 
 /* The input reference is from an ARM64::LDRXl instruction. */
-Disassembler_ReferenceType_In_ARM64_LDRXl :: 0x100000004
+LLVMDisassembler_ReferenceType_In_ARM64_LDRXl :: 0x100000004
 
 /* The input reference is from an ARM64::ADR instruction. */
-Disassembler_ReferenceType_In_ARM64_ADR :: 0x100000005
+LLVMDisassembler_ReferenceType_In_ARM64_ADR :: 0x100000005
 
 /* The output reference is to as symbol stub. */
-Disassembler_ReferenceType_Out_SymbolStub :: 1
+LLVMDisassembler_ReferenceType_Out_SymbolStub :: 1
 
 /* The output reference is to a symbol address in a literal pool. */
-Disassembler_ReferenceType_Out_LitPool_SymAddr :: 2
+LLVMDisassembler_ReferenceType_Out_LitPool_SymAddr :: 2
 
 /* The output reference is to a cstring address in a literal pool. */
-Disassembler_ReferenceType_Out_LitPool_CstrAddr :: 3
+LLVMDisassembler_ReferenceType_Out_LitPool_CstrAddr :: 3
 
 /* The output reference is to a Objective-C CoreFoundation string. */
-Disassembler_ReferenceType_Out_Objc_CFString_Ref :: 4
+LLVMDisassembler_ReferenceType_Out_Objc_CFString_Ref :: 4
 
 /* The output reference is to a Objective-C message. */
-Disassembler_ReferenceType_Out_Objc_Message :: 5
+LLVMDisassembler_ReferenceType_Out_Objc_Message :: 5
 
 /* The output reference is to a Objective-C message ref. */
-Disassembler_ReferenceType_Out_Objc_Message_Ref :: 6
+LLVMDisassembler_ReferenceType_Out_Objc_Message_Ref :: 6
 
 /* The output reference is to a Objective-C selector ref. */
-Disassembler_ReferenceType_Out_Objc_Selector_Ref :: 7
+LLVMDisassembler_ReferenceType_Out_Objc_Selector_Ref :: 7
 
 /* The output reference is to a Objective-C class ref. */
-Disassembler_ReferenceType_Out_Objc_Class_Ref :: 8
+LLVMDisassembler_ReferenceType_Out_Objc_Class_Ref :: 8
 
 /* The output reference is to a C++ symbol name. */
-Disassembler_ReferenceType_DeMangled_Name :: 9
+LLVMDisassembler_ReferenceType_DeMangled_Name :: 9

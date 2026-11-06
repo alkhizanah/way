@@ -17,8 +17,10 @@
 /*===----------------------------------------------------------------------===*/
 package llvm
 
+import "core:c"
+
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 OpaqueSectionIterator :: struct {}
 
@@ -26,8 +28,8 @@ OpaqueSectionIterator :: struct {}
 SectionIteratorRef :: ^OpaqueSectionIterator
 OpaqueSymbolIterator :: struct {}
 SymbolIteratorRef :: ^OpaqueSymbolIterator
-OpaqueRelocationIterator :: struct {}
 RelocationIteratorRef :: ^OpaqueRelocationIterator
+OpaqueRelocationIterator :: struct {}
 
 BinaryType :: enum u32 {
 	Archive              = 0, /**< Archive file. */
@@ -49,10 +51,9 @@ BinaryType :: enum u32 {
 	DXcontainer          = 16, /**< DirectX Binary Container. */
 }
 
-OpaqueObjectFile :: struct {}
-
 /** Deprecated: Use LLVMBinaryRef instead. */
 ObjectFileRef :: ^OpaqueObjectFile
+OpaqueObjectFile :: struct {}
 
 @(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
@@ -111,7 +112,7 @@ foreign lib {
 	* It is the responsiblity of the caller to free the returned object file by
 	* calling \c LLVMDisposeBinary.
 	*/
-	MachOUniversalBinaryCopyObjectForArch :: proc(BR: BinaryRef, Arch: cstring, ArchLen: i32, ErrorMessage: ^cstring) -> BinaryRef ---
+	MachOUniversalBinaryCopyObjectForArch :: proc(BR: BinaryRef, Arch: cstring, ArchLen: c.size_t, ErrorMessage: ^cstring) -> BinaryRef ---
 
 	/**
 	* Retrieve a copy of the section iterator for this object file.

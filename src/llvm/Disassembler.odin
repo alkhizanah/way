@@ -13,26 +13,28 @@
 \*===----------------------------------------------------------------------===*/
 package llvm
 
+import "core:c"
+
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /* The option to produce marked up assembly. */
-Disassembler_Option_UseMarkup :: 1
+LLVMDisassembler_Option_UseMarkup :: 1
 
 /* The option to print immediates as hex. */
-Disassembler_Option_PrintImmHex :: 2
+LLVMDisassembler_Option_PrintImmHex :: 2
 
 /* The option use the other assembler printer variant */
-Disassembler_Option_AsmPrinterVariant :: 4
+LLVMDisassembler_Option_AsmPrinterVariant :: 4
 
 /* The option to set comment on instructions */
-Disassembler_Option_SetInstrComments :: 8
+LLVMDisassembler_Option_SetInstrComments :: 8
 
 /* The option to print latency information alongside instructions */
-Disassembler_Option_PrintLatency :: 16
+LLVMDisassembler_Option_PrintLatency :: 16
 
 /* The option to print in color */
-Disassembler_Option_Color :: 32
+LLVMDisassembler_Option_Color :: 32
 
 @(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
@@ -86,5 +88,5 @@ foreign lib {
 	* function returns the number of bytes in the instruction or zero if there was
 	* no valid instruction.
 	*/
-	DisasmInstruction :: proc(DC: DisasmContextRef, Bytes: ^u8, BytesSize: u64, PC: u64, OutString: cstring, OutStringSize: i32) -> i32 ---
+	DisasmInstruction :: proc(DC: DisasmContextRef, Bytes: ^u8, BytesSize: u64, PC: u64, OutString: cstring, OutStringSize: c.size_t) -> c.size_t ---
 }

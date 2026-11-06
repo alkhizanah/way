@@ -14,8 +14,10 @@
 //===----------------------------------------------------------------------===//
 package llvm
 
+import "core:c"
+
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * Debug info flags.
@@ -144,44 +146,44 @@ DWARFEmissionKind :: enum u32 {
 	LineTablesOnly = 2,
 }
 
-MDStringMetadataKind :: 0
-ConstantAsMetadataMetadataKind :: 1
-LocalAsMetadataMetadataKind :: 2
-DistinctMDOperandPlaceholderMetadataKind :: 3
-MDTupleMetadataKind :: 4
-DILocationMetadataKind :: 5
-DIExpressionMetadataKind :: 6
-DIGlobalVariableExpressionMetadataKind :: 7
-GenericDINodeMetadataKind :: 8
-DISubrangeMetadataKind :: 9
-DIEnumeratorMetadataKind :: 10
-DIBasicTypeMetadataKind :: 11
-DIDerivedTypeMetadataKind :: 12
-DICompositeTypeMetadataKind :: 13
-DISubroutineTypeMetadataKind :: 14
-DIFileMetadataKind :: 15
-DICompileUnitMetadataKind :: 16
-DISubprogramMetadataKind :: 17
-DILexicalBlockMetadataKind :: 18
-DILexicalBlockFileMetadataKind :: 19
-DINamespaceMetadataKind :: 20
-DIModuleMetadataKind :: 21
-DITemplateTypeParameterMetadataKind :: 22
-DITemplateValueParameterMetadataKind :: 23
-DIGlobalVariableMetadataKind :: 24
-DILocalVariableMetadataKind :: 25
-DILabelMetadataKind :: 26
-DIObjCPropertyMetadataKind :: 27
-DIImportedEntityMetadataKind :: 28
-DIMacroMetadataKind :: 29
-DIMacroFileMetadataKind :: 30
-DICommonBlockMetadataKind :: 31
-DIStringTypeMetadataKind :: 32
-DIGenericSubrangeMetadataKind :: 33
-DIArgListMetadataKind :: 34
-DIAssignIDMetadataKind :: 35
-DISubrangeTypeMetadataKind :: 36
-DIFixedPointTypeMetadataKind :: 37
+LLVMMDStringMetadataKind :: 0
+LLVMLocalAsMetadataMetadataKind :: 2
+LLVMDistinctMDOperandPlaceholderMetadataKind :: 3
+LLVMMDTupleMetadataKind :: 4
+LLVMDILocationMetadataKind :: 5
+LLVMDIExpressionMetadataKind :: 6
+LLVMConstantAsMetadataMetadataKind :: 1
+LLVMGenericDINodeMetadataKind :: 8
+LLVMDISubrangeMetadataKind :: 9
+LLVMDIEnumeratorMetadataKind :: 10
+LLVMDIBasicTypeMetadataKind :: 11
+LLVMDIDerivedTypeMetadataKind :: 12
+LLVMDICompositeTypeMetadataKind :: 13
+LLVMDISubroutineTypeMetadataKind :: 14
+LLVMDIFileMetadataKind :: 15
+LLVMDICompileUnitMetadataKind :: 16
+LLVMDIGlobalVariableExpressionMetadataKind :: 7
+LLVMDILexicalBlockMetadataKind :: 18
+LLVMDILexicalBlockFileMetadataKind :: 19
+LLVMDINamespaceMetadataKind :: 20
+LLVMDIModuleMetadataKind :: 21
+LLVMDITemplateTypeParameterMetadataKind :: 22
+LLVMDITemplateValueParameterMetadataKind :: 23
+LLVMDIGlobalVariableMetadataKind :: 24
+LLVMDILocalVariableMetadataKind :: 25
+LLVMDILabelMetadataKind :: 26
+LLVMDIObjCPropertyMetadataKind :: 27
+LLVMDIImportedEntityMetadataKind :: 28
+LLVMDIMacroMetadataKind :: 29
+LLVMDIMacroFileMetadataKind :: 30
+LLVMDICommonBlockMetadataKind :: 31
+LLVMDIStringTypeMetadataKind :: 32
+LLVMDISubprogramMetadataKind :: 17
+LLVMDIGenericSubrangeMetadataKind :: 33
+LLVMDIAssignIDMetadataKind :: 35
+LLVMDIArgListMetadataKind :: 34
+LLVMDIFixedPointTypeMetadataKind :: 37
+LLVMDISubrangeTypeMetadataKind :: 36
 
 MetadataKind :: u32
 
@@ -305,7 +307,7 @@ foreign lib {
 	* \param SDK           The SDK. On Darwin, the last component of the sysroot.
 	* \param SDKLen        The length of the C string passed to \c SDK.
 	*/
-	DIBuilderCreateCompileUnit :: proc(Builder: DIBuilderRef, Lang: DWARFSourceLanguage, FileRef: MetadataRef, Producer: cstring, ProducerLen: i32, isOptimized: Bool, Flags: cstring, FlagsLen: i32, RuntimeVer: u32, SplitName: cstring, SplitNameLen: i32, Kind: DWARFEmissionKind, DWOId: u32, SplitDebugInlining: Bool, DebugInfoForProfiling: Bool, SysRoot: cstring, SysRootLen: i32, SDK: cstring, SDKLen: i32) -> MetadataRef ---
+	DIBuilderCreateCompileUnit :: proc(Builder: DIBuilderRef, Lang: DWARFSourceLanguage, FileRef: MetadataRef, Producer: cstring, ProducerLen: c.size_t, isOptimized: Bool, Flags: cstring, FlagsLen: c.size_t, RuntimeVer: u32, SplitName: cstring, SplitNameLen: c.size_t, Kind: DWARFEmissionKind, DWOId: u32, SplitDebugInlining: Bool, DebugInfoForProfiling: Bool, SysRoot: cstring, SysRootLen: c.size_t, SDK: cstring, SDKLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create a file descriptor to hold debugging information for a file.
@@ -315,7 +317,7 @@ foreign lib {
 	* \param Directory    Directory.
 	* \param DirectoryLen The length of the C string passed to \c Directory.
 	*/
-	DIBuilderCreateFile :: proc(Builder: DIBuilderRef, Filename: cstring, FilenameLen: i32, Directory: cstring, DirectoryLen: i32) -> MetadataRef ---
+	DIBuilderCreateFile :: proc(Builder: DIBuilderRef, Filename: cstring, FilenameLen: c.size_t, Directory: cstring, DirectoryLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create a file descriptor to hold debugging information for a file.
@@ -330,7 +332,7 @@ foreign lib {
 	* \param Souce        The embedded source.
 	* \param SourceLen    The length of the source.
 	*/
-	DIBuilderCreateFileWithChecksum :: proc(Builder: DIBuilderRef, Filename: cstring, FilenameLen: i32, Directory: cstring, DirectoryLen: i32, ChecksumKind: ChecksumKind, Checksum: cstring, ChecksumLen: i32, Source: cstring, SourceLen: i32) -> MetadataRef ---
+	DIBuilderCreateFileWithChecksum :: proc(Builder: DIBuilderRef, Filename: cstring, FilenameLen: c.size_t, Directory: cstring, DirectoryLen: c.size_t, ChecksumKind: ChecksumKind, Checksum: cstring, ChecksumLen: c.size_t, Source: cstring, SourceLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Creates a new descriptor for a module with the specified parent scope.
@@ -346,7 +348,7 @@ foreign lib {
 	* \param APINotesFile    The path to an API notes file for the module.
 	* \param APINotesFileLen The length of the C string passed to \c APINotestFile.
 	*/
-	DIBuilderCreateModule :: proc(Builder: DIBuilderRef, ParentScope: MetadataRef, Name: cstring, NameLen: i32, ConfigMacros: cstring, ConfigMacrosLen: i32, IncludePath: cstring, IncludePathLen: i32, APINotesFile: cstring, APINotesFileLen: i32) -> MetadataRef ---
+	DIBuilderCreateModule :: proc(Builder: DIBuilderRef, ParentScope: MetadataRef, Name: cstring, NameLen: c.size_t, ConfigMacros: cstring, ConfigMacrosLen: c.size_t, IncludePath: cstring, IncludePathLen: c.size_t, APINotesFile: cstring, APINotesFileLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Creates a new descriptor for a namespace with the specified parent scope.
@@ -357,7 +359,7 @@ foreign lib {
 	* \param ExportSymbols    Whether or not the namespace exports symbols, e.g.
 	*                         this is true of C++ inline namespaces.
 	*/
-	DIBuilderCreateNameSpace :: proc(Builder: DIBuilderRef, ParentScope: MetadataRef, Name: cstring, NameLen: i32, ExportSymbols: Bool) -> MetadataRef ---
+	DIBuilderCreateNameSpace :: proc(Builder: DIBuilderRef, ParentScope: MetadataRef, Name: cstring, NameLen: c.size_t, ExportSymbols: Bool) -> MetadataRef ---
 
 	/**
 	* Create a new descriptor for the specified subprogram.
@@ -377,7 +379,7 @@ foreign lib {
 	*                        used to emit dwarf attributes.
 	* \param IsOptimized     True if optimization is ON.
 	*/
-	DIBuilderCreateFunction :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, LinkageName: cstring, LinkageNameLen: i32, File: MetadataRef, LineNo: u32, Ty: MetadataRef, IsLocalToUnit: Bool, IsDefinition: Bool, ScopeLine: u32, Flags: DIFlags, IsOptimized: Bool) -> MetadataRef ---
+	DIBuilderCreateFunction :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, LinkageName: cstring, LinkageNameLen: c.size_t, File: MetadataRef, LineNo: u32, Ty: MetadataRef, IsLocalToUnit: Bool, IsDefinition: Bool, ScopeLine: u32, Flags: DIFlags, IsOptimized: Bool) -> MetadataRef ---
 
 	/**
 	* Create a descriptor for a lexical block with the specified parent context.
@@ -448,7 +450,7 @@ foreign lib {
 	* \param Elements       Renamed elements.
 	* \param NumElements    Number of renamed elements.
 	*/
-	DIBuilderCreateImportedDeclaration :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Decl: MetadataRef, File: MetadataRef, Line: u32, Name: cstring, NameLen: i32, Elements: ^MetadataRef, NumElements: u32) -> MetadataRef ---
+	DIBuilderCreateImportedDeclaration :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Decl: MetadataRef, File: MetadataRef, Line: u32, Name: cstring, NameLen: c.size_t, Elements: ^MetadataRef, NumElements: u32) -> MetadataRef ---
 
 	/**
 	* Creates a new DebugLocation that describes a source location.
@@ -535,7 +537,7 @@ foreign lib {
 	* \param Data           The type elements.
 	* \param NumElements    Number of type elements.
 	*/
-	DIBuilderGetOrCreateTypeArray :: proc(Builder: DIBuilderRef, Data: ^MetadataRef, NumElements: i32) -> MetadataRef ---
+	DIBuilderGetOrCreateTypeArray :: proc(Builder: DIBuilderRef, Data: ^MetadataRef, NumElements: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create subroutine type.
@@ -560,7 +562,7 @@ foreign lib {
 	* @param Value           Macro value.
 	* @param ValueLen        Macro value length.
 	*/
-	DIBuilderCreateMacro :: proc(Builder: DIBuilderRef, ParentMacroFile: MetadataRef, Line: u32, RecordType: DWARFMacinfoRecordType, Name: cstring, NameLen: i32, Value: cstring, ValueLen: i32) -> MetadataRef ---
+	DIBuilderCreateMacro :: proc(Builder: DIBuilderRef, ParentMacroFile: MetadataRef, Line: u32, RecordType: DWARFMacinfoRecordType, Name: cstring, NameLen: c.size_t, Value: cstring, ValueLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create debugging information temporary entry for a macro file.
@@ -581,7 +583,7 @@ foreign lib {
 	* @param Value          Enumerator value.
 	* @param IsUnsigned     True if the value is unsigned.
 	*/
-	DIBuilderCreateEnumerator :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: i32, Value: i64, IsUnsigned: Bool) -> MetadataRef ---
+	DIBuilderCreateEnumerator :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: c.size_t, Value: i64, IsUnsigned: Bool) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for an enumerator of arbitrary precision.
@@ -592,7 +594,7 @@ foreign lib {
 	* @param Words          The words that make up the value.
 	* @param IsUnsigned     True if the value is unsigned.
 	*/
-	DIBuilderCreateEnumeratorOfArbitraryPrecision :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: i32, SizeInBits: u64, Words: [^]u64, IsUnsigned: Bool) -> MetadataRef ---
+	DIBuilderCreateEnumeratorOfArbitraryPrecision :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: c.size_t, SizeInBits: u64, Words: [^]u64, IsUnsigned: Bool) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for an enumeration.
@@ -608,7 +610,7 @@ foreign lib {
 	* \param NumElements    Number of enumeration elements.
 	* \param ClassTy        Underlying type of a C++11/ObjC fixed enum.
 	*/
-	DIBuilderCreateEnumerationType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, Elements: ^MetadataRef, NumElements: u32, ClassTy: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateEnumerationType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, Elements: ^MetadataRef, NumElements: u32, ClassTy: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a union.
@@ -627,7 +629,7 @@ foreign lib {
 	* \param UniqueId     A unique identifier for the union.
 	* \param UniqueIdLen  Length of unique identifier.
 	*/
-	DIBuilderCreateUnionType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, Elements: ^MetadataRef, NumElements: u32, RunTimeLang: u32, UniqueId: cstring, UniqueIdLen: i32) -> MetadataRef ---
+	DIBuilderCreateUnionType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, Elements: ^MetadataRef, NumElements: u32, RunTimeLang: u32, UniqueId: cstring, UniqueIdLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for an array.
@@ -652,7 +654,7 @@ foreign lib {
 	* \param AlignInBits    Set alignment.
 	* \param BaseTy         The base type of the set.
 	*/
-	DIBuilderCreateSetType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, BaseTy: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateSetType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, BaseTy: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Create a descriptor for a subrange with dynamic bounds.
@@ -671,7 +673,7 @@ foreign lib {
 	* \param Stride     Stride of the subrange.
 	* \param Bias       Bias of the subrange.
 	*/
-	DIBuilderCreateSubrangeType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, LineNo: u32, File: MetadataRef, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, BaseTy: MetadataRef, LowerBound: MetadataRef, UpperBound: MetadataRef, Stride: MetadataRef, Bias: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateSubrangeType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, LineNo: u32, File: MetadataRef, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, BaseTy: MetadataRef, LowerBound: MetadataRef, UpperBound: MetadataRef, Stride: MetadataRef, Bias: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a dynamic array.
@@ -687,7 +689,7 @@ foreign lib {
 	* \param Rank         Rank. (DIVariable, DIExpression or NULL)
 	* \param BitStride    BitStride.
 	*/
-	DIBuilderCreateDynamicArrayType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, LineNo: u32, File: MetadataRef, Size: u64, AlignInBits: u32, Ty: MetadataRef, Subscripts: ^MetadataRef, NumSubscripts: u32, DataLocation: MetadataRef, Associated: MetadataRef, Allocated: MetadataRef, Rank: MetadataRef, BitStride: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateDynamicArrayType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, LineNo: u32, File: MetadataRef, Size: u64, AlignInBits: u32, Ty: MetadataRef, Subscripts: ^MetadataRef, NumSubscripts: u32, DataLocation: MetadataRef, Associated: MetadataRef, Allocated: MetadataRef, Rank: MetadataRef, BitStride: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Replace arrays.
@@ -713,7 +715,7 @@ foreign lib {
 	* \param Name      The unspecified type's name.
 	* \param NameLen   Length of type name.
 	*/
-	DIBuilderCreateUnspecifiedType :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: i32) -> MetadataRef ---
+	DIBuilderCreateUnspecifiedType :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a basic
@@ -725,7 +727,7 @@ foreign lib {
 	* \param Encoding    DWARF encoding code, e.g. \c LLVMDWARFTypeEncoding_float.
 	* \param Flags       Flags to encode optional attribute like endianity
 	*/
-	DIBuilderCreateBasicType :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: i32, SizeInBits: u64, Encoding: DWARFTypeEncoding, Flags: DIFlags) -> MetadataRef ---
+	DIBuilderCreateBasicType :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: c.size_t, SizeInBits: u64, Encoding: DWARFTypeEncoding, Flags: DIFlags) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a pointer.
@@ -737,7 +739,7 @@ foreign lib {
 	* \param Name              Pointer type name. (optional)
 	* \param NameLen           Length of pointer type name. (optional)
 	*/
-	DIBuilderCreatePointerType :: proc(Builder: DIBuilderRef, PointeeTy: MetadataRef, SizeInBits: u64, AlignInBits: u32, AddressSpace: u32, Name: cstring, NameLen: i32) -> MetadataRef ---
+	DIBuilderCreatePointerType :: proc(Builder: DIBuilderRef, PointeeTy: MetadataRef, SizeInBits: u64, AlignInBits: u32, AddressSpace: u32, Name: cstring, NameLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a struct.
@@ -757,7 +759,7 @@ foreign lib {
 	* \param UniqueId     A unique identifier for the struct.
 	* \param UniqueIdLen  Length of the unique identifier for the struct.
 	*/
-	DIBuilderCreateStructType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, DerivedFrom: MetadataRef, Elements: ^MetadataRef, NumElements: u32, RunTimeLang: u32, VTableHolder: MetadataRef, UniqueId: cstring, UniqueIdLen: i32) -> MetadataRef ---
+	DIBuilderCreateStructType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, DerivedFrom: MetadataRef, Elements: ^MetadataRef, NumElements: u32, RunTimeLang: u32, VTableHolder: MetadataRef, UniqueId: cstring, UniqueIdLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a member.
@@ -773,7 +775,7 @@ foreign lib {
 	* \param Flags        Flags to encode member attribute, e.g. private
 	* \param Ty           Parent type.
 	*/
-	DIBuilderCreateMemberType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNo: u32, SizeInBits: u64, AlignInBits: u32, OffsetInBits: u64, Flags: DIFlags, Ty: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateMemberType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNo: u32, SizeInBits: u64, AlignInBits: u32, OffsetInBits: u64, Flags: DIFlags, Ty: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a
@@ -789,7 +791,7 @@ foreign lib {
 	* \param ConstantVal  Const initializer of the member.
 	* \param AlignInBits  Member alignment.
 	*/
-	DIBuilderCreateStaticMemberType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNumber: u32, Type: MetadataRef, Flags: DIFlags, ConstantVal: ValueRef, AlignInBits: u32) -> MetadataRef ---
+	DIBuilderCreateStaticMemberType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNumber: u32, Type: MetadataRef, Flags: DIFlags, ConstantVal: ValueRef, AlignInBits: u32) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a pointer to member.
@@ -816,7 +818,7 @@ foreign lib {
 	* \param Ty           Parent type.
 	* \param PropertyNode Property associated with this ivar.
 	*/
-	DIBuilderCreateObjCIVar :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNo: u32, SizeInBits: u64, AlignInBits: u32, OffsetInBits: u64, Flags: DIFlags, Ty: MetadataRef, PropertyNode: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateObjCIVar :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNo: u32, SizeInBits: u64, AlignInBits: u32, OffsetInBits: u64, Flags: DIFlags, Ty: MetadataRef, PropertyNode: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for Objective-C property.
@@ -832,7 +834,7 @@ foreign lib {
 	* \param PropertyAttributes Objective C property attributes.
 	* \param Ty                 Type.
 	*/
-	DIBuilderCreateObjCProperty :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNo: u32, GetterName: cstring, GetterNameLen: i32, SetterName: cstring, SetterNameLen: i32, PropertyAttributes: u32, Ty: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateObjCProperty :: proc(Builder: DIBuilderRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNo: u32, GetterName: cstring, GetterNameLen: c.size_t, SetterName: cstring, SetterNameLen: c.size_t, PropertyAttributes: u32, Ty: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Create a uniqued DIType* clone with FlagObjectPointer. If \c Implicit
@@ -878,7 +880,7 @@ foreign lib {
 	* \param LineNo     Line number.
 	* \param Scope      The surrounding context for the typedef.
 	*/
-	DIBuilderCreateTypedef :: proc(Builder: DIBuilderRef, Type: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNo: u32, Scope: MetadataRef, AlignInBits: u32) -> MetadataRef ---
+	DIBuilderCreateTypedef :: proc(Builder: DIBuilderRef, Type: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNo: u32, Scope: MetadataRef, AlignInBits: u32) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry to establish inheritance relationship
@@ -908,7 +910,7 @@ foreign lib {
 	* \param UniqueIdentifier    A unique identifier for the type.
 	* \param UniqueIdentifierLen Length of the unique identifier.
 	*/
-	DIBuilderCreateForwardDecl :: proc(Builder: DIBuilderRef, Tag: u32, Name: cstring, NameLen: i32, Scope: MetadataRef, File: MetadataRef, Line: u32, RuntimeLang: u32, SizeInBits: u64, AlignInBits: u32, UniqueIdentifier: cstring, UniqueIdentifierLen: i32) -> MetadataRef ---
+	DIBuilderCreateForwardDecl :: proc(Builder: DIBuilderRef, Tag: u32, Name: cstring, NameLen: c.size_t, Scope: MetadataRef, File: MetadataRef, Line: u32, RuntimeLang: u32, SizeInBits: u64, AlignInBits: u32, UniqueIdentifier: cstring, UniqueIdentifierLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create a temporary forward-declared type.
@@ -927,7 +929,7 @@ foreign lib {
 	* \param UniqueIdentifier    A unique identifier for the type.
 	* \param UniqueIdentifierLen Length of the unique identifier.
 	*/
-	DIBuilderCreateReplaceableCompositeType :: proc(Builder: DIBuilderRef, Tag: u32, Name: cstring, NameLen: i32, Scope: MetadataRef, File: MetadataRef, Line: u32, RuntimeLang: u32, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, UniqueIdentifier: cstring, UniqueIdentifierLen: i32) -> MetadataRef ---
+	DIBuilderCreateReplaceableCompositeType :: proc(Builder: DIBuilderRef, Tag: u32, Name: cstring, NameLen: c.size_t, Scope: MetadataRef, File: MetadataRef, Line: u32, RuntimeLang: u32, SizeInBits: u64, AlignInBits: u32, Flags: DIFlags, UniqueIdentifier: cstring, UniqueIdentifierLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a bit field member.
@@ -943,7 +945,7 @@ foreign lib {
 	* \param Flags               Flags to encode member attribute.
 	* \param Type                Parent type.
 	*/
-	DIBuilderCreateBitFieldMemberType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNumber: u32, SizeInBits: u64, OffsetInBits: u64, StorageOffsetInBits: u64, Flags: DIFlags, Type: MetadataRef) -> MetadataRef ---
+	DIBuilderCreateBitFieldMemberType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNumber: u32, SizeInBits: u64, OffsetInBits: u64, StorageOffsetInBits: u64, Flags: DIFlags, Type: MetadataRef) -> MetadataRef ---
 
 	/**
 	* Create debugging information entry for a class.
@@ -967,7 +969,7 @@ foreign lib {
 	* \param UniqueIdentifier    A unique identifier for the type.
 	* \param UniqueIdentifierLen Length of the unique identifier.
 	*/
-	DIBuilderCreateClassType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, OffsetInBits: u64, Flags: DIFlags, DerivedFrom: MetadataRef, Elements: ^MetadataRef, NumElements: u32, VTableHolder: MetadataRef, TemplateParamsNode: MetadataRef, UniqueIdentifier: cstring, UniqueIdentifierLen: i32) -> MetadataRef ---
+	DIBuilderCreateClassType :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNumber: u32, SizeInBits: u64, AlignInBits: u32, OffsetInBits: u64, Flags: DIFlags, DerivedFrom: MetadataRef, Elements: ^MetadataRef, NumElements: u32, VTableHolder: MetadataRef, TemplateParamsNode: MetadataRef, UniqueIdentifier: cstring, UniqueIdentifierLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create a uniqued DIType* clone with FlagArtificial set.
@@ -983,7 +985,7 @@ foreign lib {
 	*
 	* @see DIType::getName()
 	*/
-	DITypeGetName :: proc(DType: MetadataRef, Length: ^i32) -> cstring ---
+	DITypeGetName :: proc(DType: MetadataRef, Length: ^c.size_t) -> cstring ---
 
 	/**
 	* Get the size of this DIType in bits.
@@ -1039,7 +1041,7 @@ foreign lib {
 	* \param Data           The DI Node elements.
 	* \param NumElements    Number of DI Node elements.
 	*/
-	DIBuilderGetOrCreateArray :: proc(Builder: DIBuilderRef, Data: ^MetadataRef, NumElements: i32) -> MetadataRef ---
+	DIBuilderGetOrCreateArray :: proc(Builder: DIBuilderRef, Data: ^MetadataRef, NumElements: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create a new descriptor for the specified variable which has a complex
@@ -1048,7 +1050,7 @@ foreign lib {
 	* \param Addr        An array of complex address operations.
 	* \param Length      Length of the address operation array.
 	*/
-	DIBuilderCreateExpression :: proc(Builder: DIBuilderRef, Addr: ^u64, Length: i32) -> MetadataRef ---
+	DIBuilderCreateExpression :: proc(Builder: DIBuilderRef, Addr: ^u64, Length: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create a new descriptor for the specified variable that does not have an
@@ -1077,7 +1079,7 @@ foreign lib {
 	* \param AlignInBits Variable alignment(or 0 if no alignment attr was
 	*                    specified)
 	*/
-	DIBuilderCreateGlobalVariableExpression :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, Linkage: cstring, LinkLen: i32, File: MetadataRef, LineNo: u32, Ty: MetadataRef, LocalToUnit: Bool, Expr: MetadataRef, Decl: MetadataRef, AlignInBits: u32) -> MetadataRef ---
+	DIBuilderCreateGlobalVariableExpression :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, Linkage: cstring, LinkLen: c.size_t, File: MetadataRef, LineNo: u32, Ty: MetadataRef, LocalToUnit: Bool, Expr: MetadataRef, Decl: MetadataRef, AlignInBits: u32) -> MetadataRef ---
 
 	/**
 	* Get the dwarf::Tag of a DINode
@@ -1132,7 +1134,7 @@ foreign lib {
 	* \param Data           The metadata elements.
 	* \param NumElements    Number of metadata elements.
 	*/
-	TemporaryMDNode :: proc(Ctx: ContextRef, Data: ^MetadataRef, NumElements: i32) -> MetadataRef ---
+	TemporaryMDNode :: proc(Ctx: ContextRef, Data: ^MetadataRef, NumElements: c.size_t) -> MetadataRef ---
 
 	/**
 	* Deallocate a temporary node.
@@ -1167,7 +1169,7 @@ foreign lib {
 	* \param AlignInBits Variable alignment(or 0 if no alignment attr was
 	*                    specified)
 	*/
-	DIBuilderCreateTempGlobalVariableFwdDecl :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, Linkage: cstring, LnkLen: i32, File: MetadataRef, LineNo: u32, Ty: MetadataRef, LocalToUnit: Bool, Decl: MetadataRef, AlignInBits: u32) -> MetadataRef ---
+	DIBuilderCreateTempGlobalVariableFwdDecl :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, Linkage: cstring, LnkLen: c.size_t, File: MetadataRef, LineNo: u32, Ty: MetadataRef, LocalToUnit: Bool, Decl: MetadataRef, AlignInBits: u32) -> MetadataRef ---
 
 	/**
 	* Only use in "new debug format" (LLVMIsNewDbgInfoFormat() is true).
@@ -1254,7 +1256,7 @@ foreign lib {
 	* \param Flags           Flags.
 	* \param AlignInBits     Variable alignment.
 	*/
-	DIBuilderCreateAutoVariable :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNo: u32, Ty: MetadataRef, AlwaysPreserve: Bool, Flags: DIFlags, AlignInBits: u32) -> MetadataRef ---
+	DIBuilderCreateAutoVariable :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNo: u32, Ty: MetadataRef, AlwaysPreserve: Bool, Flags: DIFlags, AlignInBits: u32) -> MetadataRef ---
 
 	/**
 	* Create a new descriptor for a function parameter variable.
@@ -1269,7 +1271,7 @@ foreign lib {
 	* \param AlwaysPreserve  If true, this descriptor will survive optimizations.
 	* \param Flags           Flags.
 	*/
-	DIBuilderCreateParameterVariable :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: i32, ArgNo: u32, File: MetadataRef, LineNo: u32, Ty: MetadataRef, AlwaysPreserve: Bool, Flags: DIFlags) -> MetadataRef ---
+	DIBuilderCreateParameterVariable :: proc(Builder: DIBuilderRef, Scope: MetadataRef, Name: cstring, NameLen: c.size_t, ArgNo: u32, File: MetadataRef, LineNo: u32, Ty: MetadataRef, AlwaysPreserve: Bool, Flags: DIFlags) -> MetadataRef ---
 
 	/**
 	* Get the metadata of the subprogram attached to a function.
@@ -1331,7 +1333,7 @@ foreign lib {
 	*
 	* @see llvm::DIBuilder::createLabel()
 	*/
-	DIBuilderCreateLabel :: proc(Builder: DIBuilderRef, Context: MetadataRef, Name: cstring, NameLen: i32, File: MetadataRef, LineNo: u32, AlwaysPreserve: Bool) -> MetadataRef ---
+	DIBuilderCreateLabel :: proc(Builder: DIBuilderRef, Context: MetadataRef, Name: cstring, NameLen: c.size_t, File: MetadataRef, LineNo: u32, AlwaysPreserve: Bool) -> MetadataRef ---
 
 	/**
 	* Insert a new llvm.dbg.label intrinsic call

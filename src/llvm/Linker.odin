@@ -13,7 +13,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /* This enum is provided for backwards-compatibility only. It has no effect. */
 LinkerMode :: enum u32 {

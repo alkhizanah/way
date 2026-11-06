@@ -1,6 +1,8 @@
 package main
 
+import "core:c"
 import "core:fmt"
+import "core:os"
 import "core:strings"
 import "llvm"
 
@@ -26,6 +28,49 @@ llvm_init :: proc(l: ^LLVM_Backend, name: cstring, ir: ^Ir) {
 
 	l.cached_types = make(map[Ir_Index]llvm.TypeRef, len(l.ir.types))
 	l.cached_values = make(map[Ir_Index]llvm.ValueRef, len(l.ir.values))
+}
+
+llvm_commit :: proc(l: ^LLVM_Backend, output_file_path: string) {
+	llvm.InitializeAllTargetInfos()
+	llvm.InitializeAllTargets()
+	llvm.InitializeAllTargetMCs()
+	llvm.InitializeAllAsmParsers()
+	llvm.InitializeAllAsmPrinters()
+
+	target_triple := llvm.GetDefaultTargetTriple()
+
+	target: llvm.TargetRef
+	cpu :: "generic"
+	features :: ""
+
+	llvm.GetTargetFromTriple(target_triple, &target, nil)
+
+	target_machine := llvm.CreateTargetMachine(
+		target,
+		target_triple,
+		cpu,
+		features,
+		.Default,
+		.PIC,
+		.Default,
+	)
+
+	llvm.SetModuleDataLayout(l.module, llvm.CreateTargetDataLayout(target_machine))
+	llvm.SetTarget(l.module, target_triple)
+
+	llvm.TargetMachineEmitToFile(
+		target_machine,
+		l.module,
+		fmt.ctprintf("%s.o", output_file_path),
+		.ObjectFile,
+		nil,
+	)
+
+	object_file_path := fmt.tprintf("%s.o", output_file_path)
+
+	_, _, _, _ = os.process_exec({command = {"clang", object_file_path, "-o", output_file_path}}, context.allocator)
+
+	os.remove(object_file_path)
 }
 
 llvm_start :: proc(l: ^LLVM_Backend) {
@@ -482,7 +527,7 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 		string_value := llvm.ConstStringInContext2(
 			l.ctx,
 			cstring(&l.ir.strings[value.a]),
-			i32(value.b),
+			c.size_t(value.b),
 			DontNullTerminate = 0,
 		)
 

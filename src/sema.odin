@@ -2025,6 +2025,8 @@ analyze_block :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 
 	s.scope = make_scope(&old_scope)
 
+	defer s.scope = old_scope
+
 	stmts := s.ast.extra[node.a:][:node.b]
 
 	for stmt in stmts {
@@ -2032,8 +2034,6 @@ analyze_block :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 	}
 
 	delete(s.scope.locals)
-
-	s.scope = old_scope
 
 	return true
 }

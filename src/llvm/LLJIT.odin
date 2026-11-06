@@ -23,7 +23,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * A function for constructing an ObjectLinkingLayer instance to be used
@@ -37,18 +37,22 @@ _ :: lib
 * Object linking layers returned by this function will become owned by the
 * LLJIT instance. The client is not responsible for managing their lifetimes
 * after the function returns.
+*
+* FIXME: This method needs to be updated to take a JITLinkMemoryManager
+*        argument.
+*
 */
 OrcLLJITBuilderObjectLinkingLayerCreatorFunction :: proc "c" (
 	Ctx: rawptr,
 	ES: OrcExecutionSessionRef,
 	Triple: cstring,
 ) -> OrcObjectLayerRef
-OrcOpaqueLLJITBuilder :: struct {}
 
 /**
 * A reference to an orc::LLJITBuilder instance.
 */
 OrcLLJITBuilderRef :: ^OrcOpaqueLLJITBuilder
+OrcOpaqueLLJITBuilder :: struct {}
 OrcOpaqueLLJIT :: struct {}
 
 /**

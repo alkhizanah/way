@@ -13,15 +13,20 @@
 \*===----------------------------------------------------------------------===*/
 package llvm
 
+import "core:c"
+
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /// External users depend on the following values being stable. It is not safe
 /// to reorder them.
 Opcode :: enum u32 {
 	/* Terminator Instructions */
 	Ret            = 1,
-	Br             = 2,
+
+	/* removed 2 due to API changes */
+	UncondBr       = 70,
+	CondBr         = 71,
 	Switch         = 3,
 	IndirectBr     = 4,
 	Invoke         = 5,
@@ -131,6 +136,7 @@ TypeKind :: enum u32 {
 	BFloatTypeKind         = 18, /**< 16 bit brain floating point type */
 	X86_AMXTypeKind        = 19, /**< X86 AMX */
 	TargetExtTypeKind      = 20, /**< Target extension type */
+	ByteTypeKind           = 21, /**< Arbitrary bit width bytes */
 }
 
 Linkage :: enum u32 {
@@ -238,15 +244,16 @@ ValueKind :: enum u32 {
 	ConstantDataArrayValueKind     = 16,
 	ConstantDataVectorValueKind    = 17,
 	ConstantIntValueKind           = 18,
-	ConstantFPValueKind            = 19,
-	ConstantPointerNullValueKind   = 20,
-	ConstantTokenNoneValueKind     = 21,
-	MetadataAsValueValueKind       = 22,
-	InlineAsmValueKind             = 23,
-	InstructionValueKind           = 24,
-	PoisonValueValueKind           = 25,
-	ConstantTargetNoneValueKind    = 26,
-	ConstantPtrAuthValueKind       = 27,
+	ConstantByteValueKind          = 19,
+	ConstantFPValueKind            = 20,
+	ConstantPointerNullValueKind   = 21,
+	ConstantTokenNoneValueKind     = 22,
+	MetadataAsValueValueKind       = 23,
+	InlineAsmValueKind             = 24,
+	InstructionValueKind           = 25,
+	PoisonValueValueKind           = 26,
+	ConstantTargetNoneValueKind    = 27,
+	ConstantPtrAuthValueKind       = 28,
 }
 
 IntPredicate :: enum u32 {
@@ -317,46 +324,52 @@ AtomicOrdering :: enum u32 {
 }
 
 AtomicRMWBinOp :: enum u32 {
-	Xchg     = 0, /**< Set the new value and return the one old */
-	Add      = 1, /**< Add a value and return the old one */
-	Sub      = 2, /**< Subtract a value and return the old one */
-	And      = 3, /**< And a value and return the old one */
-	Nand     = 4, /**< Not-And a value and return the old one */
-	Or       = 5, /**< OR a value and return the old one */
-	Xor      = 6, /**< Xor a value and return the old one */
-	Max      = 7, /**< Sets the value if it's greater than the
+	Xchg        = 0, /**< Set the new value and return the one old */
+	Add         = 1, /**< Add a value and return the old one */
+	Sub         = 2, /**< Subtract a value and return the old one */
+	And         = 3, /**< And a value and return the old one */
+	Nand        = 4, /**< Not-And a value and return the old one */
+	Or          = 5, /**< OR a value and return the old one */
+	Xor         = 6, /**< Xor a value and return the old one */
+	Max         = 7, /**< Sets the value if it's greater than the
                             original using a signed comparison and return
                             the old one */
-	Min      = 8, /**< Sets the value if it's Smaller than the
+	Min         = 8, /**< Sets the value if it's Smaller than the
                             original using a signed comparison and return
                             the old one */
-	UMax     = 9, /**< Sets the value if it's greater than the
+	UMax        = 9, /**< Sets the value if it's greater than the
                            original using an unsigned comparison and return
                            the old one */
-	UMin     = 10, /**< Sets the value if it's greater than the
+	UMin        = 10, /**< Sets the value if it's greater than the
                             original using an unsigned comparison and return
                             the old one */
-	FAdd     = 11, /**< Add a floating point value and return the
+	FAdd        = 11, /**< Add a floating point value and return the
                             old one */
-	FSub     = 12, /**< Subtract a floating point value and return the
+	FSub        = 12, /**< Subtract a floating point value and return the
                           old one */
-	FMax     = 13, /**< Sets the value if it's greater than the
+	FMax        = 13, /**< Sets the value if it's greater than the
                            original using an floating point comparison and
                            return the old one */
-	FMin     = 14, /**< Sets the value if it's smaller than the
+	FMin        = 14, /**< Sets the value if it's smaller than the
                            original using an floating point comparison and
                            return the old one */
-	UIncWrap = 15, /**< Increments the value, wrapping back to zero
+	UIncWrap    = 15, /**< Increments the value, wrapping back to zero
                                when incremented above input value */
-	UDecWrap = 16, /**< Decrements the value, wrapping back to
+	UDecWrap    = 16, /**< Decrements the value, wrapping back to
                                the input value when decremented below zero */
-	USubCond = 17, /**<Subtracts the value only if no unsigned
+	USubCond    = 17, /**<Subtracts the value only if no unsigned
                                  overflow */
-	USubSat  = 18, /**<Subtracts the value, clamping to zero */
-	FMaximum = 19, /**< Sets the value if it's greater than the
+	USubSat     = 18, /**<Subtracts the value, clamping to zero */
+	FMaximum    = 19, /**< Sets the value if it's greater than the
                            original using an floating point comparison and
                            return the old one */
-	FMinimum = 20, /**< Sets the value if it's smaller than the
+	FMinimum    = 20, /**< Sets the value if it's smaller than the
+                           original using an floating point comparison and
+                           return the old one */
+	FMaximumNum = 21, /**< Sets the value if it's greater than the
+                           original using an floating point comparison and
+                           return the old one */
+	FMinimumNum = 22, /**< Sets the value if it's smaller than the
                            original using an floating point comparison and
                            return the old one */
 }
@@ -429,8 +442,8 @@ ModuleFlagBehavior :: enum u32 {
 	AppendUnique = 5,
 }
 
-AttributeReturnIndex :: 0
-AttributeFunctionIndex :: -1
+LLVMAttributeReturnIndex :: 0
+LLVMAttributeFunctionIndex :: -1
 
 AttributeIndex :: u32
 
@@ -448,15 +461,15 @@ TailCallKind :: enum u32 {
 	NoTail   = 3,
 }
 
-FastMathAllowReassoc :: 1
-FastMathNoNaNs :: 2
-FastMathNoInfs :: 4
-FastMathNoSignedZeros :: 8
-FastMathAllowReciprocal :: 16
-FastMathAllowContract :: 32
-FastMathApproxFunc :: 64
-FastMathNone :: 0
-FastMathAll :: 127
+LLVMFastMathAllowReassoc :: 1
+LLVMFastMathNoNaNs :: 2
+LLVMFastMathNoInfs :: 4
+LLVMFastMathAllowReciprocal :: 16
+LLVMFastMathNoSignedZeros :: 8
+LLVMFastMathApproxFunc :: 64
+LLVMFastMathAllowContract :: 32
+LLVMFastMathNone :: 0
+LLVMFastMathAll :: 127
 
 /**
 * Flags to indicate what fast-math-style optimizations are allowed
@@ -466,9 +479,9 @@ FastMathAll :: 127
 */
 FastMathFlags :: u32
 
-GEPFlagInBounds :: 1
-GEPFlagNUSW :: 2
-GEPFlagNUW :: 4
+LLVMGEPFlagInBounds :: 1
+LLVMGEPFlagNUSW :: 2
+LLVMGEPFlagNUW :: 4
 
 /**
 * Flags that constrain the allowed wrap semantics of a getelementptr
@@ -498,6 +511,17 @@ DbgRecordKind :: enum u32 {
 */
 DiagnosticHandler :: proc "c" (_: DiagnosticInfoRef, _: rawptr)
 YieldCallback :: proc "c" (_: ContextRef, _: rawptr)
+
+/**
+* Represent different denormal handling kinds for use with
+* LLVMCreateDenormalFPEnvAttribute.
+*/
+DenormalModeKind :: enum u32 {
+	IEEE         = 0,
+	PreserveSign = 1,
+	PositiveZero = 2,
+	Dynamic      = 3,
+}
 
 @(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
@@ -598,7 +622,7 @@ foreign lib {
 	/**
 	* Maps a synchronization scope name to a ID unique within this context.
 	*/
-	GetSyncScopeID :: proc(C: ContextRef, Name: cstring, SLen: i32) -> u32 ---
+	GetSyncScopeID :: proc(C: ContextRef, Name: cstring, SLen: c.size_t) -> u32 ---
 
 	/**
 	* Return an unique id given the name of a enum attribute,
@@ -611,7 +635,7 @@ foreign lib {
 	* NB: Attribute names and/or id are subject to change without
 	* going through the C API deprecation cycle.
 	*/
-	GetEnumAttributeKindForName :: proc(Name: cstring, SLen: i32) -> u32 ---
+	GetEnumAttributeKindForName :: proc(Name: cstring, SLen: c.size_t) -> u32 ---
 	GetLastEnumAttributeKind :: proc() -> u32 ---
 
 	/**
@@ -647,6 +671,26 @@ foreign lib {
 	* elements long.
 	*/
 	CreateConstantRangeAttribute :: proc(C: ContextRef, KindID: u32, NumBits: u32, LowerWords: [^]u64, UpperWords: [^]u64) -> AttributeRef ---
+
+	/**
+	* Create a DenormalFPEnv attribute.
+	*
+	* \p DefaultModeOutput is the assumed denormal handling for the outputs of most
+	*    floating-point types.
+	*
+	* \p DefaultModeInput is the assumed denormal handling for the inputs of most
+	*    floating-point types.
+	*
+	* \p FloatModeOutput is the assumed denormal handling for the outputs of
+	*    float. This should always be the same as as DefaultModeOutput for most
+	*    targets.
+	*
+	* \p FloatModeInput is the assumed denormal handling for the inputs of
+	*    float. This should always be the same as as DefaultModeInput for most
+	*    targets.
+	*
+	*/
+	CreateDenormalFPEnvAttribute :: proc(C: ContextRef, DefaultModeOutput: DenormalModeKind, DefaultModeInput: DenormalModeKind, FloatModeOutput: DenormalModeKind, FloatModeInput: DenormalModeKind) -> AttributeRef ---
 
 	/**
 	* Create a string attribute.
@@ -733,7 +777,7 @@ foreign lib {
 	* @return The identifier of M.
 	* @see Module::getModuleIdentifier()
 	*/
-	GetModuleIdentifier :: proc(M: ModuleRef, Len: ^i32) -> cstring ---
+	GetModuleIdentifier :: proc(M: ModuleRef, Len: ^c.size_t) -> cstring ---
 
 	/**
 	* Set the identifier of a module to a string Ident with length Len.
@@ -743,7 +787,7 @@ foreign lib {
 	* @param Len Length of Ident
 	* @see Module::setModuleIdentifier()
 	*/
-	SetModuleIdentifier :: proc(M: ModuleRef, Ident: cstring, Len: i32) ---
+	SetModuleIdentifier :: proc(M: ModuleRef, Ident: cstring, Len: c.size_t) ---
 
 	/**
 	* Obtain the module's original source file name.
@@ -753,7 +797,7 @@ foreign lib {
 	* @return The original source file name of M
 	* @see Module::getSourceFileName()
 	*/
-	GetSourceFileName :: proc(M: ModuleRef, Len: ^i32) -> cstring ---
+	GetSourceFileName :: proc(M: ModuleRef, Len: ^c.size_t) -> cstring ---
 
 	/**
 	* Set the original source file name of a module to a string Name with length
@@ -764,7 +808,7 @@ foreign lib {
 	* @param Len Length of Name
 	* @see Module::setSourceFileName()
 	*/
-	SetSourceFileName :: proc(M: ModuleRef, Name: cstring, Len: i32) ---
+	SetSourceFileName :: proc(M: ModuleRef, Name: cstring, Len: c.size_t) ---
 
 	/**
 	* Obtain the data layout for a module.
@@ -806,7 +850,7 @@ foreign lib {
 	*
 	* @see Module::getModuleFlagsMetadata()
 	*/
-	CopyModuleFlagsMetadata :: proc(M: ModuleRef, Len: ^i32) -> ^ModuleFlagEntry ---
+	CopyModuleFlagsMetadata :: proc(M: ModuleRef, Len: ^c.size_t) -> ^ModuleFlagEntry ---
 
 	/**
 	* Destroys module flags metadata entries.
@@ -825,7 +869,7 @@ foreign lib {
 	*
 	* @see Module::ModuleFlagEntry::Key
 	*/
-	ModuleFlagEntriesGetKey :: proc(Entries: ^ModuleFlagEntry, Index: u32, Len: ^i32) -> cstring ---
+	ModuleFlagEntriesGetKey :: proc(Entries: ^ModuleFlagEntry, Index: u32, Len: ^c.size_t) -> cstring ---
 
 	/**
 	* Returns the metadata for a module flag entry at a specific index.
@@ -840,7 +884,7 @@ foreign lib {
 	*
 	* @see Module::getModuleFlag()
 	*/
-	GetModuleFlag :: proc(M: ModuleRef, Key: cstring, KeyLen: i32) -> MetadataRef ---
+	GetModuleFlag :: proc(M: ModuleRef, Key: cstring, KeyLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Add a module-level flag to the module-level flags metadata if it doesn't
@@ -848,7 +892,7 @@ foreign lib {
 	*
 	* @see Module::addModuleFlag()
 	*/
-	AddModuleFlag :: proc(M: ModuleRef, Behavior: ModuleFlagBehavior, Key: cstring, KeyLen: i32, Val: MetadataRef) ---
+	AddModuleFlag :: proc(M: ModuleRef, Behavior: ModuleFlagBehavior, Key: cstring, KeyLen: c.size_t, Val: MetadataRef) ---
 
 	/**
 	* Dump a representation of a module to stderr.
@@ -878,40 +922,40 @@ foreign lib {
 	*
 	* @see Module::getModuleInlineAsm()
 	*/
-	GetModuleInlineAsm :: proc(M: ModuleRef, Len: ^i32) -> cstring ---
+	GetModuleInlineAsm :: proc(M: ModuleRef, Len: ^c.size_t) -> cstring ---
 
 	/**
 	* Set inline assembly for a module.
 	*
 	* @see Module::setModuleInlineAsm()
 	*/
-	SetModuleInlineAsm2 :: proc(M: ModuleRef, Asm: cstring, Len: i32) ---
+	SetModuleInlineAsm2 :: proc(M: ModuleRef, Asm: cstring, Len: c.size_t) ---
 
 	/**
 	* Append inline assembly to a module.
 	*
 	* @see Module::appendModuleInlineAsm()
 	*/
-	AppendModuleInlineAsm :: proc(M: ModuleRef, Asm: cstring, Len: i32) ---
+	AppendModuleInlineAsm :: proc(M: ModuleRef, Asm: cstring, Len: c.size_t) ---
 
 	/**
 	* Create the specified uniqued inline asm string.
 	*
 	* @see InlineAsm::get()
 	*/
-	GetInlineAsm :: proc(Ty: TypeRef, AsmString: cstring, AsmStringSize: i32, Constraints: cstring, ConstraintsSize: i32, HasSideEffects: Bool, IsAlignStack: Bool, Dialect: InlineAsmDialect, CanThrow: Bool) -> ValueRef ---
+	GetInlineAsm :: proc(Ty: TypeRef, AsmString: cstring, AsmStringSize: c.size_t, Constraints: cstring, ConstraintsSize: c.size_t, HasSideEffects: Bool, IsAlignStack: Bool, Dialect: InlineAsmDialect, CanThrow: Bool) -> ValueRef ---
 
 	/**
 	* Get the template string used for an inline assembly snippet
 	*
 	*/
-	GetInlineAsmAsmString :: proc(InlineAsmVal: ValueRef, Len: ^i32) -> cstring ---
+	GetInlineAsmAsmString :: proc(InlineAsmVal: ValueRef, Len: ^c.size_t) -> cstring ---
 
 	/**
 	* Get the raw constraint string for an inline assembly snippet
 	*
 	*/
-	GetInlineAsmConstraintString :: proc(InlineAsmVal: ValueRef, Len: ^i32) -> cstring ---
+	GetInlineAsmConstraintString :: proc(InlineAsmVal: ValueRef, Len: ^c.size_t) -> cstring ---
 
 	/**
 	* Get the dialect used by the inline asm snippet
@@ -992,7 +1036,7 @@ foreign lib {
 	*
 	* @see llvm::Module::getNamedMetadata()
 	*/
-	GetNamedMetadata :: proc(M: ModuleRef, Name: cstring, NameLen: i32) -> NamedMDNodeRef ---
+	GetNamedMetadata :: proc(M: ModuleRef, Name: cstring, NameLen: c.size_t) -> NamedMDNodeRef ---
 
 	/**
 	* Retrieve a NamedMDNode with the given name, creating a new node if no such
@@ -1000,14 +1044,14 @@ foreign lib {
 	*
 	* @see llvm::Module::getOrInsertNamedMetadata()
 	*/
-	GetOrInsertNamedMetadata :: proc(M: ModuleRef, Name: cstring, NameLen: i32) -> NamedMDNodeRef ---
+	GetOrInsertNamedMetadata :: proc(M: ModuleRef, Name: cstring, NameLen: c.size_t) -> NamedMDNodeRef ---
 
 	/**
 	* Retrieve the name of a NamedMDNode.
 	*
 	* @see llvm::NamedMDNode::getName()
 	*/
-	GetNamedMetadataName :: proc(NamedMD: NamedMDNodeRef, NameLen: ^i32) -> cstring ---
+	GetNamedMetadataName :: proc(NamedMD: NamedMDNodeRef, NameLen: ^c.size_t) -> cstring ---
 
 	/**
 	* Obtain the number of operands for named metadata in a module.
@@ -1093,7 +1137,7 @@ foreign lib {
 	*
 	* @see llvm::Module::getOrInsertFunction()
 	*/
-	GetOrInsertFunction :: proc(M: ModuleRef, Name: cstring, NameLen: i32, FunctionTy: TypeRef) -> ValueRef ---
+	GetOrInsertFunction :: proc(M: ModuleRef, Name: cstring, NameLen: c.size_t, FunctionTy: TypeRef) -> ValueRef ---
 
 	/**
 	* Obtain a Function value from a Module by its name.
@@ -1111,7 +1155,7 @@ foreign lib {
 	*
 	* @see llvm::Module::getFunction()
 	*/
-	GetNamedFunctionWithLength :: proc(M: ModuleRef, Name: cstring, Length: i32) -> ValueRef ---
+	GetNamedFunctionWithLength :: proc(M: ModuleRef, Name: cstring, Length: c.size_t) -> ValueRef ---
 
 	/**
 	* Obtain an iterator to the first Function in a Module.
@@ -1183,6 +1227,12 @@ foreign lib {
 	* @see llvm::Type::print()
 	*/
 	PrintTypeToString :: proc(Val: TypeRef) -> cstring ---
+
+	/**
+	* Obtain a byte type from a context with specified bit width.
+	*/
+	ByteTypeInContext :: proc(C: ContextRef, NumBits: u32) -> TypeRef ---
+	GetByteTypeWidth :: proc(ByteTy: TypeRef) -> u32 ---
 
 	/**
 	* Obtain an integer type from a context with specified bit width.
@@ -1628,14 +1678,14 @@ foreign lib {
 	*
 	* @see llvm::Value::getName()
 	*/
-	GetValueName2 :: proc(Val: ValueRef, Length: ^i32) -> cstring ---
+	GetValueName2 :: proc(Val: ValueRef, Length: ^c.size_t) -> cstring ---
 
 	/**
 	* Set the string name of a value.
 	*
 	* @see llvm::Value::setName()
 	*/
-	SetValueName2 :: proc(Val: ValueRef, Name: cstring, NameLen: i32) ---
+	SetValueName2 :: proc(Val: ValueRef, Name: cstring, NameLen: c.size_t) ---
 
 	/**
 	* Dump a representation of a value to stderr.
@@ -1688,25 +1738,25 @@ foreign lib {
 	* Determine whether a value instance is poisonous.
 	*/
 	IsPoison :: proc(Val: ValueRef) -> Bool ---
-	IsAArgument :: proc(Val: ValueRef) -> ValueRef ---
 	IsABasicBlock :: proc(Val: ValueRef) -> ValueRef ---
+	IsAArgument :: proc(Val: ValueRef) -> ValueRef ---
 	IsAInlineAsm :: proc(Val: ValueRef) -> ValueRef ---
-	IsAUser :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstant :: proc(Val: ValueRef) -> ValueRef ---
 	IsABlockAddress :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantAggregateZero :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantArray :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantDataSequential :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantDataArray :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUser :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantDataVector :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantExpr :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantFP :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantInt :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantByte :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantPointerNull :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantStruct :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantTokenNone :: proc(Val: ValueRef) -> ValueRef ---
 	IsAConstantVector :: proc(Val: ValueRef) -> ValueRef ---
-	IsAConstantPtrAuth :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantDataArray :: proc(Val: ValueRef) -> ValueRef ---
 	IsAGlobalValue :: proc(Val: ValueRef) -> ValueRef ---
 	IsAGlobalAlias :: proc(Val: ValueRef) -> ValueRef ---
 	IsAGlobalObject :: proc(Val: ValueRef) -> ValueRef ---
@@ -1722,25 +1772,26 @@ foreign lib {
 	IsAIntrinsicInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsADbgInfoIntrinsic :: proc(Val: ValueRef) -> ValueRef ---
 	IsADbgVariableIntrinsic :: proc(Val: ValueRef) -> ValueRef ---
+	IsAConstantPtrAuth :: proc(Val: ValueRef) -> ValueRef ---
 	IsADbgDeclareInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsADbgLabelInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAMemIntrinsic :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMemCpyInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAMemMoveInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsAMemSetInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMemCpyInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsACmpInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsAFCmpInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAMemSetInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAICmpInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAExtractElementInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAGetElementPtrInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsAInsertElementInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAFCmpInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAInsertValueInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsALandingPadInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAPHINode :: proc(Val: ValueRef) -> ValueRef ---
 	IsASelectInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAShuffleVectorInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsAStoreInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsABranchInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAInsertElementInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAUncondBrInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACondBrInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAIndirectBrInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAInvokeInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAReturnInst :: proc(Val: ValueRef) -> ValueRef ---
@@ -1748,7 +1799,7 @@ foreign lib {
 	IsAUnreachableInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAResumeInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsACleanupReturnInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsACatchReturnInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAStoreInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsACatchSwitchInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsACallBrInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAFuncletPadInst :: proc(Val: ValueRef) -> ValueRef ---
@@ -1764,19 +1815,21 @@ foreign lib {
 	IsAFPToUIInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAFPTruncInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAIntToPtrInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsACatchReturnInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAPtrToIntInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsASExtInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsASIToFPInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsATruncInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsASExtInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAUIToFPInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsAZExtInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsATruncInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAExtractValueInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsALoadInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAVAArgInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAZExtInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAFreezeInst :: proc(Val: ValueRef) -> ValueRef ---
-	IsAAtomicCmpXchgInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAAtomicRMWInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsAAtomicCmpXchgInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAFenceInst :: proc(Val: ValueRef) -> ValueRef ---
+	IsABranchInst :: proc(Val: ValueRef) -> ValueRef ---
 	IsAMDNode :: proc(Val: ValueRef) -> ValueRef ---
 	IsAValueAsMetadata :: proc(Val: ValueRef) -> ValueRef ---
 	IsAMDString :: proc(Val: ValueRef) -> ValueRef ---
@@ -1935,6 +1988,32 @@ foreign lib {
 	ConstIntOfStringAndSize :: proc(IntTy: TypeRef, Text: cstring, SLen: u32, Radix: u8) -> ValueRef ---
 
 	/**
+	* Obtain a constant value for a byte type.
+	*
+	* The returned value corresponds to a llvm::ConstantByte.
+	*
+	* @see llvm::ConstantByte::get()
+	*
+	* @param ByteTy Byte type to obtain value of.
+	* @param N The value the returned instance should refer to.
+	*/
+	ConstByte :: proc(ByteTy: TypeRef, N: u64) -> ValueRef ---
+
+	/**
+	* Obtain a constant value for a byte of arbitrary precision.
+	*
+	* @see llvm::ConstantByte::get()
+	*/
+	ConstByteOfArbitraryPrecision :: proc(ByteTy: TypeRef, NumWords: u32, Words: [^]u64) -> ValueRef ---
+
+	/**
+	* Obtain a constant value for a byte parsed from a string with specified
+	* length.
+	* @see llvm::ConstantByte::get()
+	*/
+	ConstByteOfStringAndSize :: proc(ByteTy: TypeRef, Text: cstring, SLen: c.size_t, Radix: u8) -> ValueRef ---
+
+	/**
 	* Obtain a constant value referring to a double floating point value.
 	*/
 	ConstReal :: proc(RealTy: TypeRef, N: f64) -> ValueRef ---
@@ -1974,6 +2053,20 @@ foreign lib {
 	ConstIntGetSExtValue :: proc(ConstantVal: ValueRef) -> i64 ---
 
 	/**
+	* Obtain the zero extended value for a byte constant value.
+	*
+	* @see llvm::ConstantByte::getZExtValue()
+	*/
+	ConstByteGetZExtValue :: proc(ConstantVal: ValueRef) -> u64 ---
+
+	/**
+	* Obtain the sign extended value for a byte constant value.
+	*
+	* @see llvm::ConstantByte::getSExtValue()
+	*/
+	ConstByteGetSExtValue :: proc(ConstantVal: ValueRef) -> i64 ---
+
+	/**
 	* Obtain the double value for an floating point constant value.
 	* losesInfo indicates if some precision was lost in the conversion.
 	*
@@ -1995,7 +2088,7 @@ foreign lib {
 	*
 	* @see llvm::ConstantDataArray::getString()
 	*/
-	ConstStringInContext2 :: proc(C: ContextRef, Str: cstring, Length: i32, DontNullTerminate: Bool) -> ValueRef ---
+	ConstStringInContext2 :: proc(C: ContextRef, Str: cstring, Length: c.size_t, DontNullTerminate: Bool) -> ValueRef ---
 
 	/**
 	* Create a ConstantDataSequential with string content in the global context.
@@ -2020,7 +2113,7 @@ foreign lib {
 	*
 	* @see ConstantDataSequential::getAsString()
 	*/
-	GetAsString :: proc(_c: ValueRef, Length: ^i32) -> cstring ---
+	GetAsString :: proc(_c: ValueRef, Length: ^c.size_t) -> cstring ---
 
 	/**
 	* Get the raw, underlying bytes of the given constant data sequential.
@@ -2030,7 +2123,7 @@ foreign lib {
 	*
 	* @see ConstantDataSequential::getRawDataValues()
 	*/
-	GetRawDataValues :: proc(_c: ValueRef, SizeInBytes: ^i32) -> cstring ---
+	GetRawDataValues :: proc(_c: ValueRef, SizeInBytes: ^c.size_t) -> cstring ---
 
 	/**
 	* Create an anonymous ConstantStruct with the specified values.
@@ -2074,7 +2167,7 @@ foreign lib {
 	*
 	* @see llvm::ConstantDataArray::getRaw()
 	*/
-	ConstDataArray :: proc(ElementTy: TypeRef, Data: cstring, SizeInBytes: i32) -> ValueRef ---
+	ConstDataArray :: proc(ElementTy: TypeRef, Data: cstring, SizeInBytes: c.size_t) -> ValueRef ---
 
 	/**
 	* Create a non-anonymous ConstantStruct from values.
@@ -2275,7 +2368,7 @@ foreign lib {
 	*
 	* @see llvm::GlobalObject::getAllMetadata()
 	*/
-	GlobalCopyAllMetadata :: proc(Value: ValueRef, NumEntries: ^i32) -> ^ValueMetadataEntry ---
+	GlobalCopyAllMetadata :: proc(Value: ValueRef, NumEntries: ^c.size_t) -> ^ValueMetadataEntry ---
 
 	/**
 	* Destroys value metadata entries.
@@ -2305,7 +2398,7 @@ foreign lib {
 	AddGlobal :: proc(M: ModuleRef, Ty: TypeRef, Name: cstring) -> ValueRef ---
 	AddGlobalInAddressSpace :: proc(M: ModuleRef, Ty: TypeRef, Name: cstring, AddressSpace: u32) -> ValueRef ---
 	GetNamedGlobal :: proc(M: ModuleRef, Name: cstring) -> ValueRef ---
-	GetNamedGlobalWithLength :: proc(M: ModuleRef, Name: cstring, Length: i32) -> ValueRef ---
+	GetNamedGlobalWithLength :: proc(M: ModuleRef, Name: cstring, Length: c.size_t) -> ValueRef ---
 	GetFirstGlobal :: proc(M: ModuleRef) -> ValueRef ---
 	GetLastGlobal :: proc(M: ModuleRef) -> ValueRef ---
 	GetNextGlobal :: proc(GlobalVar: ValueRef) -> ValueRef ---
@@ -2336,7 +2429,7 @@ foreign lib {
 	*
 	* @see llvm::Module::getNamedAlias()
 	*/
-	GetNamedGlobalAlias :: proc(M: ModuleRef, Name: cstring, NameLen: i32) -> ValueRef ---
+	GetNamedGlobalAlias :: proc(M: ModuleRef, Name: cstring, NameLen: c.size_t) -> ValueRef ---
 
 	/**
 	* Obtain an iterator to the first GlobalAlias in a Module.
@@ -2411,7 +2504,7 @@ foreign lib {
 	*
 	* @see llvm::Intrinsic::lookupIntrinsicID()
 	*/
-	LookupIntrinsicID :: proc(Name: cstring, NameLen: i32) -> u32 ---
+	LookupIntrinsicID :: proc(Name: cstring, NameLen: c.size_t) -> u32 ---
 
 	/**
 	* Obtain the ID number from a function instance.
@@ -2421,34 +2514,34 @@ foreign lib {
 	GetIntrinsicID :: proc(Fn: ValueRef) -> u32 ---
 
 	/**
-	* Get or insert the declaration of an intrinsic.  For overloaded intrinsics,
-	* parameter types must be provided to uniquely identify an overload.
+	* Get or insert the declaration of an intrinsic. For overloaded intrinsics,
+	* overload types must be provided to uniquely identify an overload.
 	*
 	* @see llvm::Intrinsic::getOrInsertDeclaration()
 	*/
-	GetIntrinsicDeclaration :: proc(Mod: ModuleRef, ID: u32, ParamTypes: ^TypeRef, ParamCount: i32) -> ValueRef ---
+	GetIntrinsicDeclaration :: proc(Mod: ModuleRef, ID: u32, OverloadTypes: ^TypeRef, OverloadCount: c.size_t) -> ValueRef ---
 
 	/**
-	* Retrieves the type of an intrinsic.  For overloaded intrinsics, parameter
+	* Retrieves the type of an intrinsic. For overloaded intrinsics, overload
 	* types must be provided to uniquely identify an overload.
 	*
 	* @see llvm::Intrinsic::getType()
 	*/
-	IntrinsicGetType :: proc(Ctx: ContextRef, ID: u32, ParamTypes: ^TypeRef, ParamCount: i32) -> TypeRef ---
+	IntrinsicGetType :: proc(Ctx: ContextRef, ID: u32, OverloadTypes: ^TypeRef, OverloadCount: c.size_t) -> TypeRef ---
 
 	/**
 	* Retrieves the name of an intrinsic.
 	*
 	* @see llvm::Intrinsic::getName()
 	*/
-	IntrinsicGetName :: proc(ID: u32, NameLength: ^i32) -> cstring ---
+	IntrinsicGetName :: proc(ID: u32, NameLength: ^c.size_t) -> cstring ---
 
 	/** Deprecated: Use LLVMIntrinsicCopyOverloadedName2 instead. */
-	IntrinsicCopyOverloadedName :: proc(ID: u32, ParamTypes: ^TypeRef, ParamCount: i32, NameLength: ^i32) -> cstring ---
+	IntrinsicCopyOverloadedName :: proc(ID: u32, OverloadTypes: ^TypeRef, OverloadCount: c.size_t, NameLength: ^c.size_t) -> cstring ---
 
 	/**
 	* Copies the name of an overloaded intrinsic identified by a given list of
-	* parameter types.
+	* overload types.
 	*
 	* Unlike LLVMIntrinsicGetName, the caller is responsible for freeing the
 	* returned string.
@@ -2457,7 +2550,7 @@ foreign lib {
 	*
 	* @see llvm::Intrinsic::getName()
 	*/
-	IntrinsicCopyOverloadedName2 :: proc(Mod: ModuleRef, ID: u32, ParamTypes: ^TypeRef, ParamCount: i32, NameLength: ^i32) -> cstring ---
+	IntrinsicCopyOverloadedName2 :: proc(Mod: ModuleRef, ID: u32, OverloadTypes: ^TypeRef, OverloadCount: c.size_t, NameLength: ^c.size_t) -> cstring ---
 
 	/**
 	* Obtain if the intrinsic identified by the given ID is overloaded.
@@ -2640,7 +2733,7 @@ foreign lib {
 	*
 	* @see llvm::GlobalIFunc::create()
 	*/
-	AddGlobalIFunc :: proc(M: ModuleRef, Name: cstring, NameLen: i32, Ty: TypeRef, AddrSpace: u32, Resolver: ValueRef) -> ValueRef ---
+	AddGlobalIFunc :: proc(M: ModuleRef, Name: cstring, NameLen: c.size_t, Ty: TypeRef, AddrSpace: u32, Resolver: ValueRef) -> ValueRef ---
 
 	/**
 	* Obtain a GlobalIFunc value from a Module by its name.
@@ -2649,7 +2742,7 @@ foreign lib {
 	*
 	* @see llvm::Module::getNamedIFunc()
 	*/
-	GetNamedGlobalIFunc :: proc(M: ModuleRef, Name: cstring, NameLen: i32) -> ValueRef ---
+	GetNamedGlobalIFunc :: proc(M: ModuleRef, Name: cstring, NameLen: c.size_t) -> ValueRef ---
 
 	/**
 	* Obtain an iterator to the first GlobalIFunc in a Module.
@@ -2721,14 +2814,14 @@ foreign lib {
 	*
 	* @see llvm::MDString::get()
 	*/
-	MDStringInContext2 :: proc(C: ContextRef, Str: cstring, SLen: i32) -> MetadataRef ---
+	MDStringInContext2 :: proc(C: ContextRef, Str: cstring, SLen: c.size_t) -> MetadataRef ---
 
 	/**
 	* Create an MDNode value with the given array of operands.
 	*
 	* @see llvm::MDNode::get()
 	*/
-	MDNodeInContext2 :: proc(C: ContextRef, MDs: ^MetadataRef, Count: i32) -> MetadataRef ---
+	MDNodeInContext2 :: proc(C: ContextRef, MDs: ^MetadataRef, Count: c.size_t) -> MetadataRef ---
 
 	/**
 	* Obtain a Metadata as a Value.
@@ -2800,7 +2893,7 @@ foreign lib {
 	* @param Args Memory address of an array of bundle operands
 	* @param NumArgs Length of Args
 	*/
-	CreateOperandBundle :: proc(Tag: cstring, TagLen: i32, Args: ^ValueRef, NumArgs: u32) -> OperandBundleRef ---
+	CreateOperandBundle :: proc(Tag: cstring, TagLen: c.size_t, Args: ^ValueRef, NumArgs: u32) -> OperandBundleRef ---
 
 	/**
 	* Destroy an operand bundle.
@@ -2818,7 +2911,7 @@ foreign lib {
 	* @return The tag name of Bundle.
 	* @see OperandBundleDef::getTag()
 	*/
-	GetOperandBundleTag :: proc(Bundle: OperandBundleRef, Len: ^i32) -> cstring ---
+	GetOperandBundleTag :: proc(Bundle: OperandBundleRef, Len: ^c.size_t) -> cstring ---
 
 	/**
 	* Obtain the number of operands for an operand bundle.
@@ -3055,7 +3148,7 @@ foreign lib {
 	*
 	* @see llvm::Instruction::getAllMetadataOtherThanDebugLoc()
 	*/
-	InstructionGetAllMetadataOtherThanDebugLoc :: proc(Instr: ValueRef, NumEntries: ^i32) -> ^ValueMetadataEntry ---
+	InstructionGetAllMetadataOtherThanDebugLoc :: proc(Instr: ValueRef, NumEntries: ^c.size_t) -> ^ValueMetadataEntry ---
 
 	/**
 	* Obtain the basic block to which an instruction belongs.
@@ -3432,29 +3525,27 @@ foreign lib {
 	SetSuccessor :: proc(Term: ValueRef, i: u32, block: BasicBlockRef) ---
 
 	/**
-	* Return if a branch is conditional.
+	* Return if an instruction is a conditional branch.
 	*
-	* This only works on llvm::BranchInst instructions.
-	*
-	* @see llvm::BranchInst::isConditional
+	* Deprecated: Use LLVMIsACondBrInst instead.
 	*/
 	IsConditional :: proc(Branch: ValueRef) -> Bool ---
 
 	/**
 	* Return the condition of a branch instruction.
 	*
-	* This only works on llvm::BranchInst instructions.
+	* This only works on llvm::CondBrInst instructions.
 	*
-	* @see llvm::BranchInst::getCondition
+	* @see llvm::CondBrInst::getCondition
 	*/
 	GetCondition :: proc(Branch: ValueRef) -> ValueRef ---
 
 	/**
 	* Set the condition of a branch instruction.
 	*
-	* This only works on llvm::BranchInst instructions.
+	* This only works on llvm::CondBrInst instructions.
 	*
-	* @see llvm::BranchInst::setCondition
+	* @see llvm::CondBrInst::setCondition
 	*/
 	SetCondition :: proc(Branch: ValueRef, Cond: ValueRef) ---
 
@@ -3614,17 +3705,16 @@ foreign lib {
 	* current debug location for the given builder.  If the builder has no current
 	* debug location, this function is a no-op.
 	*
-	* @deprecated LLVMSetInstDebugLocation is deprecated in favor of the more general
-	*             LLVMAddMetadataToInst.
-	*
 	* @see llvm::IRBuilder::SetInstDebugLocation()
 	*/
 	SetInstDebugLocation :: proc(Builder: BuilderRef, Inst: ValueRef) ---
 
 	/**
-	* Adds the metadata registered with the given builder to the given instruction.
+	* Same as LLVMSetInstDebugLocation.
 	*
-	* @see llvm::IRBuilder::AddMetadataToInst()
+	* @deprecated Use the identical LLVMSetInstDebugLocation.
+	*
+	* @see llvm::IRBuilder::SetInstDebugLocation()
 	*/
 	AddMetadataToInst :: proc(Builder: BuilderRef, Inst: ValueRef) ---
 
@@ -4008,10 +4098,10 @@ foreign lib {
 	*/
 	CreateMemoryBufferWithContentsOfFile :: proc(Path: cstring, OutMemBuf: ^MemoryBufferRef, OutMessage: ^cstring) -> Bool ---
 	CreateMemoryBufferWithSTDIN :: proc(OutMemBuf: ^MemoryBufferRef, OutMessage: ^cstring) -> Bool ---
-	CreateMemoryBufferWithMemoryRange :: proc(InputData: cstring, InputDataLength: i32, BufferName: cstring, RequiresNullTerminator: Bool) -> MemoryBufferRef ---
-	CreateMemoryBufferWithMemoryRangeCopy :: proc(InputData: cstring, InputDataLength: i32, BufferName: cstring) -> MemoryBufferRef ---
+	CreateMemoryBufferWithMemoryRange :: proc(InputData: cstring, InputDataLength: c.size_t, BufferName: cstring, RequiresNullTerminator: Bool) -> MemoryBufferRef ---
+	CreateMemoryBufferWithMemoryRangeCopy :: proc(InputData: cstring, InputDataLength: c.size_t, BufferName: cstring) -> MemoryBufferRef ---
 	GetBufferStart :: proc(MemBuf: MemoryBufferRef) -> cstring ---
-	GetBufferSize :: proc(MemBuf: MemoryBufferRef) -> i32 ---
+	GetBufferSize :: proc(MemBuf: MemoryBufferRef) -> c.size_t ---
 	DisposeMemoryBuffer :: proc(MemBuf: MemoryBufferRef) ---
 
 	/** Constructs a new whole-module pass pipeline. This type of pipeline is

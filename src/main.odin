@@ -4,8 +4,6 @@ import "core:fmt"
 import "core:os"
 import "core:strings"
 
-import "llvm"
-
 main :: proc() {
 	program := os.args[0]
 
@@ -23,9 +21,11 @@ main :: proc() {
 			os.exit(1)
 		}
 
+		file_path := os.args[2]
+
 		parser: Parser
 
-		if !parser_init(&parser, os.args[2]) do os.exit(1)
+		if !parser_init(&parser, file_path) do os.exit(1)
 
 		if !parse(&parser) do os.exit(1)
 
@@ -47,7 +47,15 @@ main :: proc() {
 
 		llvm_start(&llvm_backend)
 
-		llvm.DumpModule(llvm_backend.module)
+		output_file_path := file_path
+
+		if strings.ends_with(output_file_path, ".way") {
+			output_file_path = output_file_path[:len(output_file_path) - 4]
+		} else {
+			output_file_path = fmt.tprintf("%s.out", output_file_path)
+		}
+
+		llvm_commit(&llvm_backend, output_file_path)
 
 	case:
 		fmt.eprintfln("error: unhandled command: %v", command)

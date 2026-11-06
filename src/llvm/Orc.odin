@@ -25,8 +25,10 @@
 \*===----------------------------------------------------------------------===*/
 package llvm
 
+import "core:c"
+
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * Represents an address in the executor process.
@@ -156,7 +158,7 @@ OrcJITDylibRef :: ^OrcOpaqueJITDylib
 */
 OrcCSymbolsList :: struct {
 	Symbols: ^OrcSymbolStringPoolEntryRef,
-	Length:  i32,
+	Length:  c.size_t,
 }
 
 /**
@@ -179,7 +181,7 @@ OrcCDependenceMapPairs :: ^OrcCDependenceMapPair
 OrcCSymbolDependenceGroup :: struct {
 	Symbols:         OrcCSymbolsList,
 	Dependencies:    OrcCDependenceMapPairs,
-	NumDependencies: i32,
+	NumDependencies: c.size_t,
 }
 
 /**
@@ -299,12 +301,12 @@ OrcMaterializationUnitDiscardFunction :: proc "c" (
 * opportunity for the underlying program representation to be destroyed.
 */
 OrcMaterializationUnitDestroyFunction :: proc "c" (Ctx: rawptr)
-OrcOpaqueResourceTracker :: struct {}
 
 /**
 * A reference to an orc::ResourceTracker instance.
 */
 OrcResourceTrackerRef :: ^OrcOpaqueResourceTracker
+OrcOpaqueResourceTracker :: struct {}
 OrcOpaqueDefinitionGenerator :: struct {}
 
 /**
@@ -368,7 +370,7 @@ OrcCAPIDefinitionGeneratorTryToGenerateFunction :: proc "c" (
 	JD: OrcJITDylibRef,
 	JDLookupFlags: OrcJITDylibLookupFlags,
 	LookupSet: OrcCLookupSet,
-	LookupSetSize: i32,
+	LookupSetSize: c.size_t,
 ) -> ErrorRef
 
 /**
@@ -389,12 +391,12 @@ OrcOpaqueThreadSafeContext :: struct {}
 * A reference to an orc::ThreadSafeContext instance.
 */
 OrcThreadSafeContextRef :: ^OrcOpaqueThreadSafeContext
-OrcOpaqueThreadSafeModule :: struct {}
 
 /**
 * A reference to an orc::ThreadSafeModule instance.
 */
 OrcThreadSafeModuleRef :: ^OrcOpaqueThreadSafeModule
+OrcOpaqueThreadSafeModule :: struct {}
 
 /**
 * A function for inspecting/mutating IR modules, suitable for use with
@@ -407,24 +409,24 @@ OrcOpaqueJITTargetMachineBuilder :: struct {}
 * A reference to an orc::JITTargetMachineBuilder instance.
 */
 OrcJITTargetMachineBuilderRef :: ^OrcOpaqueJITTargetMachineBuilder
-OrcOpaqueObjectLayer :: struct {}
 
 /**
 * A reference to an orc::ObjectLayer instance.
 */
 OrcObjectLayerRef :: ^OrcOpaqueObjectLayer
+OrcOpaqueObjectLayer :: struct {}
 OrcOpaqueObjectLinkingLayer :: struct {}
 
 /**
 * A reference to an orc::ObjectLinkingLayer instance.
 */
 OrcObjectLinkingLayerRef :: ^OrcOpaqueObjectLinkingLayer
-OrcOpaqueIRTransformLayer :: struct {}
 
 /**
 * A reference to an orc::IRTransformLayer instance.
 */
 OrcIRTransformLayerRef :: ^OrcOpaqueIRTransformLayer
+OrcOpaqueIRTransformLayer :: struct {}
 
 /**
 * A function for applying transformations as part of an transform layer.
@@ -509,7 +511,7 @@ OrcDumpObjectsRef :: ^OrcOpaqueDumpObjects
 OrcExecutionSessionLookupHandleResultFunction :: proc "c" (
 	Err: ErrorRef,
 	Result: OrcCSymbolMapPairs,
-	NumPairs: i32,
+	NumPairs: c.size_t,
 	Ctx: rawptr,
 )
 
@@ -588,7 +590,7 @@ foreign lib {
 	*
 	* THIS API IS EXPERIMENTAL AND LIKELY TO CHANGE IN THE NEAR FUTURE!
 	*/
-	OrcExecutionSessionLookup :: proc(ES: OrcExecutionSessionRef, K: OrcLookupKind, SearchOrder: OrcCJITDylibSearchOrder, SearchOrderSize: i32, Symbols: OrcCLookupSet, SymbolsSize: i32, HandleResult: OrcExecutionSessionLookupHandleResultFunction, Ctx: rawptr) ---
+	OrcExecutionSessionLookup :: proc(ES: OrcExecutionSessionRef, K: OrcLookupKind, SearchOrder: OrcCJITDylibSearchOrder, SearchOrderSize: c.size_t, Symbols: OrcCLookupSet, SymbolsSize: c.size_t, HandleResult: OrcExecutionSessionLookupHandleResultFunction, Ctx: rawptr) ---
 
 	/**
 	* Increments the ref-count for a SymbolStringPool entry.
@@ -669,7 +671,7 @@ foreign lib {
 	* either passing it to a JITDylib (via LLVMOrcJITDylibDefine) or disposing
 	* of it by calling LLVMOrcDisposeMaterializationUnit.
 	*/
-	OrcCreateCustomMaterializationUnit :: proc(Name: cstring, Ctx: rawptr, Syms: OrcCSymbolFlagsMapPairs, NumSyms: i32, InitSym: OrcSymbolStringPoolEntryRef, Materialize: OrcMaterializationUnitMaterializeFunction, Discard: OrcMaterializationUnitDiscardFunction, Destroy: OrcMaterializationUnitDestroyFunction) -> OrcMaterializationUnitRef ---
+	OrcCreateCustomMaterializationUnit :: proc(Name: cstring, Ctx: rawptr, Syms: OrcCSymbolFlagsMapPairs, NumSyms: c.size_t, InitSym: OrcSymbolStringPoolEntryRef, Materialize: OrcMaterializationUnitMaterializeFunction, Discard: OrcMaterializationUnitDiscardFunction, Destroy: OrcMaterializationUnitDestroyFunction) -> OrcMaterializationUnitRef ---
 
 	/**
 	* Create a MaterializationUnit to define the given symbols as pointing to
@@ -692,7 +694,7 @@ foreign lib {
 	* If a client wishes to reuse elements of the Sym array after this call they
 	* must explicitly retain each of the elements for themselves.
 	*/
-	OrcAbsoluteSymbols :: proc(Syms: OrcCSymbolMapPairs, NumPairs: i32) -> OrcMaterializationUnitRef ---
+	OrcAbsoluteSymbols :: proc(Syms: OrcCSymbolMapPairs, NumPairs: c.size_t) -> OrcMaterializationUnitRef ---
 
 	/**
 	* Create a MaterializationUnit to define lazy re-expots. These are callable
@@ -715,7 +717,7 @@ foreign lib {
 	* If a client wishes to reuse elements of the CallableAliases array after this call they
 	* must explicitly retain each of the elements for themselves.
 	*/
-	OrcLazyReexports :: proc(LCTM: OrcLazyCallThroughManagerRef, ISM: OrcIndirectStubsManagerRef, SourceRef: OrcJITDylibRef, CallableAliases: OrcCSymbolAliasMapPairs, NumPairs: i32) -> OrcMaterializationUnitRef ---
+	OrcLazyReexports :: proc(LCTM: OrcLazyCallThroughManagerRef, ISM: OrcIndirectStubsManagerRef, SourceRef: OrcJITDylibRef, CallableAliases: OrcCSymbolAliasMapPairs, NumPairs: c.size_t) -> OrcMaterializationUnitRef ---
 
 	/**
 	* Disposes of the passed MaterializationResponsibility object.
@@ -748,7 +750,7 @@ foreign lib {
 	* MaterializationResponsibility requires the caller to retain the symbols
 	* explicitly.
 	*/
-	OrcMaterializationResponsibilityGetSymbols :: proc(MR: OrcMaterializationResponsibilityRef, NumPairs: ^i32) -> OrcCSymbolFlagsMapPairs ---
+	OrcMaterializationResponsibilityGetSymbols :: proc(MR: OrcMaterializationResponsibilityRef, NumPairs: ^c.size_t) -> OrcCSymbolFlagsMapPairs ---
 
 	/**
 	* Disposes of the passed LLVMOrcCSymbolFlagsMap.
@@ -773,7 +775,7 @@ foreign lib {
 	* information can be used to return responsibility for unrequested symbols
 	* back to the JITDylib via the delegate method.
 	*/
-	OrcMaterializationResponsibilityGetRequestedSymbols :: proc(MR: OrcMaterializationResponsibilityRef, NumSymbols: ^i32) -> ^OrcSymbolStringPoolEntryRef ---
+	OrcMaterializationResponsibilityGetRequestedSymbols :: proc(MR: OrcMaterializationResponsibilityRef, NumSymbols: ^c.size_t) -> ^OrcSymbolStringPoolEntryRef ---
 
 	/**
 	* Disposes of the passed LLVMOrcSymbolStringPoolEntryRef* .
@@ -798,7 +800,7 @@ foreign lib {
 	* MaterializationResponsibility then this method is guaranteed to return
 	* LLVMErrorSuccess.
 	*/
-	OrcMaterializationResponsibilityNotifyResolved :: proc(MR: OrcMaterializationResponsibilityRef, Symbols: OrcCSymbolMapPairs, NumPairs: i32) -> ErrorRef ---
+	OrcMaterializationResponsibilityNotifyResolved :: proc(MR: OrcMaterializationResponsibilityRef, Symbols: OrcCSymbolMapPairs, NumPairs: c.size_t) -> ErrorRef ---
 
 	/**
 	* Notifies the target JITDylib (and any pending queries on that JITDylib)
@@ -826,7 +828,7 @@ foreign lib {
 	* MaterializationResponsibility then this method is guaranteed to return
 	* LLVMErrorSuccess.
 	*/
-	OrcMaterializationResponsibilityNotifyEmitted :: proc(MR: OrcMaterializationResponsibilityRef, SymbolDepGroups: ^OrcCSymbolDependenceGroup, NumSymbolDepGroups: i32) -> ErrorRef ---
+	OrcMaterializationResponsibilityNotifyEmitted :: proc(MR: OrcMaterializationResponsibilityRef, SymbolDepGroups: ^OrcCSymbolDependenceGroup, NumSymbolDepGroups: c.size_t) -> ErrorRef ---
 
 	/**
 	* Attempt to claim responsibility for new definitions. This method can be
@@ -841,7 +843,7 @@ foreign lib {
 	* additional symbols at materialization time (e.g. stubs, compile
 	* callbacks, metadata)
 	*/
-	OrcMaterializationResponsibilityDefineMaterializing :: proc(MR: OrcMaterializationResponsibilityRef, Pairs: OrcCSymbolFlagsMapPairs, NumPairs: i32) -> ErrorRef ---
+	OrcMaterializationResponsibilityDefineMaterializing :: proc(MR: OrcMaterializationResponsibilityRef, Pairs: OrcCSymbolFlagsMapPairs, NumPairs: c.size_t) -> ErrorRef ---
 
 	/**
 	* Notify all not-yet-emitted covered by this MaterializationResponsibility
@@ -869,7 +871,7 @@ foreign lib {
 	* The caller retains responsibility of the the passed
 	* MaterializationResponsibility.
 	*/
-	OrcMaterializationResponsibilityDelegate :: proc(MR: OrcMaterializationResponsibilityRef, Symbols: ^OrcSymbolStringPoolEntryRef, NumSymbols: i32, Result: ^OrcMaterializationResponsibilityRef) -> ErrorRef ---
+	OrcMaterializationResponsibilityDelegate :: proc(MR: OrcMaterializationResponsibilityRef, Symbols: ^OrcSymbolStringPoolEntryRef, NumSymbols: c.size_t, Result: ^OrcMaterializationResponsibilityRef) -> ErrorRef ---
 
 	/**
 	* Create a "bare" JITDylib.

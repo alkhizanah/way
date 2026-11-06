@@ -13,7 +13,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * @defgroup LLVMCSupportTypes Types and Enumerations
@@ -21,7 +21,6 @@ _ :: lib
 * @{
 */
 Bool :: i32
-OpaqueMemoryBuffer :: struct {}
 
 /**
 * Used to pass regions of memory through LLVM interfaces.
@@ -29,6 +28,7 @@ OpaqueMemoryBuffer :: struct {}
 * @see llvm::MemoryBuffer
 */
 MemoryBufferRef :: ^OpaqueMemoryBuffer
+OpaqueMemoryBuffer :: struct {}
 OpaqueContext :: struct {}
 
 /**
@@ -92,7 +92,6 @@ OpaqueValueMetadataEntry :: struct {}
 * This models std::pair<unsigned, MDNode *>
 */
 ValueMetadataEntry :: OpaqueValueMetadataEntry
-OpaqueBuilder :: struct {}
 
 /**
 * Represents an LLVM basic block builder.
@@ -100,6 +99,7 @@ OpaqueBuilder :: struct {}
 * This models llvm::IRBuilder.
 */
 BuilderRef :: ^OpaqueBuilder
+OpaqueBuilder :: struct {}
 OpaqueDIBuilder :: struct {}
 
 /**
@@ -127,12 +127,12 @@ OpaqueUse :: struct {}
 *
 * @see llvm::Use */
 UseRef :: ^OpaqueUse
-OpaqueOperandBundle :: struct {}
 
 /**
 * @see llvm::OperandBundleDef
 */
 OperandBundleRef :: ^OpaqueOperandBundle
+OpaqueOperandBundle :: struct {}
 OpaqueAttributeRef :: struct {}
 
 /**
@@ -141,18 +141,18 @@ OpaqueAttributeRef :: struct {}
 * @see llvm::Attribute
 */
 AttributeRef :: ^OpaqueAttributeRef
-OpaqueDiagnosticInfo :: struct {}
 
 /**
 * @see llvm::DiagnosticInfo
 */
 DiagnosticInfoRef :: ^OpaqueDiagnosticInfo
-Comdat :: struct {}
+OpaqueDiagnosticInfo :: struct {}
 
 /**
 * @see llvm::Comdat
 */
 ComdatRef :: ^Comdat
+Comdat :: struct {}
 OpaqueModuleFlagEntry :: struct {}
 
 /**

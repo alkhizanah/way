@@ -13,7 +13,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 /**
 * @defgroup LLVMCError Error Handling
@@ -21,7 +21,7 @@ _ :: lib
 *
 * @{
 */
-ErrorSuccess :: 0
+LLVMErrorSuccess :: 0
 
 OpaqueError :: struct {}
 

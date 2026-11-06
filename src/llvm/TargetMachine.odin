@@ -18,7 +18,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 OpaqueTargetMachineOptions :: struct {}
 
@@ -30,8 +30,8 @@ OpaqueTargetMachineOptions :: struct {}
 TargetMachineOptionsRef :: ^OpaqueTargetMachineOptions
 OpaqueTargetMachine :: struct {}
 TargetMachineRef :: ^OpaqueTargetMachine
-Target :: struct {}
 TargetRef :: ^Target
+Target :: struct {}
 
 CodeGenOptLevel :: enum u32 {
 	None       = 0,

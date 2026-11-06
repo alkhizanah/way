@@ -13,7 +13,7 @@
 package llvm
 
 foreign import lib "system:LLVM"
-_ :: lib
+
 
 @(default_calling_convention = "c", link_prefix = "LLVM")
 foreign lib {
