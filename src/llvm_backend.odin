@@ -7,20 +7,43 @@ import "core:strings"
 import "llvm"
 
 LLVM_Backend :: struct {
-	ir:            ^Ir,
-	ctx:           llvm.ContextRef,
-	builder:       llvm.BuilderRef,
-	module:        llvm.ModuleRef,
-	function:      llvm.ValueRef,
-	globals:       [dynamic]llvm.ValueRef,
-	functions:     [dynamic]llvm.ValueRef,
-	blocks:        [dynamic]llvm.BasicBlockRef,
-	cached_types:  map[Ir_Index]llvm.TypeRef,
-	cached_values: map[Ir_Index]llvm.ValueRef,
+	ir:             ^Ir,
+	target:         llvm.TargetRef,
+	target_triple:  cstring,
+	target_machine: llvm.TargetMachineRef,
+	ctx:            llvm.ContextRef,
+	builder:        llvm.BuilderRef,
+	module:         llvm.ModuleRef,
+	function:       llvm.ValueRef,
+	globals:        [dynamic]llvm.ValueRef,
+	functions:      [dynamic]llvm.ValueRef,
+	blocks:         [dynamic]llvm.BasicBlockRef,
+	cached_types:   map[Ir_Index]llvm.TypeRef,
+	cached_values:  map[Ir_Index]llvm.ValueRef,
 }
 
 llvm_init :: proc(l: ^LLVM_Backend, name: cstring, ir: ^Ir) {
 	l.ir = ir
+
+	llvm.InitializeAllTargetInfos()
+	llvm.InitializeAllTargets()
+	llvm.InitializeAllTargetMCs()
+	llvm.InitializeAllAsmParsers()
+	llvm.InitializeAllAsmPrinters()
+
+	l.target_triple = llvm.GetDefaultTargetTriple()
+
+	llvm.GetTargetFromTriple(l.target_triple, &l.target, nil)
+
+	l.target_machine = llvm.CreateTargetMachine(
+		l.target,
+		l.target_triple,
+		"generic",
+		"",
+		.Default,
+		.PIC,
+		.Default,
+	)
 
 	l.ctx = llvm.ContextCreate()
 	l.builder = llvm.CreateBuilderInContext(l.ctx)
@@ -31,35 +54,20 @@ llvm_init :: proc(l: ^LLVM_Backend, name: cstring, ir: ^Ir) {
 }
 
 llvm_commit :: proc(l: ^LLVM_Backend, output_file_path: string) {
-	llvm.InitializeAllTargetInfos()
-	llvm.InitializeAllTargets()
-	llvm.InitializeAllTargetMCs()
-	llvm.InitializeAllAsmParsers()
-	llvm.InitializeAllAsmPrinters()
+	pbo := llvm.CreatePassBuilderOptions()
 
-	target_triple := llvm.GetDefaultTargetTriple()
+	llvm.PassBuilderOptionsSetVerifyEach(pbo, 1)
+	llvm.PassBuilderOptionsSetLoopUnrolling(pbo, 1)
+	llvm.PassBuilderOptionsSetLoopVectorization(pbo, 1)
+	llvm.PassBuilderOptionsSetSLPVectorization(pbo, 1)
 
-	target: llvm.TargetRef
-	cpu :: "generic"
-	features :: ""
+	llvm.RunPasses(l.module, "default<O2>", l.target_machine, pbo)
 
-	llvm.GetTargetFromTriple(target_triple, &target, nil)
-
-	target_machine := llvm.CreateTargetMachine(
-		target,
-		target_triple,
-		cpu,
-		features,
-		.Default,
-		.PIC,
-		.Default,
-	)
-
-	llvm.SetModuleDataLayout(l.module, llvm.CreateTargetDataLayout(target_machine))
-	llvm.SetTarget(l.module, target_triple)
+	llvm.SetModuleDataLayout(l.module, llvm.CreateTargetDataLayout(l.target_machine))
+	llvm.SetTarget(l.module, l.target_triple)
 
 	llvm.TargetMachineEmitToFile(
-		target_machine,
+		l.target_machine,
 		l.module,
 		fmt.ctprintf("%s.o", output_file_path),
 		.ObjectFile,
@@ -68,7 +76,10 @@ llvm_commit :: proc(l: ^LLVM_Backend, output_file_path: string) {
 
 	object_file_path := fmt.tprintf("%s.o", output_file_path)
 
-	_, _, _, _ = os.process_exec({command = {"clang", object_file_path, "-o", output_file_path}}, context.allocator)
+	_, _, _, _ = os.process_exec(
+		{command = {"clang", object_file_path, "-o", output_file_path}},
+		context.allocator,
+	)
 
 	os.remove(object_file_path)
 }
