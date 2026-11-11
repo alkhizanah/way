@@ -37,6 +37,8 @@ Token_Tag :: enum {
 	Brace_Open,
 	Brace_Close,
 	Assign,
+	Plus_Assign,
+	Minus_Assign,
 	Equal,
 	Not_Equal,
 	Less_Than,
@@ -91,6 +93,8 @@ token_tag_string := [Token_Tag]string {
 	.Brace_Open         = "{",
 	.Brace_Close        = "}",
 	.Assign             = "=",
+	.Plus_Assign        = "+=",
+	.Minus_Assign       = "-=",
 	.Equal              = "==",
 	.Not_Equal          = "!=",
 	.Less_Than          = "<",
@@ -313,13 +317,23 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 		token.tag = .EOF
 
 	case '+':
-		token.tag = .Plus
+		if l.character == '=' {
+			next_rune(l)
+
+			token.tag = .Plus_Assign
+		} else {
+			token.tag = .Plus
+		}
 
 	case '-':
 		if l.character == '>' {
 			next_rune(l)
 
 			token.tag = .Right_Arrow
+		} else if l.character == '=' {
+			next_rune(l)
+
+			token.tag = .Minus_Assign
 		} else {
 			token.tag = .Minus
 		}

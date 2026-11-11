@@ -3,7 +3,6 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:strconv"
-import "core:strings"
 
 Parser :: struct {
 	lexer:          Lexer,
@@ -47,6 +46,15 @@ allow_token :: proc(p: ^Parser, tag: Token_Tag) -> bool {
 @(require_results)
 peek_token :: proc(p: ^Parser, tag: Token_Tag) -> bool {
 	return p.current_token.tag == tag
+}
+
+@(require_results)
+peek_any_token :: proc(p: ^Parser, tags: []Token_Tag) -> bool {
+	for tag in tags {
+		if p.current_token.tag == tag do return true
+	}
+
+	return false
 }
 
 append_node :: proc(
@@ -181,7 +189,7 @@ parse_stmt :: proc(p: ^Parser) -> Ast_Index {
 
 		if e == AST_INVALID do return AST_INVALID
 
-		if peek_token(p, .Assign) {
+		if peek_assign(p) {
 			return parse_assign(p, e)
 		}
 
@@ -600,11 +608,25 @@ parse_field_access :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 	return append_node(p, .Dereference, 0, target, token.position)
 }
 
+peek_assign :: proc(p: ^Parser) -> bool {
+	return peek_any_token(p, {.Assign, .Plus_Assign, .Minus_Assign})
+}
+
 parse_assign :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 	token := advance_token(p)
+
 	value := parse_expr(p, .Lowest)
+
 	if value == AST_INVALID do return AST_INVALID
+
+	if token.tag == .Plus_Assign {
+		value = append_node(p, .Add, target, value, token.position)
+	} else if token.tag == .Minus_Assign {
+		value = append_node(p, .Sub, target, value, token.position)
+	}
+
 	return append_node(p, .Assign, target, value, token.position)
+
 }
 
 parse_identifier :: proc(p: ^Parser) -> Ast_Index {
