@@ -54,6 +54,9 @@ Ir_Value_Tag :: enum {
 	// a is an index to a function
 	Function,
 
+	// a is an index to a foreign function
+	Foreign_Function,
+
 	// a is an index to a type
 	Type,
 
@@ -149,19 +152,25 @@ Ir_Function :: struct {
 	blocks: [dynamic]Ir_Block,
 }
 
+Ir_Foreign_Function :: struct {
+	name: Token,
+	type: Ir_Index,
+}
+
 Ir_Global :: struct {
 	name:  Token,
 	value: Ir_Index,
 }
 
 Ir :: struct {
-	values:    [dynamic]Ir_Value,
-	types:     [dynamic]Ir_Type,
-	extra:     [dynamic]Ir_Index,
-	positions: [dynamic]Position,
-	functions: [dynamic]Ir_Function,
-	globals:   [dynamic]Ir_Global,
-	strings:   [dynamic]byte,
+	values:            [dynamic]Ir_Value,
+	types:             [dynamic]Ir_Type,
+	extra:             [dynamic]Ir_Index,
+	positions:         [dynamic]Position,
+	functions:         [dynamic]Ir_Function,
+	foreign_functions: [dynamic]Ir_Foreign_Function,
+	globals:           [dynamic]Ir_Global,
+	strings:           [dynamic]byte,
 }
 
 is_untyped_type :: proc(type: Ir_Type) -> bool {

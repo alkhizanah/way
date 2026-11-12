@@ -272,7 +272,7 @@ is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	value := s.ir.values[value_id]
 
 	switch value.tag {
-	case .Int, .Float, .Bool, .Zero, .Null, .Type, .Function, .String:
+	case .Int, .Float, .Bool, .Zero, .Null, .Type, .Function, .Foreign_Function, .String:
 		return true
 
 	case .Negate, .Bool_Not, .Bit_Not:
@@ -626,6 +626,9 @@ analyze_expr :: proc(
 
 	case .Null:
 		return analyze_null(s, result_type, position)
+
+	case .Foreign_Function:
+		return analyze_foreign_function(s, result_type, node, position, name, binding)
 
 	case .Function:
 		return analyze_function(s, result_type, node, position, name, binding)
@@ -1866,6 +1869,48 @@ analyze_call :: proc(
 	return append_value(s, callee_type.b, .Call, callee_value_id, Ir_Index(call_arguments_index))
 }
 
+analyze_foreign_function :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+	name: Maybe(string),
+	binding: Maybe(^Sema_Global_Binding),
+) -> Ir_Index {
+	if name == nil {
+		sema_error(position, "foreign functions must be named")
+
+		return IR_INVALID
+	}
+
+	function_type_node := s.ast.nodes[node.a]
+
+	parameters_node := s.ast.nodes[function_type_node.a]
+
+	function_type_value := analyze_function_type(s, IR_INVALID, function_type_node, position)
+
+	function_type_id := unchecked_value_as_type(s, function_type_value)
+
+	function_type := s.ir.types[function_type_id]
+
+	if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, function_type_id, result_type_id) {
+		return IR_INVALID
+	}
+
+	function_id := Ir_Index(len(s.ir.foreign_functions))
+
+	name := Token {
+		tag      = .Identifier,
+		value    = name.(string),
+		position = position,
+	}
+
+	append(&s.ir.foreign_functions, Ir_Foreign_Function{name = name, type = function_type_id})
+
+	return append_value(s, function_type_id, .Foreign_Function, function_id, 0)
+}
+
 analyze_function :: proc(
 	s: ^Sema,
 	result_type_id: Ir_Index,
@@ -1915,7 +1960,10 @@ analyze_function :: proc(
 	parameter_nodes_len := parameters_node.b
 
 	if parameters_node.tag != .Function_Named_Parameters && parameter_nodes_len > 0 {
-		sema_error(position, "function with a body must have named parameters")
+		sema_error(
+			position,
+			"regular functions must have named parameters, foreign functions don't",
+		)
 
 		return IR_INVALID
 	}

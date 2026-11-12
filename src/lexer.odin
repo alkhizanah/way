@@ -59,6 +59,7 @@ Token_Tag :: enum {
 	Int,
 	Float,
 	String,
+	Foreign,
 	Fn,
 	While,
 	For,
@@ -115,6 +116,7 @@ token_tag_string := [Token_Tag]string {
 	.Int                = "an integer",
 	.Float              = "a floating points number",
 	.String             = "a string",
+	.Foreign            = "foreign",
 	.Fn                 = "fn",
 	.While              = "while",
 	.For                = "for",
@@ -265,6 +267,8 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 		token.value = text
 
 		switch text {
+		case "foreign":
+			token.tag = .Foreign
 		case "fn":
 			token.tag = .Fn
 		case "while":

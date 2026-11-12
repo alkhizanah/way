@@ -7,19 +7,20 @@ import "core:strings"
 import "llvm"
 
 LLVM_Backend :: struct {
-	ir:             ^Ir,
-	target:         llvm.TargetRef,
-	target_triple:  cstring,
-	target_machine: llvm.TargetMachineRef,
-	ctx:            llvm.ContextRef,
-	builder:        llvm.BuilderRef,
-	module:         llvm.ModuleRef,
-	function:       llvm.ValueRef,
-	globals:        [dynamic]llvm.ValueRef,
-	functions:      [dynamic]llvm.ValueRef,
-	blocks:         [dynamic]llvm.BasicBlockRef,
-	cached_types:   map[Ir_Index]llvm.TypeRef,
-	cached_values:  map[Ir_Index]llvm.ValueRef,
+	ir:                ^Ir,
+	target:            llvm.TargetRef,
+	target_triple:     cstring,
+	target_machine:    llvm.TargetMachineRef,
+	ctx:               llvm.ContextRef,
+	builder:           llvm.BuilderRef,
+	module:            llvm.ModuleRef,
+	function:          llvm.ValueRef,
+	globals:           [dynamic]llvm.ValueRef,
+	functions:         [dynamic]llvm.ValueRef,
+	foreign_functions: [dynamic]llvm.ValueRef,
+	blocks:            [dynamic]llvm.BasicBlockRef,
+	cached_types:      map[Ir_Index]llvm.TypeRef,
+	cached_values:     map[Ir_Index]llvm.ValueRef,
 }
 
 llvm_init :: proc(l: ^LLVM_Backend, name: cstring, ir: ^Ir) {
@@ -63,6 +64,8 @@ llvm_commit :: proc(l: ^LLVM_Backend, output_file_path: string) {
 
 	llvm.RunPasses(l.module, "default<O2>", l.target_machine, pbo)
 
+	fmt.println(llvm.PrintModuleToString(l.module))
+
 	llvm.SetModuleDataLayout(l.module, llvm.CreateTargetDataLayout(l.target_machine))
 	llvm.SetTarget(l.module, l.target_triple)
 
@@ -92,6 +95,20 @@ llvm_start :: proc(l: ^LLVM_Backend) {
 			&l.globals,
 			llvm.AddGlobal(l.module, llvm_type, strings.clone_to_cstring(binding.name.value)),
 		)
+	}
+
+	for function in l.ir.foreign_functions {
+		llvm_type := llvm_compile_type(l, function.type)
+
+		llvm_function := llvm.AddFunction(
+			l.module,
+			strings.clone_to_cstring(function.name.value),
+			llvm_type,
+		)
+
+		llvm.SetLinkage(llvm_function, .ExternalLinkage)
+
+		append(&l.foreign_functions, llvm_function)
 	}
 
 	for function in l.ir.functions {
@@ -443,6 +460,9 @@ llvm_compile_value :: proc(l: ^LLVM_Backend, value_id: Ir_Index) -> (llvm_value:
 
 	case .Function:
 		llvm_value = l.functions[value.a]
+
+	case .Foreign_Function:
+		llvm_value = l.foreign_functions[value.a]
 
 	case .Parameter:
 		llvm_value = llvm.GetParam(l.function, u32(value.a))

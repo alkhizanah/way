@@ -493,6 +493,9 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .Paren_Open:
 		return parse_grouped_expr(p)
 
+	case .Foreign:
+		return parse_foreign_function(p)
+
 	case .Fn:
 		return parse_function(p)
 
@@ -757,6 +760,20 @@ parse_call :: proc(p: ^Parser, callee: Ast_Index) -> Ast_Index {
 	)
 
 	return append_node(p, .Call, callee, arguments_node, paren_open.position)
+}
+
+parse_foreign_function :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	_, ok := expect_token(p, .Fn)
+
+	if !ok do return AST_INVALID
+
+	type := parse_function_type(p)
+
+	if type == AST_INVALID do return AST_INVALID
+
+	return append_node(p, .Foreign_Function, type, 0, token.position)
 }
 
 parse_function :: proc(p: ^Parser) -> Ast_Index {

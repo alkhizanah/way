@@ -59,6 +59,8 @@ Ast_Node_Tag :: enum {
 	Function_Type,
 	// a is an index to Function_Type and b is an index to Block
 	Function,
+	// a is an index to Function_Type, and it doesn't have a Block
+	Foreign_Function,
 	// a is an index into values in extra, and b is the amount of values
 	Call_Arguments,
 	// a is an index to the callee, and b is an index to Call_Arguments

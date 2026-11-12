@@ -255,3 +255,21 @@ main :: fn () {
     };
 }
 ```
+
+# Foreign Function Interface
+
+To call a foreign function you should define it first:
+
+```
+putchar :: foreign fn (c : u8) -> s32;
+```
+
+Then you can use it as a regular function even though it's defined somewhere else completely
+
+```
+main :: fn () -> u8 {
+    putchar('H');
+
+    return 0;
+}
+```
