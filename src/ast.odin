@@ -49,6 +49,8 @@ Ast_Node_Tag :: enum {
 	Gte,
 	Assign,
 	Subscript,
+	// like the above but b is an index to an identifier node
+	Field_Access,
 	// a is an index into statements in extra, and b is the amount of statements
 	Block,
 	// a is an index into pairs of (identifier index, parameter type index) in extra, and b is the amount of parameters

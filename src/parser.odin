@@ -602,18 +602,19 @@ parse_subscript :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 parse_field_access :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 	token := advance_token(p)
 
-	if !peek_token(p, .Star) {
-		syntax_error(
-			p.current_token.position,
-			"field access is not implemented yet, only dereference is, using .* suffix",
-		)
+	if peek_token(p, .Star) {
+		advance_token(p)
+
+		return append_node(p, .Dereference, 0, target, token.position)
+	} else if peek_token(p, .Identifier) {
+		identifier := parse_identifier(p)
+
+		return append_node(p, .Field_Access, target, identifier, token.position)
+	} else {
+		syntax_error(token.position, "you can either access a field with an identifier or dereference a pointer with a star")
 
 		return AST_INVALID
 	}
-
-	advance_token(p)
-
-	return append_node(p, .Dereference, 0, target, token.position)
 }
 
 peek_assign :: proc(p: ^Parser) -> bool {

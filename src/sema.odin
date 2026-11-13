@@ -296,14 +296,10 @@ is_const_value :: proc(s: ^Sema, value_id: Ir_Index) -> bool {
 	     .Gte:
 		return is_const_value(s, value.a) && is_const_value(s, value.b)
 
-	case .Global,
-	     .Alloca,
-	     .Call,
-	     .Parameter,
-	     .Get_Element_Ptr,
-	     .Get_Slice_Ptr,
-	     .Get_Slice_Len,
-	     .Load:
+	case .Get_Slice_Ptr, .Get_Slice_Len:
+		return is_const_value(s, value.a)
+
+	case .Global, .Alloca, .Call, .Parameter, .Get_Element_Ptr, .Load:
 		return false
 	}
 
@@ -738,6 +734,9 @@ analyze_expr :: proc(
 	case .Subscript:
 		return analyze_subscript(s, result_type, node, position)
 
+	case .Field_Access:
+		return analyze_field_access(s, result_type, node, position)
+
 	case:
 		sema_error(position, "unhandled expression: %v", node.tag)
 
@@ -848,18 +847,28 @@ analyze_string :: proc(
 	u8_type := intern_type(s, .Unsigned_Int, 8, 0)
 	string_type := intern_type(s, .Slice, u8_type, 0)
 
-	if result_type_id != IR_INVALID &&
-	   !check_type_compatibility(s, position, string_type, result_type_id) {
-		return IR_INVALID
-	}
-
 	index := len(s.ir.strings)
 
 	append(&s.ir.strings, ..s.ast.strings[node.a:][:node.b])
 
 	count := node.b
 
-	return append_value(s, string_type, .String, Ir_Index(index), Ir_Index(count))
+	if result_type_id != IR_INVALID &&
+	   s.ir.types[result_type_id].tag == .Multi_Pointer &&
+	   s.ir.types[result_type_id].a == u8_type {
+		return append_value(
+			s,
+			result_type_id,
+			.Get_Slice_Ptr,
+			append_value(s, string_type, .String, Ir_Index(index), Ir_Index(count)),
+			0,
+		)
+	} else if result_type_id != IR_INVALID &&
+	   !check_type_compatibility(s, position, string_type, result_type_id) {
+		return IR_INVALID
+	} else {
+		return append_value(s, string_type, .String, Ir_Index(index), Ir_Index(count))
+	}
 }
 
 analyze_int :: proc(
@@ -1782,6 +1791,66 @@ analyze_subscript :: proc(
 		sema_error(
 			position,
 			"can not subscript a value of type '%s'",
+			type_to_string_temp(s, target_value_type_id),
+		)
+
+		return IR_INVALID
+	}
+}
+
+analyze_field_access :: proc(
+	s: ^Sema,
+	result_type_id: Ir_Index,
+	node: Ast_Node,
+	position: Position,
+) -> Ir_Index {
+	target_value_id := analyze_expr(s, IR_INVALID, node.a)
+	if target_value_id == IR_INVALID do return IR_INVALID
+
+	target_value := s.ir.values[target_value_id]
+	target_value_type_id := target_value.type
+	target_value_type := s.ir.types[target_value_type_id]
+
+	identifier := s.ast.nodes[node.b]
+
+	assert(identifier.tag == .Identifier)
+
+	field := string(s.ast.strings[identifier.a:][:identifier.b])
+
+	if target_value_type.tag == .Slice {
+		switch field {
+		case "len":
+			return append_value(
+				s,
+				intern_type(s, .Unsigned_Int, 64, 0),
+				.Get_Slice_Len,
+				target_value_id,
+				0,
+			)
+
+		case "ptr":
+			return append_value(
+				s,
+				intern_type(s, .Multi_Pointer, target_value_type.a, 0),
+				.Get_Slice_Ptr,
+				target_value_id,
+				0,
+			)
+
+		case:
+			sema_error(
+				position,
+				"%s has only two fields: len and ptr",
+				type_to_string_temp(s, target_value_type_id),
+			)
+
+			return IR_INVALID
+		}
+
+	} else {
+		sema_error(
+			position,
+			"%s doesn't support field accessing",
 			type_to_string_temp(s, target_value_type_id),
 		)
 
