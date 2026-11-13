@@ -2,7 +2,6 @@ package main
 
 import "core:unicode/utf8"
 
-
 Position :: struct {
 	file_path: string,
 	line:      int,
@@ -59,6 +58,7 @@ Token_Tag :: enum {
 	Int,
 	Float,
 	String,
+	Character,
 	Foreign,
 	Fn,
 	While,
@@ -116,6 +116,7 @@ token_tag_string := [Token_Tag]string {
 	.Int                = "an integer",
 	.Float              = "a floating points number",
 	.String             = "a string",
+	.Character          = "a single character",
 	.Foreign            = "foreign",
 	.Fn                 = "fn",
 	.While              = "while",
@@ -225,6 +226,32 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 		}
 
 		token.tag = .String
+	}
+
+	scan_character :: proc(l: ^Lexer, token: ^Token) {
+		start := l.offset
+
+		for {
+			if l.character == '\'' || l.character == utf8.RUNE_EOF {
+				break
+			}
+
+			if l.character == '\\' {
+				next_rune(l)
+			}
+
+			next_rune(l)
+		}
+
+		token.value = l.buffer[start:l.offset]
+
+		if l.character == '\'' {
+			next_rune(l)
+		} else {
+			token.tag = .Invalid
+		}
+
+		token.tag = .Character
 	}
 
 	scan_number :: proc(l: ^Lexer, token: ^Token) {
@@ -486,6 +513,9 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 
 	case '"':
 		scan_string(l, &token)
+
+	case '\'':
+		scan_character(l, &token)
 
 	case 'A' ..= 'Z', 'a' ..= 'z', '_':
 		scan_identifier(l, &token)

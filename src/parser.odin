@@ -3,6 +3,8 @@ package main
 import "core:fmt"
 import "core:os"
 import "core:strconv"
+import "core:strings"
+import "core:unicode/utf8"
 
 Parser :: struct {
 	lexer:          Lexer,
@@ -478,6 +480,9 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .String:
 		return parse_string(p)
 
+	case .Character:
+		return parse_character(p)
+
 	case .Minus:
 		return parse_unary_op(p, .Negate)
 
@@ -704,12 +709,57 @@ parse_float :: proc(p: ^Parser) -> Ast_Index {
 	return append_node(p, .Float, Ast_Index(v >> 32), Ast_Index(v), token.position)
 }
 
+unescape :: proc(input: string) -> string {
+	output_builder := strings.builder_make()
+
+	unescaping := false
+
+	for c in input {
+		if unescaping {
+			unescaped: rune
+
+			switch c {
+			case '\\':
+				unescaped = '\\'
+			case 'n':
+				unescaped = '\n'
+			case 'r':
+				unescaped = '\r'
+			case 't':
+				unescaped = '\t'
+			case 'e':
+				unescaped = 27
+			case 'v':
+				unescaped = 11
+			case 'b':
+				unescaped = 8
+			case 'f':
+				unescaped = 12
+			case '"':
+				unescaped = '"'
+			case:
+				unescaped = c
+			}
+
+			strings.write_rune(&output_builder, unescaped)
+
+			unescaping = false
+		} else if c == '\\' {
+			unescaping = true
+		} else {
+			strings.write_rune(&output_builder, c)
+		}
+	}
+
+	return strings.to_string(output_builder)
+}
+
 parse_string :: proc(p: ^Parser) -> Ast_Index {
 	token := advance_token(p)
 
 	string_offset := len(p.ast.strings)
 
-	append(&p.ast.strings, token.value)
+	append(&p.ast.strings, unescape(token.value))
 
 	return append_node(
 		p,
@@ -718,6 +768,26 @@ parse_string :: proc(p: ^Parser) -> Ast_Index {
 		Ast_Index(len(p.ast.strings) - string_offset),
 		token.position,
 	)
+}
+
+parse_character :: proc(p: ^Parser) -> Ast_Index {
+	token := advance_token(p)
+
+	runes := utf8.string_to_runes(unescape(token.value))
+
+	if len(runes) == 0 {
+		syntax_error(token.position, "must provide a character")
+
+		return AST_INVALID
+	}
+
+	if len(runes) > 1 {
+		syntax_error(token.position, "provided too much characters")
+
+		return AST_INVALID
+	}
+
+	return append_node(p, .Int, Ast_Index(runes[0] >> 32), Ast_Index(runes[0]), token.position)
 }
 
 parse_call :: proc(p: ^Parser, callee: Ast_Index) -> Ast_Index {
