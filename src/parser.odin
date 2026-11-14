@@ -498,9 +498,6 @@ parse_unary_expr :: proc(p: ^Parser) -> Ast_Index {
 	case .Paren_Open:
 		return parse_grouped_expr(p)
 
-	case .Foreign:
-		return parse_foreign_function(p)
-
 	case .Fn:
 		return parse_function(p)
 
@@ -836,20 +833,6 @@ parse_call :: proc(p: ^Parser, callee: Ast_Index) -> Ast_Index {
 	return append_node(p, .Call, callee, arguments_node, paren_open.position)
 }
 
-parse_foreign_function :: proc(p: ^Parser) -> Ast_Index {
-	token := advance_token(p)
-
-	_, ok := expect_token(p, .Fn)
-
-	if !ok do return AST_INVALID
-
-	type := parse_function_type(p)
-
-	if type == AST_INVALID do return AST_INVALID
-
-	return append_node(p, .Foreign_Function, type, 0, token.position)
-}
-
 parse_function :: proc(p: ^Parser) -> Ast_Index {
 	token := advance_token(p)
 
@@ -863,6 +846,26 @@ parse_function :: proc(p: ^Parser) -> Ast_Index {
 		if block == AST_INVALID do return AST_INVALID
 
 		return append_node(p, .Function, type, block, token.position)
+	} else if peek_token(p, .Fat_Right_Arrow) {
+		advance_token(p)
+
+		if peek_token(p, .Foreign) {
+			advance_token(p)
+
+			return append_node(p, .Foreign_Function, type, 0, token.position)
+		} else {
+			stmt := parse_stmt(p)
+
+			if stmt == AST_INVALID do return AST_INVALID
+
+			index := len(p.ast.extra)
+
+			append(&p.ast.extra, stmt)
+
+			block := append_node(p, .Block, Ast_Index(index), 1, token.position)
+
+			return append_node(p, .Function, type, block, token.position)
+		}
 	} else {
 		return type
 	}

@@ -262,7 +262,7 @@ main :: fn () {
 To call a foreign function you should define it first:
 
 ```
-putchar :: foreign fn (c : u8) -> s32;
+putchar :: fn (u8) -> s32 => foreign;
 ```
 
 Then you can use it as a regular function even though it's defined somewhere else completely

@@ -46,6 +46,7 @@ Token_Tag :: enum {
 	Greater_Than_Equal,
 	Ellipsis,
 	Right_Arrow,
+	Fat_Right_Arrow,
 	Colon,
 	Bit_Left_Shift,
 	Bit_Right_Shift,
@@ -104,6 +105,7 @@ token_tag_string := [Token_Tag]string {
 	.Greater_Than_Equal = ">=",
 	.Ellipsis           = "...",
 	.Right_Arrow        = "->",
+	.Fat_Right_Arrow        = "=>",
 	.Colon              = ":",
 	.Bit_Left_Shift     = "<<",
 	.Bit_Right_Shift    = ">>",
@@ -481,6 +483,10 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 			next_rune(l)
 			token.value = "=="
 			token.tag = .Equal
+		} else if l.character == '>' {
+			next_rune(l)
+
+			token.tag = .Fat_Right_Arrow
 		} else {
 			token.tag = .Assign
 		}
