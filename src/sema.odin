@@ -1139,6 +1139,12 @@ analyze_dereference :: proc(
 
 	child_type := s.ir.types[child_type_id]
 
+	if child_type.tag == .Function {
+		sema_error(position, "cannot dereference a function pointer")
+
+		return IR_INVALID
+	}
+
 	if result_type_id != IR_INVALID &&
 	   !check_type_compatibility(s, position, child_type_id, result_type_id) {
 		return IR_INVALID
@@ -1977,7 +1983,13 @@ analyze_foreign_function :: proc(
 
 	append(&s.ir.foreign_functions, Ir_Foreign_Function{name = name, type = function_type_id})
 
-	return append_value(s, intern_type(s, .Single_Pointer, function_type_id, 0), .Foreign_Function, function_id, 0)
+	return append_value(
+		s,
+		intern_type(s, .Single_Pointer, function_type_id, 0),
+		.Foreign_Function,
+		function_id,
+		0,
+	)
 }
 
 analyze_function :: proc(
@@ -1999,7 +2011,7 @@ analyze_function :: proc(
 	function_type := s.ir.types[function_type_id]
 
 	if result_type_id != IR_INVALID &&
-	   !check_type_compatibility(s, position, function_type_id, result_type_id) {
+	   !check_type_compatibility(s, position, intern_type(s, .Single_Pointer, function_type_id, 0), result_type_id) {
 		return IR_INVALID
 	}
 
@@ -2037,7 +2049,13 @@ analyze_function :: proc(
 		return IR_INVALID
 	}
 
-	function_value := append_value(s, intern_type(s, .Single_Pointer, function_type_id, 0), .Function, function_id, 0)
+	function_value := append_value(
+		s,
+		intern_type(s, .Single_Pointer, function_type_id, 0),
+		.Function,
+		function_id,
+		0,
+	)
 
 	if binding != nil {
 		binding.(^Sema_Global_Binding).value = function_value
