@@ -167,9 +167,9 @@ swap :: fn (a: *u8, b: *u8) {
 You can have a multi-value pointer:
 
 ```
-iterate :: fn (xs: [*]u8, len: usize, f: fn (x: u8) -> void) {
-    for i := 0; i < len; i += 1 {
-        f(xs[i])
+iterate :: fn (xs: [*]u8, len: usize, f: *fn (x: u8) -> void) {
+    for i : u64 = 0; i < len; i += 1 {
+        f(xs[i]);
     }
 }
 ```
@@ -177,9 +177,9 @@ iterate :: fn (xs: [*]u8, len: usize, f: fn (x: u8) -> void) {
 The above example is better if we used slices, a structure with mutli-value pointer and a length:
 
 ```
-iterate :: fn (xs: []u8, f: fn (x: u8) -> void) {
-    for i := 0; i < xs.len; i += 1 {
-        f(xs[i])
+iterate :: fn (xs: []u8, f: *fn (x: u8) -> void) {
+    for i : u64 = 0; i < xs.len; i += 1 {
+        f(xs[i]);
     }
 }
 ```
@@ -193,11 +193,11 @@ and for a `for` loop you specify three things: a statement that runs before the 
 Let's see an example:
 
 ```
-drop_while :: fn (xs: []u8, p: fn (x: u8) -> bool) -> []u8 {
-    i := 0
+drop_while :: fn (xs: []u8, p: *fn (x: u8) -> bool) -> []u8 {
+    i : u64 = 0;
 
     while p(xs[i]) {
-        i += 1
+        i += 1;
     }
 
     return xs[i + 1..];
@@ -207,8 +207,8 @@ drop_while :: fn (xs: []u8, p: fn (x: u8) -> bool) -> []u8 {
 This could be also written as a `for` loop:
 
 ```
-drop_while :: fn (xs: []u8, p: fn (x: u8) -> bool) -> []u8 {
-    for i := 0; p(xs[i]); i += 1 {}
+drop_while :: fn (xs: []u8, p: *fn (x: u8) -> bool) -> []u8 {
+    for i : u64 = 0; p(xs[i]); i += 1 {}
 
     return xs[i + 1..];
 }

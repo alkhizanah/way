@@ -1879,9 +1879,9 @@ analyze_call :: proc(
 	if callee_type.tag == .Single_Pointer {
 		pointer_callee_type_id := callee_type_id
 
-		callee_type_id := callee_type.a
+		callee_type_id = callee_type.a
 
-		callee_type := s.ir.types[callee_type_id]
+		callee_type = s.ir.types[callee_type_id]
 
 		if callee_type.tag != .Function {
 			sema_error(
@@ -1977,7 +1977,7 @@ analyze_foreign_function :: proc(
 
 	append(&s.ir.foreign_functions, Ir_Foreign_Function{name = name, type = function_type_id})
 
-	return append_value(s, function_type_id, .Foreign_Function, function_id, 0)
+	return append_value(s, intern_type(s, .Single_Pointer, function_type_id, 0), .Foreign_Function, function_id, 0)
 }
 
 analyze_function :: proc(
@@ -2037,7 +2037,7 @@ analyze_function :: proc(
 		return IR_INVALID
 	}
 
-	function_value := append_value(s, function_type_id, .Function, function_id, 0)
+	function_value := append_value(s, intern_type(s, .Single_Pointer, function_type_id, 0), .Function, function_id, 0)
 
 	if binding != nil {
 		binding.(^Sema_Global_Binding).value = function_value
