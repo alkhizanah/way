@@ -76,6 +76,8 @@ Ast_Node_Tag :: enum {
 	// a is an index into the sequence (start statement, conditon, end statement) in extra, all of them can be AST_INVALID,
 	// and b is an index to Block
 	For,
+	// a is an index into the sequence (identifier, slice) in extra and b is an index to Block
+	For_In,
 	// a is an index into pair (name index, type index) in extra and b is an index to the value
 	Variable,
 	// a is an index into pair (name index, type index) in extra and b is an index to the value

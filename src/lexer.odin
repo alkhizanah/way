@@ -64,6 +64,7 @@ Token_Tag :: enum {
 	Fn,
 	While,
 	For,
+	In,
 	If,
 	Else,
 	True,
@@ -123,6 +124,7 @@ token_tag_string := [Token_Tag]string {
 	.Fn                 = "fn",
 	.While              = "while",
 	.For                = "for",
+	.In = "in",
 	.If                 = "if",
 	.Else               = "else",
 	.True               = "true",
@@ -304,6 +306,8 @@ next_token :: proc(l: ^Lexer) -> (token: Token) {
 			token.tag = .While
 		case "for":
 			token.tag = .For
+		case "in":
+			token.tag = .In
 		case "if":
 			token.tag = .If
 		case "else":

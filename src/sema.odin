@@ -2205,6 +2205,9 @@ analyze_stmt :: proc(s: ^Sema, node_id: Ast_Index) -> bool {
 	case .For:
 		return analyze_for_loop(s, node, position)
 
+	case .For_In:
+		return analyze_for_in_loop(s, node, position)
+
 	case:
 		value := analyze_expr(s, IR_INVALID, node_id)
 
@@ -2452,8 +2455,14 @@ analyze_while_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool
 	old_loop_breaks := s.loop_breaks
 	old_loop_repeat := s.loop_repeat
 
-	defer s.loop_breaks = old_loop_breaks
-	defer s.loop_repeat = old_loop_repeat
+	s.loop_breaks = make([dynamic]Ir_Instruction_Position)
+
+	defer {
+		delete(s.loop_breaks)
+
+		s.loop_breaks = old_loop_breaks
+		s.loop_repeat = old_loop_repeat
+	}
 
 	header_block_id := new_block(s)
 
@@ -2488,7 +2497,6 @@ analyze_while_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool
 
 	s.block = repeated_block_id
 
-
 	s.block = continuation_block_id
 
 	for loop_break in s.loop_breaks {
@@ -2511,13 +2519,14 @@ analyze_for_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 
 	s.scope = make_scope(&old_scope)
 
-
-	defer s.loop_breaks = old_loop_breaks
-	defer s.loop_repeat = old_loop_repeat
+	s.loop_breaks = make([dynamic]Ir_Instruction_Position)
 
 	defer {
+		delete(s.loop_breaks)
 		delete(s.scope.locals)
 
+		s.loop_breaks = old_loop_breaks
+		s.loop_repeat = old_loop_repeat
 		s.scope = old_scope
 	}
 
@@ -2583,6 +2592,142 @@ analyze_for_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
 				b   = 0,
 			}
 
+	}
+
+	return true
+}
+
+analyze_for_in_loop :: proc(s: ^Sema, node: Ast_Node, position: Position) -> bool {
+	old_loop_breaks := s.loop_breaks
+	old_loop_repeat := s.loop_repeat
+	old_scope := s.scope
+
+	s.scope = make_scope(&old_scope)
+
+	s.loop_breaks = make([dynamic]Ir_Instruction_Position)
+
+	defer {
+		delete(s.loop_breaks)
+		delete(s.scope.locals)
+
+		s.loop_breaks = old_loop_breaks
+		s.loop_repeat = old_loop_repeat
+		s.scope = old_scope
+	}
+
+	name_node_id := s.ast.extra[node.a]
+	slice_node_id := s.ast.extra[node.a + 1]
+
+	name_node := s.ast.nodes[name_node_id]
+	name := string(s.ast.strings[name_node.a:][:name_node.b])
+
+	assert(s.ast.nodes[node.b].tag == .Block)
+
+	slice := analyze_expr(s, IR_INVALID, slice_node_id)
+
+	if slice == IR_INVALID do return false
+
+	slice_type_id := s.ir.values[slice].type
+	slice_type := s.ir.types[slice_type_id]
+
+	if slice_type.tag != .Slice {
+		sema_error(
+			s.ast.positions[slice_node_id],
+			"can only iterate over a slice, got '%s'",
+			type_to_string_temp(s, slice_type_id),
+		)
+
+		return false
+	}
+
+	element_type_id := slice_type.a
+	index_type_id := intern_type(s, .Signed_Int, 64, 0) // same type as `.len`
+	bool_type_id := intern_type(s, .Bool, 0, 0)
+
+	slice_ptr_type_id := intern_type(s, .Single_Pointer, slice_type_id, 0)
+	index_ptr_type_id := intern_type(s, .Single_Pointer, index_type_id, 0)
+	element_ptr_type_id := intern_type(s, .Single_Pointer, element_type_id, 0)
+	multi_ptr_type_id := intern_type(s, .Multi_Pointer, element_type_id, 0)
+
+	slice_local := append_value(s, slice_ptr_type_id, .Alloca, slice_type_id, 0)
+	index_local := append_value(s, index_ptr_type_id, .Alloca, index_type_id, 0)
+	element_local := append_value(s, element_ptr_type_id, .Alloca, element_type_id, 0)
+
+	append_instruction(s, .Value, slice_local, 0)
+	append_instruction(s, .Value, index_local, 0)
+	append_instruction(s, .Value, element_local, 0)
+
+	append_instruction(s, .Store, slice_local, slice)
+	append_instruction(s, .Store, index_local, append_int_value(s, index_type_id, 0))
+
+	scope_add(&s.scope, name, element_local, false, s.ast.positions[name_node_id])
+
+	header_block_id := new_block(s)
+
+	// repeat block: index += 1, back to header (also the `continue` target)
+	s.block = IR_INVALID
+	s.loop_repeat = new_block(s)
+
+	{
+		i := append_value(s, index_type_id, .Load, index_local, 0)
+		one := append_int_value(s, index_type_id, 1)
+		next := append_value(s, index_type_id, .Add, i, one)
+
+		append_instruction(s, .Store, index_local, next)
+		append_instruction(s, .Branch, header_block_id, 0)
+	}
+
+	// body entry: element = slice[index]
+	s.block = IR_INVALID
+	body_block_id := new_block(s)
+
+	{
+		slice_value := append_value(s, slice_type_id, .Load, slice_local, 0)
+		base := append_value(s, multi_ptr_type_id, .Get_Slice_Ptr, slice_value, 0)
+		i := append_value(s, index_type_id, .Load, index_local, 0)
+		element_ptr := append_value(s, element_ptr_type_id, .Get_Element_Ptr, base, i)
+		element := append_value(s, element_type_id, .Load, element_ptr, 0)
+
+		append_instruction(s, .Store, element_local, element)
+	}
+
+	// analyze_block branches from body_block_id into its own first block
+	analyze_block(s, s.ast.nodes[node.b], position) or_return
+
+	append_instruction(s, .Branch, s.loop_repeat, 0)
+
+	s.block = IR_INVALID
+
+	continuation_block_id := new_block(s)
+
+	// header: index < slice.len
+	s.block = header_block_id
+
+	{
+		i := append_value(s, index_type_id, .Load, index_local, 0)
+		slice_value := append_value(s, slice_type_id, .Load, slice_local, 0)
+		length := append_value(s, index_type_id, .Get_Slice_Len, slice_value, 0)
+		condition := append_value(s, bool_type_id, .Lt, i, length)
+
+		pair_index := len(s.ir.extra)
+
+		append(&s.ir.extra, body_block_id)
+		append(&s.ir.extra, continuation_block_id)
+
+		append_instruction(s, .Conditional_Branch, condition, Ir_Index(pair_index))
+	}
+
+	s.block = continuation_block_id
+
+	for loop_break in s.loop_breaks {
+		if loop_break.instruction == IR_INVALID do continue
+
+		s.ir.functions[s.function].blocks[loop_break.block].instructions[loop_break.instruction] =
+			{
+				tag = .Branch,
+				a   = continuation_block_id,
+				b   = 0,
+			}
 	}
 
 	return true

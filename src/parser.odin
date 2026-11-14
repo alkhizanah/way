@@ -304,14 +304,41 @@ parse_while_loop :: proc(p: ^Parser) -> Ast_Index {
 parse_for_loop :: proc(p: ^Parser) -> Ast_Index {
 	token := advance_token(p)
 
-	inital := AST_INVALID
+	initial := AST_INVALID
 
 	if !allow_token(p, .Semicolon) {
-		inital = parse_stmt(p)
+		initial = parse_stmt(p)
 
-		if inital == AST_INVALID do return AST_INVALID
+		if initial == AST_INVALID do return AST_INVALID
 
-		if _, ok := expect_token(p, .Semicolon); !ok do return AST_INVALID
+		if peek_token(p, .In) {
+			identifier := initial
+
+			if p.ast.nodes[identifier].tag != .Identifier {
+				syntax_error(
+					p.previous_token.position,
+					"first parameter to `for .. in` loop must be an identifier",
+				)
+
+				return AST_INVALID
+			}
+
+			advance_token(p)
+
+			slice := parse_expr(p, .Lowest)
+
+			block := parse_block(p)
+
+			if block == AST_INVALID do return AST_INVALID
+
+			a := Ast_Index(len(p.ast.extra))
+
+			append(&p.ast.extra, identifier, slice)
+
+			return append_node(p, .For_In, a, block, token.position)
+		} else if _, ok := expect_token(p, .Semicolon); !ok {
+			return AST_INVALID
+		}
 	}
 
 	condition := AST_INVALID
@@ -338,7 +365,7 @@ parse_for_loop :: proc(p: ^Parser) -> Ast_Index {
 
 	a := Ast_Index(len(p.ast.extra))
 
-	append(&p.ast.extra, inital, condition, ending)
+	append(&p.ast.extra, initial, condition, ending)
 
 	return append_node(p, .For, a, block, token.position)
 }
