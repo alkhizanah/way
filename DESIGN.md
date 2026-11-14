@@ -55,7 +55,8 @@ name :: fn () { // A shortcut to the above one
 ```
 name : fn (a: T, b: T) -> R;
 name : fn () -> R;
-name : fn () -> void; // No shortcut since that would be ambiguous
+name : fn () -> void;
+name : fn (); // A shortcut to the above
 ```
 
 # Operators

@@ -611,7 +611,10 @@ parse_field_access :: proc(p: ^Parser, target: Ast_Index) -> Ast_Index {
 
 		return append_node(p, .Field_Access, target, identifier, token.position)
 	} else {
-		syntax_error(token.position, "you can either access a field with an identifier or dereference a pointer with a star")
+		syntax_error(
+			token.position,
+			"you can either access a field with an identifier or dereference a pointer with a star",
+		)
 
 		return AST_INVALID
 	}
@@ -957,9 +960,7 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 
 	return_type: Ast_Index
 
-	if peek_token(p, .Brace_Open) {
-		return_type = append_node(p, .Void_Type, 0, 0, p.current_token.position)
-	} else {
+	if peek_token(p, .Right_Arrow) {
 		arrow_token, ok := expect_token(p, .Right_Arrow)
 
 		if !ok do return AST_INVALID
@@ -967,6 +968,8 @@ parse_function_type :: proc(p: ^Parser) -> Ast_Index {
 		return_type = parse_expr(p, .Lowest)
 
 		if return_type == AST_INVALID do return AST_INVALID
+	} else {
+		return_type = append_node(p, .Void_Type, 0, 0, p.current_token.position)
 	}
 
 	return append_node(p, .Function_Type, parameters_node, return_type, paren_open.position)
