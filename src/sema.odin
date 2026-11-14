@@ -559,22 +559,14 @@ analyze_global_binding :: proc(s: ^Sema, binding: ^Sema_Global_Binding) -> bool 
 	if !binding.constant {
 		initializer := s.ir.values[binding.value]
 
-		initializer_type := s.ir.types[initializer.type]
+		if s.ir.types[initializer.type].tag == .Untyped_Int {
+			initializer.type = intern_type(s, .Signed_Int, 64, 0)
 
-		if initializer_type.tag == .Untyped_Int {
-			sema_error(
-				binding.syntax.name.position,
-				"please specify a type for your integer variable, the compiler can't decide on its own",
-			)
+			binding.value = append_value_with_struct(s, initializer)
+		} else if s.ir.types[initializer.type].tag == .Untyped_Float {
+			initializer.type = intern_type(s, .Float, 64, 0)
 
-			return false
-		} else if initializer_type.tag == .Untyped_Float {
-			sema_error(
-				binding.syntax.name.position,
-				"please specify a type for your float variable, the compiler can't decide on its own",
-			)
-
-			return false
+			binding.value = append_value_with_struct(s, initializer)
 		}
 
 		index := Ir_Index(len(s.ir.globals))
@@ -1828,7 +1820,7 @@ analyze_field_access :: proc(
 		case "len":
 			return append_value(
 				s,
-				intern_type(s, .Unsigned_Int, 64, 0),
+				intern_type(s, .Signed_Int, 64, 0),
 				.Get_Slice_Len,
 				target_value_id,
 				0,
@@ -2011,7 +2003,12 @@ analyze_function :: proc(
 	function_type := s.ir.types[function_type_id]
 
 	if result_type_id != IR_INVALID &&
-	   !check_type_compatibility(s, position, intern_type(s, .Single_Pointer, function_type_id, 0), result_type_id) {
+	   !check_type_compatibility(
+			   s,
+			   position,
+			   intern_type(s, .Single_Pointer, function_type_id, 0),
+			   result_type_id,
+		   ) {
 		return IR_INVALID
 	}
 
@@ -2269,28 +2266,20 @@ analyze_local_binding :: proc(
 
 		scope_add(&s.scope, name, initializer, constant, position)
 	} else {
-		initializer_type_id := s.ir.values[initializer].type
+		initializer_value := s.ir.values[initializer]
 
-		initializer_type := s.ir.types[initializer_type_id]
+		if s.ir.types[initializer_value.type].tag == .Untyped_Int {
+			initializer_value.type = intern_type(s, .Signed_Int, 64, 0)
 
-		if initializer_type.tag == .Untyped_Int {
-			sema_error(
-				position,
-				"please specify a type for your integer variable, the compiler can't decide on its own",
-			)
+			initializer = append_value_with_struct(s, initializer_value)
+		} else if s.ir.types[initializer_value.type].tag == .Untyped_Float {
+			initializer_value.type = intern_type(s, .Float, 64, 0)
 
-			return false
-		} else if initializer_type.tag == .Untyped_Float {
-			sema_error(
-				position,
-				"please specify a type for your float variable, the compiler can't decide on its own",
-			)
-
-			return false
+			initializer = append_value_with_struct(s, initializer_value)
 		}
 
-		pointer_type := intern_type(s, .Single_Pointer, initializer_type_id, 0)
-		alloca := append_value(s, pointer_type, .Alloca, initializer_type_id, 0)
+		pointer_type := intern_type(s, .Single_Pointer, initializer_value.type, 0)
+		alloca := append_value(s, pointer_type, .Alloca, initializer_value.type, 0)
 
 		append_instruction(s, .Value, alloca, 0)
 		append_instruction(s, .Store, alloca, initializer)

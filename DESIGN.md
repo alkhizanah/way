@@ -168,7 +168,7 @@ You can have a multi-value pointer:
 
 ```
 iterate :: fn (xs: [*]u8, len: usize, f: *fn (x: u8) -> void) {
-    for i : u64 = 0; i < len; i += 1 {
+    for i := 0; i < len; i += 1 {
         f(xs[i]);
     }
 }
@@ -178,7 +178,7 @@ The above example is better if we used slices, a structure with mutli-value poin
 
 ```
 iterate :: fn (xs: []u8, f: *fn (x: u8) -> void) {
-    for i : u64 = 0; i < xs.len; i += 1 {
+    for i := 0; i < xs.len; i += 1 {
         f(xs[i]);
     }
 }
@@ -194,7 +194,7 @@ Let's see an example:
 
 ```
 drop_while :: fn (xs: []u8, p: *fn (x: u8) -> bool) -> []u8 {
-    i : u64 = 0;
+    i := 0;
 
     while p(xs[i]) {
         i += 1;
@@ -208,7 +208,7 @@ This could be also written as a `for` loop:
 
 ```
 drop_while :: fn (xs: []u8, p: *fn (x: u8) -> bool) -> []u8 {
-    for i : u64 = 0; p(xs[i]); i += 1 {}
+    for i := 0; p(xs[i]); i += 1 {}
 
     return xs[i + 1..];
 }
