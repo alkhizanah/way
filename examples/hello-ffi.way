@@ -1,0 +1,7 @@
+printf :: fn ([*]u8) => foreign;
+
+main :: fn () -> u8 {
+    printf("Hello, FFI!\n");
+
+    return 0;
+}
