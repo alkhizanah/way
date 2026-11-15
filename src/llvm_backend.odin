@@ -64,8 +64,6 @@ llvm_commit :: proc(l: ^LLVM_Backend, output_file_path: string) {
 
 	llvm.RunPasses(l.module, "default<O2>", l.target_machine, pbo)
 
-	fmt.println(llvm.PrintModuleToString(l.module))
-
 	llvm.SetModuleDataLayout(l.module, llvm.CreateTargetDataLayout(l.target_machine))
 	llvm.SetTarget(l.module, l.target_triple)
 
