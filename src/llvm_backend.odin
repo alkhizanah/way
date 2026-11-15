@@ -77,10 +77,15 @@ llvm_commit :: proc(l: ^LLVM_Backend, output_file_path: string) {
 
 	object_file_path := fmt.tprintf("%s.o", output_file_path)
 
-	_, _, _, _ = os.process_exec(
-		{command = {"clang", object_file_path, "-o", output_file_path}},
+	state, _, stderr, _ := os.process_exec(
+		{command = {"clang", object_file_path, "-o", output_file_path, "-lm"}},
 		context.allocator,
 	)
+
+	if state.exit_code != 0 {
+		fmt.println("clang faild to link the program:")
+		fmt.println(string(stderr))
+	}
 
 	os.remove(object_file_path)
 }
